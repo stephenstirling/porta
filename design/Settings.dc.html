@@ -1,0 +1,379 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Porta settings</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="width: 1440px; height: 900px; position: relative; overflow: hidden; font-family: 'Segoe UI Variable Text', 'Segoe UI', 'Onest', system-ui, sans-serif; color: #F3F4F8; background: radial-gradient(1100px 700px at 12% 18%, #3B2A7A 0%, rgba(59,42,122,0) 62%), radial-gradient(900px 650px at 88% 22%, #A4502C 0%, rgba(164,80,44,0) 58%), radial-gradient(1100px 700px at 55% 105%, #1C4A86 0%, rgba(28,74,134,0) 62%), #0B0D1A">
+
+  <!-- WINDOW -->
+  <div style="position: absolute; left: 200px; top: 64px; width: 1040px; height: 712px; display: flex; flex-direction: column; border-radius: 16px; overflow: hidden; background: rgba(18,20,28,0.86); border: 1px solid rgba(255,255,255,0.10); box-shadow: 0 30px 80px rgba(0,0,0,0.55); backdrop-filter: blur(40px) saturate(160%); -webkit-backdrop-filter: blur(40px) saturate(160%)">
+
+    <!-- title bar -->
+    <div style="height: 44px; flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; padding-left: 16px; border-bottom: 1px solid rgba(255,255,255,0.06)">
+      <div style="display: flex; align-items: center; gap: 10px; font-size: 13px">
+        <svg width="20" height="20" viewBox="0 0 256 256" aria-hidden="true"><path d="M40 128a88 88 0 0 1 176 0" stroke="#8AA8FF" stroke-width="34" fill="none" stroke-linecap="round"></path><path d="M216 128a88 88 0 0 1-176 0" stroke="#5F7FE8" stroke-width="34" fill="none" stroke-linecap="round"></path><path d="M98 112a30 30 0 1 0 60 0a30 30 0 1 0-60 0M112 120l-13 64h58l-13-64z" fill="#3A4D70"></path><path d="M116 112a12 12 0 1 0 24 0a12 12 0 1 0-24 0" fill="#8AA8FF"></path></svg>
+        <span>Porta Settings</span>
+      </div>
+      <div style="display: flex">
+        <button type="button" aria-label="Minimize" style="width: 46px; height: 44px; border: 0; background: transparent; color: #A7ADBC; cursor: pointer"><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M1 6h10" stroke="currentColor"></path></svg></button>
+        <button type="button" aria-label="Maximize" style="width: 46px; height: 44px; border: 0; background: transparent; color: #A7ADBC; cursor: pointer"><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><rect x="1.5" y="1.5" width="9" height="9" rx="1.5" fill="none" stroke="currentColor"></rect></svg></button>
+        <button type="button" aria-label="Close" style="width: 46px; height: 44px; border: 0; background: transparent; color: #A7ADBC; cursor: pointer"><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M2 2l8 8M10 2l-8 8" stroke="currentColor"></path></svg></button>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-grow: 1; min-height: 0">
+      <!-- SIDEBAR -->
+      <nav aria-label="Settings sections" style="width: 240px; flex-shrink: 0; box-sizing: border-box; padding: 16px 12px; display: flex; flex-direction: column; gap: 2px; background: rgba(255,255,255,0.025); border-right: 1px solid rgba(255,255,255,0.06)">
+        <sc-for list="{{sections}}" as="s" hint-placeholder-count="7">
+          <button type="button" onClick="{{s.pick}}" aria-current="{{s.current}}" style="display: flex; align-items: center; gap: 12px; height: 40px; padding: 0 12px; border: 0; border-radius: 10px; font: inherit; font-size: 13.5px; text-align: left; cursor: pointer; background: {{s.bg}}; color: {{s.color}}; position: relative">
+            <span style="position: absolute; left: 0; top: 11px; width: 3px; height: 18px; border-radius: 3px; background: {{s.bar}}"></span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{s.d}}"></path></svg>
+            {{s.label}}
+          </button>
+        </sc-for>
+      </nav>
+
+      <!-- CONTENT -->
+      <div style="flex-grow: 1; overflow-y: auto; box-sizing: border-box; padding: 28px 36px 36px; display: flex; flex-direction: column; gap: 18px">
+
+        <!-- START BUTTON -->
+        <sc-if value="{{is.start}}" hint-placeholder-val="{{ true }}">
+          <div style="display: flex; flex-direction: column; gap: 4px">
+            <h1 style="margin: 0; font-size: 26px; font-weight: 600; letter-spacing: -0.01em">Start button</h1>
+            <p style="margin: 0; font-size: 13.5px; color: #A7ADBC">Swap the Windows Start button for your own icon and choose how it behaves.</p>
+          </div>
+
+          <!-- preview -->
+          <div style="border-radius: 14px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08)">
+            <div style="height: 120px; display: flex; align-items: flex-end; background: radial-gradient(500px 200px at 20% 0%, #3B2A7A 0%, rgba(59,42,122,0) 70%), radial-gradient(500px 220px at 90% 10%, #A4502C 0%, rgba(164,80,44,0) 70%), #0E1020">
+              <div style="width: 100%; height: 52px; display: flex; align-items: center; justify-content: {{alignJustify}}; gap: 6px; padding: 0 16px; box-sizing: border-box; background: rgba(14,16,24,0.78); border-top: 1px solid rgba(255,255,255,0.08)">
+                <span style="width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.08); color: {{accent}}">
+                  <sc-if value="{{replaceOn}}" hint-placeholder-val="{{ true }}">
+                    <svg width="{{iconPx}}" height="{{iconPx}}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-label="Your Start icon"><path d="{{chosen.d}}"></path></svg>
+                  </sc-if>
+                  <sc-if value="{{replaceOff}}" hint-placeholder-val="{{ false }}">
+                    <span style="font-size: 10px; color: #A7ADBC">Default</span>
+                  </sc-if>
+                </span>
+                <span style="width: 42px; height: 42px; display: flex; align-items: center; justify-content: center"><span style="width: 24px; height: 24px; border-radius: 7px; background: linear-gradient(145deg, #E0A23A, #A9661A)"></span></span>
+                <span style="width: 42px; height: 42px; display: flex; align-items: center; justify-content: center"><span style="width: 24px; height: 24px; border-radius: 7px; background: linear-gradient(145deg, #3F8CF0, #1C55B8)"></span></span>
+                <span style="width: 42px; height: 42px; display: flex; align-items: center; justify-content: center"><span style="width: 24px; height: 24px; border-radius: 7px; background: linear-gradient(145deg, #2BA6C9, #14708A)"></span></span>
+                <span style="width: 42px; height: 42px; display: flex; align-items: center; justify-content: center"><span style="width: 24px; height: 24px; border-radius: 7px; background: linear-gradient(145deg, #8E6CF0, #5133B8)"></span></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- master toggle -->
+          <div style="display: flex; align-items: center; gap: 16px; padding: 16px 18px; border-radius: 14px; background: rgba(255,255,255,0.05)">
+            <div style="display: flex; flex-direction: column; gap: 3px; flex-grow: 1">
+              <span style="font-size: 14px; font-weight: 600">Replace the Windows Start button</span>
+              <span style="font-size: 12.5px; color: #A7ADBC">Turn off to keep the Windows icon but still open Porta when you click it.</span>
+            </div>
+            <button type="button" aria-label="Replace the Windows Start button" aria-pressed="{{master.pressed}}" onClick="{{master.toggle}}" style="width: 44px; height: 24px; border-radius: 999px; border: 1px solid {{master.trackBorder}}; background: {{master.trackBg}}; padding: 0; position: relative; cursor: pointer; flex-shrink: 0"><span style="position: absolute; top: 3px; left: {{master.knobLeft}}; width: 16px; height: 16px; border-radius: 50%; background: {{master.knobBg}}"></span></button>
+          </div>
+
+          <!-- icon picker -->
+          <div style="display: flex; flex-direction: column; gap: 12px; padding: 18px; border-radius: 14px; background: rgba(255,255,255,0.05); opacity: {{pickerOpacity}}">
+            <span style="font-size: 14px; font-weight: 600">Icon</span>
+            <div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 10px">
+              <sc-for list="{{icons}}" as="i" hint-placeholder-count="6">
+                <button type="button" aria-label="{{i.label}}" aria-pressed="{{i.pressed}}" onClick="{{i.pick}}" style="height: 76px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; border-radius: 12px; cursor: pointer; font: inherit; font-size: 11.5px; color: #C9CDD8; background: {{i.bg}}; border: 2px solid {{i.border}}">
+                  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="color: {{accent}}"><path d="{{i.d}}"></path></svg>
+                  {{i.label}}
+                </button>
+              </sc-for>
+              <button type="button" aria-label="Use a custom image" style="height: 76px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; border-radius: 12px; cursor: pointer; font: inherit; font-size: 11.5px; color: #C9CDD8; background: transparent; border: 2px dashed rgba(255,255,255,0.22)">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M5 20h14"></path></svg>
+                Custom…
+              </button>
+            </div>
+            <span style="font-size: 12px; color: #A7ADBC">Custom images: PNG, ICO or SVG, square, 64 × 64 px or larger. Separate light and dark versions supported.</span>
+          </div>
+
+          <!-- size + alignment -->
+          <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px">
+            <div style="display: flex; flex-direction: column; gap: 12px; padding: 18px; border-radius: 14px; background: rgba(255,255,255,0.05)">
+              <span style="font-size: 14px; font-weight: 600">Icon size</span>
+              <div style="display: flex; gap: 4px; padding: 4px; border-radius: 12px; background: rgba(255,255,255,0.06); align-self: flex-start">
+                <sc-for list="{{sizeSeg}}" as="o" hint-placeholder-count="3">
+                  <button type="button" onClick="{{o.pick}}" style="border: 0; height: 32px; padding: 0 16px; border-radius: 9px; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; background: {{o.bg}}; color: {{o.color}}">{{o.label}}</button>
+                </sc-for>
+              </div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 12px; padding: 18px; border-radius: 14px; background: rgba(255,255,255,0.05)">
+              <span style="font-size: 14px; font-weight: 600">Taskbar alignment</span>
+              <div style="display: flex; gap: 4px; padding: 4px; border-radius: 12px; background: rgba(255,255,255,0.06); align-self: flex-start">
+                <sc-for list="{{alignSeg}}" as="o" hint-placeholder-count="2">
+                  <button type="button" onClick="{{o.pick}}" style="border: 0; height: 32px; padding: 0 16px; border-radius: 9px; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; background: {{o.bg}}; color: {{o.color}}">{{o.label}}</button>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+        </sc-if>
+
+        <!-- APPEARANCE extras -->
+        <sc-if value="{{is.appearance}}" hint-placeholder-val="{{ false }}">
+          <div style="display: flex; flex-direction: column; gap: 4px">
+            <h1 style="margin: 0; font-size: 26px; font-weight: 600; letter-spacing: -0.01em">Appearance</h1>
+            <p style="margin: 0; font-size: 13.5px; color: #A7ADBC">Theme, accent color and transparency for the menu.</p>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px">
+            <div style="display: flex; flex-direction: column; gap: 12px; padding: 18px; border-radius: 14px; background: rgba(255,255,255,0.05)">
+              <span style="font-size: 14px; font-weight: 600">Theme</span>
+              <div style="display: flex; gap: 4px; padding: 4px; border-radius: 12px; background: rgba(255,255,255,0.06); align-self: flex-start">
+                <sc-for list="{{themeSeg}}" as="o" hint-placeholder-count="3">
+                  <button type="button" onClick="{{o.pick}}" style="border: 0; height: 32px; padding: 0 16px; border-radius: 9px; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; background: {{o.bg}}; color: {{o.color}}">{{o.label}}</button>
+                </sc-for>
+              </div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 12px; padding: 18px; border-radius: 14px; background: rgba(255,255,255,0.05)">
+              <span style="font-size: 14px; font-weight: 600">Accent color</span>
+              <div style="display: flex; gap: 10px">
+                <sc-for list="{{swatches}}" as="w" hint-placeholder-count="5">
+                  <button type="button" aria-label="{{w.label}}" aria-pressed="{{w.pressed}}" onClick="{{w.pick}}" style="width: 36px; height: 36px; border-radius: 50%; cursor: pointer; background: {{w.hex}}; border: 3px solid #171922; box-shadow: 0 0 0 2px {{w.ring}}"></button>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+        </sc-if>
+
+        <!-- LAYOUT extras -->
+        <sc-if value="{{is.layout}}" hint-placeholder-val="{{ false }}">
+          <div style="display: flex; flex-direction: column; gap: 4px">
+            <h1 style="margin: 0; font-size: 26px; font-weight: 600; letter-spacing: -0.01em">Menu layout</h1>
+            <p style="margin: 0; font-size: 13.5px; color: #A7ADBC">Choose what the menu shows and how much room it takes.</p>
+          </div>
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 18px; border-radius: 14px; background: rgba(255,255,255,0.05)">
+            <div style="display: flex; flex-direction: column; gap: 3px">
+              <span style="font-size: 14px; font-weight: 600">Pinned columns</span>
+              <span style="font-size: 12.5px; color: #A7ADBC">More columns make the menu wider.</span>
+            </div>
+            <div style="display: flex; gap: 4px; padding: 4px; border-radius: 12px; background: rgba(255,255,255,0.06)">
+              <sc-for list="{{colSeg}}" as="o" hint-placeholder-count="3">
+                <button type="button" onClick="{{o.pick}}" style="border: 0; height: 32px; min-width: 44px; padding: 0 14px; border-radius: 9px; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; background: {{o.bg}}; color: {{o.color}}">{{o.label}}</button>
+              </sc-for>
+            </div>
+          </div>
+        </sc-if>
+
+        <!-- GENERIC PAGE HEADER for general / search -->
+        <sc-if value="{{is.general}}" hint-placeholder-val="{{ false }}">
+          <div style="display: flex; flex-direction: column; gap: 4px">
+            <h1 style="margin: 0; font-size: 26px; font-weight: 600; letter-spacing: -0.01em">General</h1>
+            <p style="margin: 0; font-size: 13.5px; color: #A7ADBC">Startup, updates and how Porta takes over from the Windows Start menu.</p>
+          </div>
+        </sc-if>
+        <sc-if value="{{is.search}}" hint-placeholder-val="{{ false }}">
+          <div style="display: flex; flex-direction: column; gap: 4px">
+            <h1 style="margin: 0; font-size: 26px; font-weight: 600; letter-spacing: -0.01em">Search</h1>
+            <p style="margin: 0; font-size: 13.5px; color: #A7ADBC">Decide what the search box looks through.</p>
+          </div>
+        </sc-if>
+
+        <!-- TOGGLE LIST (every section that has one) -->
+        <sc-if value="{{hasToggles}}" hint-placeholder-val="{{ true }}">
+          <div style="display: flex; flex-direction: column; border-radius: 14px; overflow: hidden; background: rgba(255,255,255,0.05)">
+            <sc-for list="{{toggles}}" as="x" hint-placeholder-count="3">
+              <div style="display: flex; align-items: center; gap: 16px; padding: 14px 18px; border-top: 1px solid {{x.sep}}">
+                <div style="display: flex; flex-direction: column; gap: 3px; flex-grow: 1">
+                  <span style="font-size: 14px">{{x.label}}</span>
+                  <span style="font-size: 12.5px; color: #A7ADBC">{{x.desc}}</span>
+                </div>
+                <button type="button" aria-label="{{x.label}}" aria-pressed="{{x.pressed}}" onClick="{{x.toggle}}" style="width: 44px; height: 24px; border-radius: 999px; border: 1px solid {{x.trackBorder}}; background: {{x.trackBg}}; padding: 0; position: relative; cursor: pointer; flex-shrink: 0"><span style="position: absolute; top: 3px; left: {{x.knobLeft}}; width: 16px; height: 16px; border-radius: 50%; background: {{x.knobBg}}"></span></button>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <!-- SHORTCUTS -->
+        <sc-if value="{{is.shortcuts}}" hint-placeholder-val="{{ false }}">
+          <div style="display: flex; flex-direction: column; gap: 4px">
+            <h1 style="margin: 0; font-size: 26px; font-weight: 600; letter-spacing: -0.01em">Shortcuts</h1>
+            <p style="margin: 0; font-size: 13.5px; color: #A7ADBC">Keyboard shortcuts while the menu is open. Click one to change it.</p>
+          </div>
+          <div style="display: flex; flex-direction: column; border-radius: 14px; overflow: hidden; background: rgba(255,255,255,0.05)">
+            <sc-for list="{{shortcuts}}" as="k" hint-placeholder-count="4">
+              <button type="button" style="display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 18px; border: 0; border-top: 1px solid {{k.sep}}; background: transparent; color: #F3F4F8; font: inherit; font-size: 14px; cursor: pointer; text-align: left">
+                <span>{{k.label}}</span>
+                <span style="font-size: 12px; padding: 4px 9px; border-radius: 7px; border: 1px solid rgba(255,255,255,0.14); background: rgba(255,255,255,0.05); color: #C9CDD8">{{k.keys}}</span>
+              </button>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <!-- ABOUT -->
+        <sc-if value="{{is.about}}" hint-placeholder-val="{{ false }}">
+          <div style="display: flex; align-items: center; gap: 20px; padding: 24px; border-radius: 16px; background: rgba(255,255,255,0.05)">
+            <svg width="72" height="72" viewBox="0 0 256 256" aria-hidden="true" style="flex-shrink: 0"><path d="M40 128a88 88 0 0 1 176 0" stroke="#8AA8FF" stroke-width="24" fill="none" stroke-linecap="round"></path><path d="M216 128a88 88 0 0 1-176 0" stroke="#5F7FE8" stroke-width="24" fill="none" stroke-linecap="round"></path><path d="M98 112a30 30 0 1 0 60 0a30 30 0 1 0-60 0M112 120l-13 64h58l-13-64z" fill="#3A4D70"></path><path d="M116 112a12 12 0 1 0 24 0a12 12 0 1 0-24 0" fill="#8AA8FF"></path><path d="M113 100a5 5 0 1 0 10 0a5 5 0 1 0-10 0" fill="rgba(255,255,255,0.85)"></path></svg>
+            <div style="display: flex; flex-direction: column; gap: 4px; flex-grow: 1">
+              <span style="font-size: 24px; font-weight: 600">Porta</span>
+              <span style="font-size: 13px; color: #A7ADBC">Version 0.1.0 · Publisher: Stephen Stirling</span>
+              <span style="font-size: 12.5px; color: #A7ADBC">© 2026 Stephen Stirling</span>
+            </div>
+            <button type="button" style="border: 0; height: 38px; padding: 0 18px; border-radius: 10px; background: {{accent}}; color: #0E1120; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer">Check for updates</button>
+          </div>
+          <div style="display: flex; align-items: center; gap: 18px; padding: 20px 24px; border-radius: 16px; background: rgba(255,221,0,0.08); border: 1px solid rgba(255,221,0,0.28)">
+            <span style="width: 44px; height: 44px; border-radius: 12px; background: #FFDD00; color: #1A1400; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 8h1a3 3 0 0 1 0 6h-1M3 8h14v6a5 5 0 0 1-5 5H8a5 5 0 0 1-5-5zM7 2v3M11 2v3M15 2v3"></path></svg></span>
+            <div style="display: flex; flex-direction: column; gap: 3px; flex-grow: 1">
+              <span style="font-size: 14.5px; font-weight: 600">Porta is free</span>
+              <span style="font-size: 12.5px; color: #C9CDD8">If it saves you time, you can support its development with a coffee.</span>
+            </div>
+            <a href="https://buymeacoffee.com/stephenstirling" target="_blank" rel="noopener" style="height: 38px; padding: 0 18px; border-radius: 10px; background: #FFDD00; color: #1A1400; font-size: 13px; font-weight: 600; display: flex; align-items: center; text-decoration: none; white-space: nowrap">Buy me a coffee</a>
+          </div>
+          <div style="display: flex; gap: 10px">
+            <a href="https://github.com/stephenstirling" target="_blank" rel="noopener" style="font-size: 13px; color: {{accent}}">Release notes</a>
+            <span style="color: #6B7180">·</span>
+            <a href="https://github.com/stephenstirling" target="_blank" rel="noopener" style="font-size: 13px; color: {{accent}}">Report a problem</a>
+          </div>
+        </sc-if>
+      </div>
+    </div>
+  </div>
+
+  <!-- TASKBAR -->
+  <div style="position: absolute; left: 0; right: 0; bottom: 0; height: 56px; display: flex; align-items: center; justify-content: center; background: rgba(14,16,24,0.72); border-top: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px)">
+    <div style="display: flex; align-items: center; gap: 6px">
+      <a href="Main.dc.html" aria-label="Open Start" style="width: 44px; height: 44px; border-radius: 10px; background: rgba(255,255,255,0.06); display: flex; align-items: center; justify-content: center; color: {{accent}}"><svg width="{{iconPx}}" height="{{iconPx}}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{chosen.d}}"></path></svg></a>
+      <span style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center"><span style="width: 26px; height: 26px; border-radius: 8px; background: linear-gradient(145deg, #E0A23A, #A9661A)"></span></span>
+      <span style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center"><span style="width: 26px; height: 26px; border-radius: 8px; background: linear-gradient(145deg, #3F8CF0, #1C55B8)"></span></span>
+      <span style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center"><span style="width: 26px; height: 26px; border-radius: 8px; background: linear-gradient(145deg, #6B7385, #3E4555)"></span></span>
+    </div>
+    <div style="position: absolute; right: 20px; display: flex; flex-direction: column; align-items: flex-end; font-size: 12px; line-height: 1.35">
+      <span>8:14 PM</span>
+      <span style="color: #A7ADBC">10/2/2026</span>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#8AA8FF","options":["#8AA8FF","#F2A65A","#6FD3B5","#E58CB8"]},"startSection":{"editor":"enum","options":["general","start","layout","appearance","search","shortcuts","about"],"default":"start"},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const s = this.state || {};
+    const accent = s.accent ?? this.props.accent ?? '#8AA8FF';
+    const section = s.section ?? this.props.startSection ?? 'start';
+    const defaults = { replace: true, signin: true, winkey: true, updates: true, restore: true, hover: false, rclick: true,
+      recent: true, rail: true, clock: true, headers: true, files: true, settings: true, web: false, ctrlk: true,
+      transparency: true, rounded: true, matchbar: false };
+    const on = Object.assign({}, defaults, s.on || {});
+    const flip = (k) => this.setState({ on: Object.assign({}, on, { [k]: !on[k] }) });
+
+    const sw = (k, label, desc, i) => ({
+      label, desc, pressed: on[k] ? 'true' : 'false', toggle: () => flip(k),
+      trackBg: on[k] ? accent : 'transparent', trackBorder: on[k] ? accent : 'rgba(255,255,255,0.35)',
+      knobBg: on[k] ? '#0E1120' : '#C9CDD8', knobLeft: on[k] ? '23px' : '3px',
+      sep: i === 0 ? 'transparent' : 'rgba(255,255,255,0.06)'
+    });
+    const list = (rows) => rows.map((r, i) => sw(r[0], r[1], r[2], i));
+
+    const toggleSets = {
+      general: list([
+        ['signin', 'Start with Windows', 'Launch Porta when you sign in.'],
+        ['winkey', 'Open with the Windows key', 'The Windows key opens Porta instead of the built-in menu.'],
+        ['restore', 'Restore the Windows menu when Porta closes', 'Nothing stays changed if you quit or uninstall.'],
+        ['updates', 'Check for updates automatically', 'Looks once a day; never installs without asking.']
+      ]),
+      start: list([
+        ['hover', 'Open on hover', 'Open the menu when the pointer rests on the Start button.'],
+        ['rclick', 'Right-click opens the power user menu', 'Quick links to Device Manager, Terminal, Disk Management and more.']
+      ]),
+      layout: list([
+        ['recent', 'Show recent files', 'List the files you opened last under your pinned apps.'],
+        ['rail', 'Show the account side panel', 'Your account, folders and power controls on the right.'],
+        ['clock', 'Show the clock card', 'Time and date at the bottom of the side panel.'],
+        ['headers', 'Letter headings in All apps', 'Group the app list A–Z.']
+      ]),
+      appearance: list([
+        ['transparency', 'Transparency effects', 'Frosted glass behind the menu.'],
+        ['rounded', 'Rounded corners', 'Match the Windows 11 corner style.'],
+        ['matchbar', 'Tint the taskbar to match', 'Apply the accent color to the taskbar.']
+      ]),
+      search: list([
+        ['files', 'Search files and folders', 'Include your Documents, Desktop and Downloads.'],
+        ['settings', 'Search Windows settings', 'Find settings pages by name.'],
+        ['web', 'Show web results', 'Off keeps every search on this PC.'],
+        ['ctrlk', 'Ctrl K jumps to search', 'Focus the search box from anywhere in the menu.']
+      ])
+    };
+    const toggles = toggleSets[section] || [];
+
+    const sectionDefs = [
+      ['general', 'General', 'M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M14 4v4M8 10v4M16 16v4'],
+      ['start', 'Start button', 'M3.5 12a8.5 8.5 0 1 0 17 0a8.5 8.5 0 1 0-17 0M10 12a2 2 0 1 0 4 0a2 2 0 1 0-4 0'],
+      ['layout', 'Menu layout', 'M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z'],
+      ['appearance', 'Appearance', 'M12 3a9 9 0 1 0 0 18c1.1 0 1.5-.9 1.2-1.7-.4-1 .3-2.3 1.5-2.3H17a4 4 0 0 0 4-4c0-5.5-4-10-9-10z'],
+      ['search', 'Search', 'M4 11a7 7 0 1 0 14 0a7 7 0 1 0-14 0M20 20l-4-4'],
+      ['shortcuts', 'Shortcuts', 'M3 6h18v12H3zM7 10h.01M11 10h.01M15 10h.01M7 14h10'],
+      ['about', 'About', 'M3 12a9 9 0 1 0 18 0a9 9 0 1 0-18 0M12 11v5M12 8h.01']
+    ];
+    const sections = sectionDefs.map(([id, label, d]) => {
+      const cur = id === section;
+      return { label, d, current: cur ? 'page' : 'false', pick: () => this.setState({ section: id }),
+        bg: cur ? 'rgba(255,255,255,0.08)' : 'transparent', color: cur ? '#F3F4F8' : '#B5BAC7', bar: cur ? accent : 'transparent' };
+    });
+    const is = {};
+    sectionDefs.forEach(([id]) => { is[id] = id === section; });
+
+    const iconDefs = [
+      ['Orbit', 'M3.5 12a8.5 8.5 0 1 0 17 0a8.5 8.5 0 1 0-17 0M10 12a2 2 0 1 0 4 0a2 2 0 1 0-4 0'],
+      ['Keyhole', 'M3.5 12a8.5 8.5 0 1 0 17 0a8.5 8.5 0 1 0-17 0M9.8 10.5a2.2 2.2 0 1 0 4.4 0a2.2 2.2 0 1 0-4.4 0M11 12.6l-.9 4.4h3.8l-.9-4.4'],
+      ['Diamond', 'M12 3l9 9-9 9-9-9zM12 8.5l3.5 3.5-3.5 3.5-3.5-3.5z'],
+      ['Spark', 'M12 2c.8 5 3 7.2 10 10-7 2.8-9.2 5-10 10-.8-5-3-7.2-10-10 7-2.8 9.2-5 10-10z'],
+      ['Hex', 'M12 2.5l8.2 4.75v9.5L12 21.5l-8.2-4.75v-9.5zM12 9v6'],
+      ['Trio', 'M9 8.5a3 3 0 1 0 6 0a3 3 0 1 0-6 0M4.5 16a3 3 0 1 0 6 0a3 3 0 1 0-6 0M13.5 16a3 3 0 1 0 6 0a3 3 0 1 0-6 0']
+    ];
+    const iconIdx = s.icon ?? 1;
+    const icons = iconDefs.map(([label, d], i) => ({
+      label, d, pressed: i === iconIdx ? 'true' : 'false', pick: () => this.setState({ icon: i }),
+      bg: i === iconIdx ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.03)',
+      border: i === iconIdx ? accent : 'rgba(255,255,255,0.06)'
+    }));
+    const chosen = { d: iconDefs[iconIdx][1] };
+
+    const seg = (opts, cur, key) => opts.map((o) => ({
+      label: o, pick: () => this.setState({ [key]: o }),
+      bg: o === cur ? accent : 'transparent', color: o === cur ? '#0E1120' : '#B5BAC7'
+    }));
+    const size = s.size ?? 'Medium';
+    const align = s.align ?? 'Center';
+    const theme = s.theme ?? 'System';
+    const cols = s.cols ?? '4';
+
+    const swatchDefs = [['Periwinkle', '#8AA8FF'], ['Apricot', '#F2A65A'], ['Mint', '#6FD3B5'], ['Rose', '#E58CB8'], ['Lilac', '#B79CFF']];
+    const swatches = swatchDefs.map(([label, hex]) => ({
+      label, hex, pressed: hex === accent ? 'true' : 'false', ring: hex === accent ? hex : 'transparent',
+      pick: () => this.setState({ accent: hex })
+    }));
+
+    const shortcuts = [
+      ['Open or close Porta', 'Win'], ['Jump to search', 'Ctrl K'], ['Switch Pinned / All apps', 'Tab'],
+      ['Pin the selected app', 'Ctrl P'], ['Power options', 'Ctrl Shift Q']
+    ].map(([label, keys], i) => ({ label, keys, sep: i === 0 ? 'transparent' : 'rgba(255,255,255,0.06)' }));
+
+    return {
+      accent, sections, is, toggles, hasToggles: toggles.length > 0,
+      master: sw('replace', '', '', 0), replaceOn: on.replace, replaceOff: !on.replace,
+      pickerOpacity: on.replace ? '1' : '0.45',
+      icons, chosen, iconPx: size === 'Small' ? 18 : size === 'Large' ? 30 : 24,
+      sizeSeg: seg(['Small', 'Medium', 'Large'], size, 'size'),
+      alignSeg: seg(['Center', 'Left'], align, 'align'),
+      alignJustify: align === 'Left' ? 'flex-start' : 'center',
+      themeSeg: seg(['System', 'Dark', 'Light'], theme, 'theme'),
+      colSeg: seg(['4', '5', '6'], cols, 'cols'),
+      swatches, shortcuts
+    };
+  }
+}
+</script>
+</body>
+</html>

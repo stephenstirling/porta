@@ -1,0 +1,495 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Porta smart search</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="width: 1440px; height: 900px; position: relative; overflow: hidden; font-family: 'Segoe UI Variable Text', 'Segoe UI', 'Onest', system-ui, sans-serif; color: #F3F4F8; background: radial-gradient(1100px 700px at 12% 18%, #3B2A7A 0%, rgba(59,42,122,0) 62%), radial-gradient(900px 650px at 88% 22%, #A4502C 0%, rgba(164,80,44,0) 58%), radial-gradient(1100px 700px at 55% 105%, #1C4A86 0%, rgba(28,74,134,0) 62%), #0B0D1A">
+
+  <!-- try-these strip -->
+  <div style="position: absolute; left: 340px; top: 36px; width: 760px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px">
+    <span style="font-size: 13px; color: #C9CDD8; margin-right: 4px">Try:</span>
+    <sc-for list="{{samples}}" as="x" hint-placeholder-count="11">
+      <button type="button" onClick="{{x.pick}}" aria-pressed="{{x.pressed}}" style="height: 32px; padding: 0 12px; border-radius: 999px; font: inherit; font-size: 12.5px; cursor: pointer; background: {{x.bg}}; color: {{x.color}}; border: 1px solid {{x.border}}">{{x.label}}</button>
+    </sc-for>
+  </div>
+
+  <!-- MENU -->
+  <div style="position: absolute; left: 340px; bottom: 72px; width: 760px; height: 680px; display: flex; border-radius: 20px; background: rgba(18,20,28,0.78); border: 1px solid rgba(255,255,255,0.10); box-shadow: 0 30px 80px rgba(0,0,0,0.55); backdrop-filter: blur(40px) saturate(160%); -webkit-backdrop-filter: blur(40px) saturate(160%)">
+
+    <!-- left: search -->
+    <div style="width: 500px; box-sizing: border-box; padding: 24px; display: flex; flex-direction: column; gap: 14px; min-height: 0">
+      <label style="display: flex; align-items: center; gap: 10px; height: 44px; padding: 0 14px; border-radius: 12px; background: rgba(255,255,255,0.07); border: 1px solid {{accent}}">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="color: #A7ADBC; flex-shrink: 0"><path d="M4 11a7 7 0 1 0 14 0a7 7 0 1 0-14 0M20 20l-4-4"></path></svg>
+        <input type="search" aria-label="Search apps, files, settings and answers" placeholder="Search apps, files, settings and answers" value="{{query}}" onChange="{{onQuery}}" style="flex-grow: 1; border: 0; outline: none; background: transparent; color: #F3F4F8; font: inherit; font-size: 14px; min-width: 0">
+      </label>
+
+      <!-- answer card -->
+      <sc-if value="{{hasAnswer}}" hint-placeholder-val="{{ true }}">
+        <div style="display: flex; flex-direction: column; gap: 6px; padding: 16px 18px; border-radius: 16px; background: rgba(138,168,255,0.10); border: 1px solid rgba(138,168,255,0.35)">
+          <span style="display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; letter-spacing: 0.04em; color: {{accent}}">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{answer.icon}}"></path></svg>
+            {{answer.kind}}
+          </span>
+          <span style="font-size: 30px; font-weight: 600; letter-spacing: -0.01em">{{answer.value}}</span>
+          <span style="font-size: 13px; color: #C9CDD8">{{answer.detail}}</span>
+          <sc-if value="{{answer.needsOnline}}" hint-placeholder-val="{{ false }}">
+            <div style="display: flex; align-items: center; gap: 12px; margin-top: 6px">
+              <button type="button" onClick="{{enableRates}}" style="height: 34px; padding: 0 14px; border: 0; border-radius: 9px; background: {{accent}}; color: #0E1120; font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer">Turn on exchange rates</button>
+              <span style="font-size: 12px; color: #A7ADBC">Fetches rates once a day. Nothing you type is sent.</span>
+            </div>
+          </sc-if>
+          <sc-if value="{{answer.copyable}}" hint-placeholder-val="{{ true }}">
+            <span style="font-size: 12px; color: #A7ADBC; margin-top: 2px">Enter copies the result</span>
+          </sc-if>
+        </div>
+      </sc-if>
+
+      <!-- games (Steam) -->
+      <sc-if value="{{hasGames}}" hint-placeholder-val="{{ false }}">
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <span style="display: flex; align-items: center; justify-content: space-between; font-size: 12px; font-weight: 600; letter-spacing: 0.04em; color: #A7ADBC; padding: 0 4px">
+            <span>GAMES</span>
+            <button type="button" onClick="{{toggleStore}}" style="height: 28px; padding: 0 8px; border: 0; border-radius: 7px; background: transparent; color: #A7ADBC; font: inherit; font-size: 11.5px; font-weight: 400; letter-spacing: 0; cursor: pointer">{{storeToggleLabel}}</button>
+          </span>
+          <sc-for list="{{games}}" as="g" hint-placeholder-count="2">
+            <div style="display: flex; align-items: center; gap: 12px; padding: 8px 10px; border-radius: 12px; background: {{g.bg}}">
+              <span style="width: 92px; height: 43px; border-radius: 7px; flex-shrink: 0; display: flex; align-items: flex-end; padding: 5px 7px; box-sizing: border-box; background: {{g.art}}; font-size: 9.5px; font-weight: 700; letter-spacing: 0.03em; color: rgba(255,255,255,0.85); overflow: hidden">[COVER ART]</span>
+              <span style="display: flex; flex-direction: column; gap: 2px; flex-grow: 1; min-width: 0">
+                <span style="font-size: 13.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{g.name}}</span>
+                <span style="display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: #A7ADBC"><span style="font-size: 10.5px; font-weight: 700; padding: 1px 6px; border-radius: 5px; background: {{g.chipBg}}; color: #F3F4F8">{{g.launcher}}</span>{{g.sub}}</span>
+              </span>
+              <button type="button" style="height: 34px; padding: 0 14px; border-radius: 9px; font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; white-space: nowrap; background: {{g.btnBg}}; color: {{g.btnColor}}; border: 1px solid {{g.btnBorder}}">{{g.action}}</button>
+            </div>
+          </sc-for>
+          <div style="display: flex; align-items: center; gap: 4px; padding: 0 4px; font-size: 11.5px; color: #8C93A3">
+            <span>Search stores:</span>
+            <sc-for list="{{storeLinks}}" as="l" hint-placeholder-count="3">
+              <button type="button" style="height: 28px; padding: 0 8px; border: 0; border-radius: 7px; background: transparent; color: {{accent}}; font: inherit; font-size: 11.5px; cursor: pointer">{{l.label}}</button>
+            </sc-for>
+          </div>
+          <sc-if value="{{storeOff}}" hint-placeholder-val="{{ false }}">
+            <span style="font-size: 11.5px; color: #8C93A3; padding: 0 4px">Store results are off, so only installed games show.</span>
+          </sc-if>
+        </div>
+      </sc-if>
+
+      <!-- photos (Ocula) -->
+      <sc-if value="{{hasPhotos}}" hint-placeholder-val="{{ false }}">
+        <div style="display: flex; flex-direction: column; gap: 8px; padding: 12px; border-radius: 14px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08)">
+          <span style="display: flex; align-items: center; gap: 8px">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#B49CFF" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12zM9 12a3 3 0 1 0 6 0a3 3 0 1 0-6 0"></path></svg>
+            <span style="font-size: 13px; font-weight: 600; flex-grow: 1">{{photos.title}}</span>
+            <button type="button" style="height: 30px; padding: 0 12px; border: 0; border-radius: 8px; background: rgba(180,156,255,0.18); color: #D9CCFF; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer">Open all in Ocula</button>
+          </span>
+          <span style="font-size: 11.5px; color: #A7ADBC">{{photos.how}}</span>
+          <div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px">
+            <sc-for list="{{photos.items}}" as="ph" hint-placeholder-count="5">
+              <button type="button" aria-label="{{ph.label}}" style="height: 72px; padding: 0; border: 0; border-radius: 8px; cursor: pointer; position: relative; overflow: hidden; background: {{ph.bg}}">
+                <span style="position: absolute; left: 4px; bottom: 4px; font-size: 10px; font-weight: 600; padding: 1px 5px; border-radius: 5px; background: rgba(10,12,18,0.72); color: #F3F4F8">{{ph.badge}}</span>
+              </button>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- results -->
+      <sc-if value="{{hasResults}}" hint-placeholder-val="{{ true }}">
+        <div style="display: flex; flex-direction: column; gap: 2px; overflow: hidden">
+          <sc-for list="{{results}}" as="r" hint-placeholder-count="5">
+            <button type="button" style="display: flex; align-items: center; gap: 12px; min-height: 48px; padding: 6px 10px; border: 0; border-radius: 11px; background: {{r.bg}}; color: #F3F4F8; font: inherit; cursor: pointer; text-align: left">
+              <span style="width: 32px; height: 32px; border-radius: 9px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: {{r.tile}}; color: #FFFFFF; font-size: 13px; font-weight: 600">
+                <sc-if value="{{r.glyph}}" hint-placeholder-val="{{ false }}"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{r.d}}"></path></svg></sc-if>
+                <sc-if value="{{r.letter}}" hint-placeholder-val="{{ true }}">{{r.initial}}</sc-if>
+              </span>
+              <span style="display: flex; flex-direction: column; gap: 2px; flex-grow: 1; min-width: 0">
+                <span style="font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{r.name}}</span>
+                <span style="font-size: 11.5px; color: #A7ADBC">{{r.sub}}</span>
+              </span>
+              <sc-if value="{{r.hasTag}}" hint-placeholder-val="{{ false }}">
+                <span style="font-size: 11px; padding: 3px 8px; border-radius: 999px; background: rgba(138,168,255,0.14); color: #C3D2FF; white-space: nowrap">{{r.tag}}</span>
+              </sc-if>
+              <span style="font-size: 11.5px; color: #8C93A3; width: 64px; text-align: right; flex-shrink: 0">{{r.kind}}</span>
+            </button>
+          </sc-for>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{isEmpty}}" hint-placeholder-val="{{ false }}">
+        <div style="display: flex; flex-direction: column; gap: 10px; padding: 8px 4px; color: #A7ADBC; font-size: 13.5px; line-height: 1.5">
+          <span style="color: #F3F4F8; font-weight: 600">Search does more than apps</span>
+          <span>Type an app, a game, a photo, a file, a setting, a command, a sum, a conversion or a date. Pick one of the examples above to see each kind.</span>
+        </div>
+      </sc-if>
+      <sc-if value="{{noMatch}}" hint-placeholder-val="{{ false }}">
+        <div style="padding: 32px 4px; text-align: center; color: #A7ADBC; font-size: 13.5px">Nothing matches “{{query}}”</div>
+      </sc-if>
+
+      <div style="flex-grow: 1"></div>
+      <div style="display: flex; gap: 16px; font-size: 11.5px; color: #8C93A3; padding: 0 4px">
+        <span>↑ ↓ move</span><span>Enter open</span><span>Esc clear</span>
+      </div>
+    </div>
+
+    <!-- right rail -->
+    <div style="width: 260px; box-sizing: border-box; padding: 28px 16px 16px; display: flex; flex-direction: column; gap: 4px; background: rgba(255,255,255,0.035); border-left: 1px solid rgba(255,255,255,0.08); border-radius: 0 20px 20px 0">
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 10px; padding-bottom: 16px">
+        <span role="img" aria-label="Account picture" style="width: 64px; height: 64px; border-radius: 50%; position: relative; overflow: hidden; background: radial-gradient(circle at 50% 38%, #D8B79C 0 17%, rgba(0,0,0,0) 18%), radial-gradient(ellipse at 50% 100%, #3E5A86 0 46%, rgba(0,0,0,0) 47%), linear-gradient(160deg, #8EA9C9, #4B6386); box-shadow: 0 0 0 3px rgba(18,20,28,0.9), 0 0 0 5px rgba(138,168,255,0.4)"></span>
+        <span style="font-size: 16px; font-weight: 600">[YOUR NAME]</span>
+        <span style="font-size: 11.5px; color: #A7ADBC; margin-top: -6px">Microsoft account picture</span>
+      </div>
+      <sc-for list="{{places}}" as="p" hint-placeholder-count="4">
+        <button type="button" style="display: flex; align-items: center; gap: 12px; height: 40px; padding: 0 12px; border: 0; border-radius: 10px; background: transparent; color: #F3F4F8; font: inherit; font-size: 13.5px; cursor: pointer; text-align: left"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{p.d}}"></path></svg>{{p.label}}</button>
+      </sc-for>
+      <div style="flex-grow: 1"></div>
+      <div style="display: flex; justify-content: flex-end; gap: 6px">
+        <button type="button" aria-label="Lock" style="width: 44px; height: 44px; border: 0; border-radius: 12px; background: transparent; color: #F3F4F8; cursor: pointer; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 11h14v10H5zM8 11V7a4 4 0 0 1 8 0v4"></path></svg></button>
+        <button type="button" aria-label="Power options" style="width: 44px; height: 44px; border: 0; border-radius: 12px; background: transparent; color: #F3F4F8; cursor: pointer; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v8M6.3 7.3a8 8 0 1 0 11.4 0"></path></svg></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- taskbar -->
+  <div style="position: absolute; left: 0; right: 0; bottom: 0; height: 56px; display: flex; align-items: center; justify-content: center; gap: 6px; background: rgba(14,16,24,0.72); border-top: 1px solid rgba(255,255,255,0.08)">
+    <span style="width: 44px; height: 44px; border-radius: 10px; background: rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: center">
+      <svg width="26" height="26" viewBox="0 0 256 256" aria-label="Porta"><path d="M40 128a88 88 0 0 1 176 0" stroke="#8AA8FF" stroke-width="34" fill="none" stroke-linecap="round"></path><path d="M216 128a88 88 0 0 1-176 0" stroke="#5F7FE8" stroke-width="34" fill="none" stroke-linecap="round"></path><path d="M98 112a30 30 0 1 0 60 0a30 30 0 1 0-60 0M112 120l-13 64h58l-13-64z" fill="#3A4D70"></path></svg>
+    </span>
+    <span style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center"><span style="width: 26px; height: 26px; border-radius: 8px; background: linear-gradient(145deg, #E0A23A, #A9661A)"></span></span>
+    <span style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center"><span style="width: 26px; height: 26px; border-radius: 8px; background: linear-gradient(145deg, #3F8CF0, #1C55B8)"></span></span>
+    <span style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center"><span style="width: 26px; height: 26px; border-radius: 8px; background: linear-gradient(145deg, #454B5A, #1D2029)"></span></span>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#8AA8FF","options":["#8AA8FF","#9DB4FF","#6F8CF0"]},"startQuery":{"editor":"enum","options":["red dead redemption","diablo","fortnite","forza","sunset over water","photos of maya","volleyball","c","browser","12% of 340","5 ft in cm","days until dec 25","time in tokyo","100 usd to eur","dark mode","pdf last week","restart","w"],"default":"red dead redemption"},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const accent = this.props.accent ?? '#8AA8FF';
+    const s = this.state || {};
+    const query = s.query ?? this.props.startQuery ?? 'red dead redemption';
+    const q = query.trim().toLowerCase();
+    const ratesOn = !!s.ratesOn;
+
+    const G = {
+      amber: 'linear-gradient(145deg, #E0A23A, #A9661A)', blue: 'linear-gradient(145deg, #3F8CF0, #1C55B8)',
+      green: 'linear-gradient(145deg, #4FAF7A, #26704A)', red: 'linear-gradient(145deg, #E5604F, #A8352A)',
+      violet: 'linear-gradient(145deg, #8E6CF0, #5133B8)', gold: 'linear-gradient(145deg, #C99A1F, #8A640C)',
+      slate: 'linear-gradient(145deg, #454B5A, #1D2029)', grey: 'linear-gradient(145deg, #6B7385, #3E4555)',
+      teal: 'linear-gradient(145deg, #2BA6C9, #14708A)', orange: 'linear-gradient(145deg, #F07A3E, #B84716)',
+      sky: 'linear-gradient(145deg, #4E9BE8, #2560A8)', peri: 'linear-gradient(145deg, #7C93E8, #3E55B0)'
+    };
+    // uses = how often the user picked it recently (what search learns from)
+    const apps = [
+      ['Google Chrome', 'blue', 48], ['Calculator', 'green', 6], ['Calendar', 'red', 9], ['Camera', 'teal', 2],
+      ['Capta', 'amber', 18], ['Visual Studio Code', 'sky', 30], ['Microsoft Edge', 'teal', 4], ['Notepad', 'gold', 20],
+      ['Word', 'sky', 15], ['Ocula', 'violet', 22], ['File Explorer', 'amber', 26], ['Excel', 'green', 11],
+      ['Windows Terminal', 'slate', 14], ['Photos', 'violet', 3], ['Spotify', 'green', 12], ['Outlook', 'blue', 16]
+    ].map(([name, c, uses]) => ({ name, bg: G[c], uses }));
+
+    const synonyms = {
+      'browser': ['Google Chrome', 'Microsoft Edge'], 'web': ['Google Chrome', 'Microsoft Edge'],
+      'text editor': ['Notepad', 'Visual Studio Code'], 'editor': ['Notepad', 'Visual Studio Code'],
+      'photo viewer': ['Ocula', 'Photos'], 'screenshot': ['Capta'], 'snip': ['Capta'],
+      'email': ['Outlook'], 'music': ['Spotify'], 'spreadsheet': ['Excel']
+    };
+    const aliases = { 'w': 'Word', 'x': 'Excel', 'nas': 'Synology DSM (bookmark)' };
+
+    const P = {
+      gear: 'M9 12a3 3 0 1 0 6 0a3 3 0 1 0-6 0M12 2v3M12 19v3M4.9 4.9 7 7M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1 7 17M17 7l2.1-2.1',
+      bolt: 'M13 2 4 14h7l-1 8 9-12h-7z',
+      power: 'M12 3v8M6.3 7.3a8 8 0 1 0 11.4 0',
+      file: 'M6 3h8l4 4v14H6zM14 3v4h4',
+      image: 'M3 4h18v16H3zM9 10a2 2 0 1 0 0.01 0M21 16l-5-5-9 9',
+      calc: 'M5 3h14v18H5zM8 7h8M8 12h.01M12 12h.01M16 12h.01M8 16h.01M12 16h.01M16 16h.01',
+      ruler: 'M3 17 17 3l4 4L7 21zM7 13l2 2M10 10l2 2M13 7l2 2',
+      clock: 'M3 12a9 9 0 1 0 18 0a9 9 0 1 0-18 0M12 7v5l3 2',
+      cal: 'M3 5h18v16H3zM3 10h18M8 3v4M16 3v4',
+      coin: 'M4 12a8 8 0 1 0 16 0a8 8 0 1 0-16 0M12 7v10M9.5 9.5h3.5a1.5 1.5 0 0 1 0 3h-2a1.5 1.5 0 0 0 0 3H14',
+      star: 'M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z',
+      link: 'M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1'
+    };
+
+    const settings = [
+      ['Bluetooth & devices', ['bluetooth', 'devices', 'mouse', 'printer', 'headphones']],
+      ['Display', ['display', 'resolution', 'monitor', 'scale', 'brightness']],
+      ['Personalization › Colors (dark mode)', ['dark mode', 'dark', 'theme', 'colors', 'light mode']],
+      ['Network & internet › Wi-Fi', ['wifi', 'wi-fi', 'network', 'internet']],
+      ['System › Sound', ['sound', 'volume', 'audio', 'speaker']],
+      ['Windows Update', ['update', 'updates']],
+      ['Apps › Installed apps', ['uninstall', 'installed apps', 'programs']]
+    ];
+    const commands = [
+      ['Restart', ['restart', 'reboot'], P.power], ['Shut down', ['shut down', 'shutdown', 'turn off'], P.power],
+      ['Sleep', ['sleep'], P.power], ['Lock', ['lock'], P.power], ['Sign out', ['sign out', 'log off', 'logout'], P.power],
+      ['Empty Recycle Bin', ['empty recycle bin', 'recycle', 'empty bin'], P.bolt],
+      ['Switch to light mode', ['toggle dark mode', 'dark mode', 'light mode'], P.bolt]
+    ];
+    const files = [
+      ['Quarterly report.pdf', 'pdf', 1, 'Documents'], ['Invoice 0921.pdf', 'pdf', 6, 'Downloads'],
+      ['Lease renewal.pdf', 'pdf', 21, 'Documents'], ['budget-2026.xlsx', 'doc', 3, 'Documents'],
+      ['Notes from Monday.docx', 'doc', 3, 'Documents'], ['IMG_2041.jpg', 'photo', 4, 'Pictures'],
+      ['IMG_2038.jpg', 'photo', 5, 'Pictures'], ['Capta 2026-10-02 16.42.07.png', 'photo', 6, 'Pictures\\Capta']
+    ];
+
+    // ---------- matching ----------
+    const score = (name, qq) => {
+      const n = name.toLowerCase();
+      if (n === qq) return 1000;
+      if (n.startsWith(qq)) return 900;
+      const words = n.split(/[\s\-_.›()]+/).filter(Boolean);
+      if (words.some((w) => w.startsWith(qq))) return 750;
+      if (qq.length > 1 && words.map((w) => w[0]).join('').startsWith(qq)) return 650;
+      if (n.includes(qq)) return 500;
+      return 0;
+    };
+
+    const results = [];
+    let answer = null;
+
+    // ---------- answers ----------
+    const fmt = (n) => {
+      const r = Math.round(n * 1000) / 1000;
+      return r.toLocaleString('en-US', { maximumFractionDigits: 3 });
+    };
+    const evalMath = (src) => {
+      let i = 0; const t = src.replace(/\s+/g, '').replace(/×/g, '*').replace(/÷/g, '/');
+      const num = () => { const m = /^\d*\.?\d+/.exec(t.slice(i)); if (!m) throw 0; i += m[0].length; return parseFloat(m[0]); };
+      const factor = () => {
+        if (t[i] === '-') { i++; return -factor(); }
+        if (t[i] === '(') { i++; const v = expr(); if (t[i] !== ')') throw 0; i++; return post(v); }
+        return post(num());
+      };
+      const post = (v) => { if (t[i] === '%') { i++; return v / 100; } if (t[i] === '^') { i++; return Math.pow(v, factor()); } return v; };
+      const term = () => { let v = factor(); while (t[i] === '*' || t[i] === '/') { const op = t[i++]; const r = factor(); v = op === '*' ? v * r : v / r; } return v; };
+      const expr = () => { let v = term(); while (t[i] === '+' || t[i] === '-') { const op = t[i++]; const r = term(); v = op === '+' ? v + r : v - r; } return v; };
+      const v = expr(); if (i !== t.length || !isFinite(v)) throw 0; return v;
+    };
+
+    let m;
+    if ((m = /^(-?[\d.]+)\s*%\s*of\s*(-?[\d.]+)$/.exec(q))) {
+      answer = { kind: 'CALCULATION', icon: P.calc, value: fmt(parseFloat(m[1]) / 100 * parseFloat(m[2])), detail: `${m[1]}% of ${m[2]}`, copyable: true };
+    } else if (/[\d)]\s*[-+*/^×÷]\s*[\d(]/.test(q) && /^[\d\s+\-*/().%^×÷]+$/.test(q)) {
+      try { answer = { kind: 'CALCULATION', icon: P.calc, value: fmt(evalMath(q)), detail: query.trim(), copyable: true }; } catch (e) { answer = null; }
+    }
+
+    const unitAlias = { feet: 'ft', foot: 'ft', inch: 'in', inches: 'in', miles: 'mi', mile: 'mi', meters: 'm', metres: 'm', meter: 'm',
+      kilometers: 'km', km: 'km', centimeters: 'cm', pounds: 'lb', lbs: 'lb', kilos: 'kg', kilograms: 'kg', grams: 'g', ounces: 'oz',
+      '°f': 'f', fahrenheit: 'f', '°c': 'c', celsius: 'c', gb: 'gb', mb: 'mb', kb: 'kb', tb: 'tb' };
+    const units = {
+      mm: ['len', 0.001, 'mm'], cm: ['len', 0.01, 'cm'], m: ['len', 1, 'm'], km: ['len', 1000, 'km'], in: ['len', 0.0254, 'in'],
+      ft: ['len', 0.3048, 'ft'], yd: ['len', 0.9144, 'yd'], mi: ['len', 1609.344, 'mi'],
+      g: ['mass', 1, 'g'], kg: ['mass', 1000, 'kg'], lb: ['mass', 453.59237, 'lb'], oz: ['mass', 28.349523, 'oz'],
+      kb: ['data', 1, 'KB'], mb: ['data', 1024, 'MB'], gb: ['data', 1048576, 'GB'], tb: ['data', 1073741824, 'TB'],
+      c: ['temp', 0, '°C'], f: ['temp', 0, '°F'], k: ['temp', 0, 'K']
+    };
+    if (!answer && (m = /^(-?[\d.]+)\s*([a-z°]+)\s+(?:in|to)\s+([a-z°]+)$/.exec(q))) {
+      const a = units[unitAlias[m[2]] || m[2]], b = units[unitAlias[m[3]] || m[3]];
+      const v = parseFloat(m[1]);
+      if (a && b && a[0] === b[0]) {
+        let out;
+        if (a[0] === 'temp') {
+          const toC = { '°C': (x) => x, '°F': (x) => (x - 32) * 5 / 9, K: (x) => x - 273.15 }[a[2]](v);
+          out = { '°C': toC, '°F': toC * 9 / 5 + 32, K: toC + 273.15 }[b[2]];
+        } else out = v * a[1] / b[1];
+        answer = { kind: 'CONVERSION', icon: P.ruler, value: `${fmt(out)} ${b[2]}`, detail: `${m[1]} ${a[2]}` + (a[0] === 'data' ? ' (1 KB = 1,024 bytes, as Windows counts)' : ''), copyable: true };
+      }
+    }
+
+    const cur = ['usd', 'eur', 'gbp', 'jpy', 'cad', 'aud', 'chf'];
+    if (!answer && (m = /^([\d.]+)\s*([a-z]{3})\s+(?:in|to)\s+([a-z]{3})$/.exec(q)) && cur.includes(m[2]) && cur.includes(m[3])) {
+      answer = ratesOn
+        ? { kind: 'CURRENCY', icon: P.coin, value: `[LIVE RESULT] ${m[3].toUpperCase()}`, detail: `${m[1]} ${m[2].toUpperCase()} at today's rate, updated once a day`, copyable: true }
+        : { kind: 'CURRENCY', icon: P.coin, value: `${m[1]} ${m[2].toUpperCase()} → ${m[3].toUpperCase()}`, detail: 'Currency needs exchange rates from the internet, which is off by default.', needsOnline: true };
+    }
+
+    const months = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    if (!answer && (m = /^days (?:until|till|to) ([a-z]+)\s+(\d{1,2})$/.exec(q)) && months.includes(m[1].slice(0, 3))) {
+      let d = new Date(today.getFullYear(), months.indexOf(m[1].slice(0, 3)), parseInt(m[2], 10));
+      if (d < today) d = new Date(today.getFullYear() + 1, d.getMonth(), d.getDate());
+      const n = Math.round((d - today) / 86400000);
+      answer = { kind: 'DATE', icon: P.cal, value: `${n} days`, detail: 'Until ' + d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }), copyable: true };
+    }
+    if (!answer && (m = /^date in (\d+) (days?|weeks?)$/.exec(q))) {
+      const n = parseInt(m[1], 10) * (m[2].startsWith('week') ? 7 : 1);
+      const d = new Date(today.getTime() + n * 86400000);
+      answer = { kind: 'DATE', icon: P.cal, value: d.toLocaleDateString('en-US', { weekday: 'short', month: 'long', day: 'numeric', year: 'numeric' }), detail: `${n} days from today`, copyable: true };
+    }
+    const zones = { tokyo: 'Asia/Tokyo', london: 'Europe/London', paris: 'Europe/Paris', 'new york': 'America/New_York', sydney: 'Australia/Sydney', kyiv: 'Europe/Kyiv', 'los angeles': 'America/Los_Angeles', berlin: 'Europe/Berlin' };
+    if (!answer && (m = /^time in (.+)$/.exec(q)) && zones[m[1]]) {
+      const now = new Date();
+      const t = now.toLocaleTimeString('en-US', { timeZone: zones[m[1]], hour: 'numeric', minute: '2-digit' });
+      const day = now.toLocaleDateString('en-US', { timeZone: zones[m[1]], weekday: 'long', month: 'short', day: 'numeric' });
+      const city = m[1].replace(/\b\w/g, (c) => c.toUpperCase());
+      answer = { kind: 'WORLD CLOCK', icon: P.clock, value: t, detail: `${city}, ${day}`, copyable: true };
+    }
+
+    // ---------- results ----------
+    const add = (r) => { if (!results.some((x) => x.name === r.name)) results.push(r); };
+    const appRow = (a, tag) => ({ name: a.name, sub: 'App', kind: 'App', tile: a.bg, letter: true, glyph: false, initial: a.name[0], d: '', tag: tag || '' });
+
+    if (q && !answer) {
+      if (aliases[q]) {
+        const target = apps.find((a) => a.name === aliases[q]);
+        add(target ? appRow(target, `Your alias “${q}”`) : { name: aliases[q], sub: 'Opens your bookmark', kind: 'Link', tile: G.peri, glyph: true, letter: false, d: P.link, initial: '', tag: `Your alias “${q}”` });
+      }
+      if (synonyms[q]) synonyms[q].forEach((n) => { const a = apps.find((x) => x.name === n); if (a) add(appRow(a, `Matches “${q}”`)); });
+
+      // natural file filters: "pdf last week", "photos yesterday"
+      const typeWord = /(pdfs?|photos?|pictures?|images?|docs?|documents?)/.exec(q);
+      const timeWord = /(today|yesterday|this week|last week|last month)/.exec(q);
+      if (typeWord || timeWord) {
+        const type = typeWord ? (typeWord[1].startsWith('pdf') ? 'pdf' : /^(photo|picture|image)/.test(typeWord[1]) ? 'photo' : 'doc') : null;
+        const maxDays = timeWord ? { today: 0, yesterday: 1, 'this week': 7, 'last week': 7, 'last month': 31 }[timeWord[1]] : 999;
+        files.filter(([, t, d]) => (!type || t === type) && d <= maxDays).forEach(([name, t, d, folder]) => add({
+          name, sub: `${folder} · ${d === 0 ? 'Today' : d === 1 ? 'Yesterday' : d + ' days ago'}`,
+          kind: 'File', tile: t === 'photo' ? G.violet : t === 'pdf' ? G.red : G.sky, glyph: true, letter: false,
+          d: t === 'photo' ? P.image : P.file, initial: '', tag: t === 'photo' ? 'Opens in Ocula' : ''
+        }));
+      }
+
+      commands.forEach(([name, keys, d]) => { if (keys.some((k) => k === q || (q.length > 2 && k.startsWith(q)))) add({ name, sub: 'Command', kind: 'Command', tile: G.slate, glyph: true, letter: false, d, initial: '', tag: '' }); });
+      settings.forEach(([name, keys]) => { if (keys.some((k) => k === q || (q.length > 2 && k.startsWith(q)))) add({ name, sub: 'Windows Settings', kind: 'Setting', tile: G.grey, glyph: true, letter: false, d: P.gear, initial: '', tag: '' }); });
+
+      const ranked = apps
+        .map((a) => ({ a, sc: score(a.name, q) }))
+        .filter((x) => x.sc > 0)
+        .map((x) => ({ ...x, total: x.sc + Math.min(x.a.uses, 50) * 6 }))
+        .sort((x, y) => y.total - x.total);
+      ranked.forEach((x, i) => add(appRow(x.a, i === 0 && q.length <= 2 && x.a.uses >= 20 ? 'You usually pick this' : '')));
+
+      files.forEach(([name, t, d, folder]) => { if (q.length > 2 && name.toLowerCase().includes(q)) add({ name, sub: folder, kind: 'File', tile: G.sky, glyph: true, letter: false, d: P.file, initial: '', tag: '' }); });
+    }
+    if (answer && /^time in|^days|^date/.test(q)) add({ name: 'Calendar', sub: 'Open the full calendar', kind: 'App', tile: G.red, letter: true, glyph: false, initial: 'C', d: '', tag: '' });
+
+
+    // ---------- Steam games ----------
+    const steamStoreOn = s.storeOn ?? true;
+    const art = {
+      red: 'linear-gradient(160deg, #7A1E12 0%, #C2451C 55%, #2A0F0A 100%)', amber: 'linear-gradient(160deg, #6A4A16 0%, #C98E2E 60%, #2A1E0A 100%)',
+      cyan: 'linear-gradient(160deg, #0E3B4A 0%, #F2E14C 70%, #1B1B24 100%)', green: 'linear-gradient(160deg, #2E5B2A 0%, #8BC46A 60%, #1C2A16 100%)',
+      grey: 'linear-gradient(160deg, #2B3240 0%, #6B7890 60%, #151A22 100%)'
+    };
+    // installed = found in Steam's library folders on this PC
+    const steamLib = [
+      ['Red Dead Redemption 2', 'red', 'Steam'], ['Cyberpunk 2077', 'cyan', 'Steam'],
+      ['Stardew Valley', 'green', 'Steam'], ['Portal 2', 'grey', 'Steam'],
+      ['Fortnite', 'cyan', 'Epic'], ['Rocket League', 'amber', 'Epic'],
+      ['Diablo IV', 'red', 'Battle.net'], ['Overwatch 2', 'amber', 'Battle.net'],
+      ['Forza Horizon 5', 'green', 'Xbox'], ['Microsoft Flight Simulator', 'grey', 'Xbox']
+    ];
+    const chip = { 'Steam': '#2A475E', 'Epic': '#3A3A3A', 'Battle.net': '#14558C', 'Xbox': '#1E7B1E' };
+    // store = Steam's online store search (opt-out), excluding what's installed
+    const steamStore = [['Red Dead Redemption', 'amber'], ['Red Dead Online', 'red'], ['Portal', 'grey'], ['Stardew Valley Soundtrack', 'green']];
+    const gameHit = (name) => { const sc = score(name, q); return sc > 0 || (q.length >= 3 && name.toLowerCase().split(/\s+/).map((w) => w[0]).join('') === q.replace(/\d+$/, '') && /\d$/.test(q) ? name.endsWith(q.match(/\d+$/)[0]) : sc > 0); };
+    const games = [];
+    if (q.length >= 2 && !answer) {
+      steamLib.filter(([n]) => gameHit(n)).forEach(([name, a, launcher]) => games.push({
+        name, art: art[a], launcher, chipBg: chip[launcher], sub: 'Installed', action: 'Play', btnBg: accent, btnColor: '#0E1120', btnBorder: accent, bg: 'rgba(138,168,255,0.10)'
+      }));
+      if (steamStoreOn) steamStore.filter(([n]) => q.length >= 3 && gameHit(n)).forEach(([name, a]) => games.push({
+        name, art: art[a], launcher: 'Steam', chipBg: chip.Steam, sub: 'Store · not installed', action: 'View in Steam', btnBg: 'transparent', btnColor: '#F3F4F8', btnBorder: 'rgba(255,255,255,0.18)', bg: 'transparent'
+      }));
+    }
+    const shownGames = games.slice(0, 3);
+
+    // ---------- Photos from Ocula's library ----------
+    const scene = {
+      sunset: 'linear-gradient(180deg, #F6A35C 0%, #E0624A 45%, #2B3A6B 46%, #1D2A52 100%)',
+      beach: 'linear-gradient(180deg, #9ED3F0 0%, #CDE9F5 50%, #E9D4A6 51%, #D8BC84 100%)',
+      vball: 'linear-gradient(180deg, #8FC7EE 0%, #B9DDF2 40%, #E8CF95 41%, #CFAE6E 100%)',
+      city: 'linear-gradient(180deg, #2A3352 0%, #4A5578 60%, #1A2036 100%)',
+      park: 'linear-gradient(180deg, #A9D1E8 0%, #CFE3C9 45%, #6FA35A 46%, #4E7E3E 100%)',
+      portrait: 'linear-gradient(180deg, #C9A88E 0%, #8A6A57 60%, #3E2F28 100%)',
+      snow: 'linear-gradient(180deg, #DDE7F2 0%, #F4F7FB 60%, #B9C7D8 100%)'
+    };
+    // tags come from Ocula: your own tags, approved suggestions, named People, camera and dates
+    const library = [
+      ['sunset', ['sunset', 'water', 'beach', 'golden hour'], ['Maya'], 'Canon EOS 5D Mark IV', 5],
+      ['sunset', ['sunset', 'water', 'pier'], [], 'Canon EOS 5D Mark IV', 4],
+      ['beach', ['beach', 'water', 'family'], ['Maya', 'Jon'], 'Canon EOS R6', 4],
+      ['vball', ['volleyball', 'beach volleyball', 'sports', 'beach'], ['Jon'], 'Canon EOS R6', 5],
+      ['vball', ['volleyball', 'beach volleyball', 'sports'], ['Maya'], 'Canon EOS R6', 3],
+      ['park', ['picnic', 'park', 'family'], ['Maya', 'Jon'], 'iPhone 15 Pro', 4],
+      ['portrait', ['portrait', 'candid'], ['Maya'], 'Canon EOS 5D Mark IV', 5],
+      ['city', ['city', 'night', 'street'], [], 'Canon EOS R6', 3],
+      ['snow', ['snow', 'hiking', 'mountain'], ['Jon'], 'iPhone 15 Pro', 4],
+      ['sunset', ['sunset', 'city'], [], 'iPhone 15 Pro', 3]
+    ];
+    let photos = null;
+    const people = ['maya', 'jon'];
+    const pm = /^(?:photos? (?:of|with) )(.+)$/.exec(q);
+    const stars = /^(\d) ?stars?$/.exec(q);
+    if (!answer && q) {
+      let hits = [], how = '';
+      if (pm && people.includes(pm[1])) {
+        const who = pm[1][0].toUpperCase() + pm[1].slice(1);
+        hits = library.filter((p) => p[2].includes(who)).map((p) => [p, 'People']);
+        how = `Faces you named “${who}” in Ocula. Matching happens only on this PC.`;
+      } else if (stars) {
+        hits = library.filter((p) => p[4] >= parseInt(stars[1], 10)).map((p) => [p, '★'.repeat(p[4])]);
+        how = 'Ratings you gave in Ocula.';
+      } else if (/canon|iphone|5d|r6/.test(q)) {
+        const cw = q.replace(/^photos? (?:from|with|on) /, '').split(/\s+/);
+        hits = library.filter((p) => cw.every((w) => p[3].toLowerCase().includes(w))).map((p) => [p, p[3].replace('Canon EOS ', '')]);
+        how = 'Camera from each photo’s metadata.';
+      } else if (q.length >= 4) {
+        const words = q.replace(/^photos? (?:of )?/, '').split(/\s+(?:over|on|at|in|with|and)?\s*/).filter((w) => w.length > 2);
+        hits = library.map((p) => [p, words.filter((w) => p[1].some((t) => t.includes(w))).length / words.length])
+          .filter(([, sc]) => sc > 0.49).sort((a, b) => b[1] - a[1])
+          .map(([p, sc], i) => [p, Math.round(96 - i * 3 - (1 - sc) * 20) + '%']);
+        how = 'Scene search: Ocula looked at what’s in each photo, on this PC. Best matches first.';
+      }
+      if (hits.length) photos = {
+        title: `${hits.length} photo${hits.length === 1 ? '' : 's'} in Ocula`, how,
+        items: hits.slice(0, 5).map(([p, badge]) => ({ bg: scene[p[0]], badge, label: `Photo tagged ${p[1].join(', ')}` }))
+      };
+    }
+    // photo files from the date filters now go to the Ocula strip instead of the list
+    if (photos) for (let i = results.length - 1; i >= 0; i--) if (results[i].tag === 'Opens in Ocula') results.splice(i, 1);
+    if (!photos && results.some((r) => r.tag === 'Opens in Ocula')) {
+      const ph = results.filter((r) => r.tag === 'Opens in Ocula');
+      photos = { title: `${ph.length} photos in Ocula`, how: 'Matched by date taken.', items: ph.map((r, i) => ({ bg: [scene.beach, scene.vball, scene.city][i % 3], badge: r.sub.split(' · ')[1], label: r.name })) };
+      for (let i = results.length - 1; i >= 0; i--) if (results[i].tag === 'Opens in Ocula') results.splice(i, 1);
+    }
+
+    const shown = results.slice(0, (shownGames.length || photos) ? 3 : 7).map((r, i) => ({ ...r, hasTag: !!r.tag, bg: i === 0 && !answer && !shownGames.length && !photos ? 'rgba(138,168,255,0.16)' : 'transparent' }));
+
+    const sampleList = ['red dead redemption', 'rdr2', 'diablo', 'fortnite', 'forza', 'sunset over water', 'photos of maya', 'volleyball', '5 stars', 'c', 'browser', '12% of 340', '5 ft in cm', 'days until dec 25', '100 usd to eur', 'dark mode', 'pdf last week'];
+    const samples = sampleList.map((label) => {
+      const on = label === q;
+      return { label, pressed: on ? 'true' : 'false', pick: () => this.setState({ query: label }),
+        bg: on ? accent : 'rgba(18,20,28,0.6)', color: on ? '#0E1120' : '#E4E7EE', border: on ? accent : 'rgba(255,255,255,0.14)' };
+    });
+
+    const places = [
+      ['Documents', P.file], ['Downloads', 'M12 4v11M7 10l5 5 5-5M5 20h14'], ['Pictures', P.image], ['Settings', P.gear]
+    ].map(([label, d]) => ({ label, d }));
+
+    return {
+      accent, query, samples, places,
+      onQuery: (e) => this.setState({ query: e.target.value }),
+      enableRates: () => this.setState({ ratesOn: true }),
+      hasAnswer: !!answer,
+      answer: answer ? { needsOnline: false, copyable: false, ...answer } : { kind: '', icon: '', value: '', detail: '', needsOnline: false, copyable: false },
+      results: shown, hasResults: shown.length > 0,
+      isEmpty: !q, noMatch: !!q && !answer && shown.length === 0 && !shownGames.length && !photos,
+      games: shownGames, hasGames: shownGames.length > 0, storeLinks: [{ label: 'Steam' }, { label: 'Epic' }, { label: 'Microsoft Store' }], storeOff: !steamStoreOn,
+      storeToggleLabel: steamStoreOn ? 'Store results on' : 'Store results off',
+      toggleStore: () => this.setState({ storeOn: !steamStoreOn }),
+      hasPhotos: !!photos, photos: photos || { title: '', how: '', items: [] }
+    };
+  }
+}
+</script>
+</body>
+</html>

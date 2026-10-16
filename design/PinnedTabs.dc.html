@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Porta pinned tabs</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="width: 1440px; height: 900px; position: relative; overflow: hidden; font-family: 'Segoe UI Variable Text', 'Segoe UI', 'Onest', system-ui, sans-serif; color: #F3F4F8; background: radial-gradient(1100px 700px at 12% 18%, #3B2A7A 0%, rgba(59,42,122,0) 62%), radial-gradient(900px 650px at 88% 22%, #A4502C 0%, rgba(164,80,44,0) 58%), radial-gradient(1100px 700px at 55% 105%, #1C4A86 0%, rgba(28,74,134,0) 62%), #0B0D1A">
+
+  <div style="position: absolute; left: 340px; bottom: 72px; width: 760px; height: 680px; display: flex; border-radius: 20px; background: rgba(18,20,28,0.78); border: 1px solid rgba(255,255,255,0.10); box-shadow: 0 30px 80px rgba(0,0,0,0.55); backdrop-filter: blur(40px) saturate(160%); -webkit-backdrop-filter: blur(40px) saturate(160%)">
+    <div style="width: 500px; box-sizing: border-box; padding: 24px; display: flex; flex-direction: column; gap: 14px">
+      <label style="display: flex; align-items: center; gap: 10px; height: 44px; padding: 0 14px; border-radius: 12px; background: rgba(255,255,255,0.07)">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#A7ADBC" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 11a7 7 0 1 0 14 0a7 7 0 1 0-14 0M20 20l-4-4"></path></svg>
+        <input type="search" aria-label="Search" placeholder="Search apps, files, settings and answers" style="flex-grow: 1; border: 0; outline: none; background: transparent; color: #F3F4F8; font: inherit; font-size: 14px; min-width: 0">
+      </label>
+
+      <!-- tabs = profiles -->
+      <div role="tablist" aria-label="Pinned tabs" style="display: flex; align-items: flex-end; gap: 2px; border-bottom: 1px solid rgba(255,255,255,0.08)">
+        <sc-for list="{{tabs}}" as="t" hint-placeholder-count="3">
+          <button type="button" role="tab" aria-selected="{{t.selected}}" onClick="{{t.pick}}" style="position: relative; height: 44px; padding: 0 14px; border: 0; background: transparent; color: {{t.color}}; font: inherit; font-size: 13.5px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{t.d}}"></path></svg>
+            {{t.name}}
+            <span style="position: absolute; left: 10px; right: 10px; bottom: -1px; height: 3px; border-radius: 3px; background: {{t.bar}}"></span>
+          </button>
+        </sc-for>
+        <button type="button" aria-label="Add a tab" style="width: 44px; height: 44px; border: 0; background: transparent; color: #A7ADBC; cursor: pointer; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></button>
+        <span style="flex-grow: 1"></span>
+        <a href="LetterJump.dc.html" style="height: 44px; display: flex; align-items: center; padding: 0 4px; font-size: 13px; color: #A7ADBC; text-decoration: none">All apps ›</a>
+      </div>
+
+      <sc-if value="{{auto}}" hint-placeholder-val="{{ true }}">
+        <span style="display: flex; align-items: center; gap: 8px; font-size: 12px; color: #A7ADBC">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0-18 0M12 7v5l3 2"></path></svg>
+          {{autoText}}
+        </span>
+      </sc-if>
+
+      <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px">
+        <sc-for list="{{pins}}" as="p" hint-placeholder-count="8">
+          <button type="button" style="display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 12px 4px 10px; border: 0; border-radius: 12px; background: transparent; color: #F3F4F8; font: inherit; cursor: pointer; min-height: 88px">
+            <span style="width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 600; color: #FFFFFF; background: {{p.tile}}; box-shadow: 0 6px 16px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.28)">{{p.initial}}</span>
+            <span style="font-size: 12.5px">{{p.name}}</span>
+          </button>
+        </sc-for>
+      </div>
+    </div>
+
+    <div style="width: 260px; box-sizing: border-box; padding: 28px 16px 16px; display: flex; flex-direction: column; align-items: center; gap: 10px; background: rgba(255,255,255,0.035); border-left: 1px solid rgba(255,255,255,0.08); border-radius: 0 20px 20px 0">
+      <span role="img" aria-label="Account picture" style="width: 64px; height: 64px; border-radius: 50%; background: radial-gradient(circle at 50% 38%, #D8B79C 0 17%, rgba(0,0,0,0) 18%), radial-gradient(ellipse at 50% 100%, #3E5A86 0 46%, rgba(0,0,0,0) 47%), linear-gradient(160deg, #8EA9C9, #4B6386); box-shadow: 0 0 0 3px rgba(18,20,28,0.9), 0 0 0 5px rgba(138,168,255,0.4)"></span>
+      <span style="font-size: 16px; font-weight: 600">[YOUR NAME]</span>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#8AA8FF","options":["#8AA8FF","#9DB4FF","#6F8CF0"]},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const accent = this.props.accent ?? '#8AA8FF';
+    const s = this.state || {};
+    const tab = s.tab ?? 0;
+    const G = {
+      amber: 'linear-gradient(145deg, #E0A23A, #A9661A)', blue: 'linear-gradient(145deg, #3F8CF0, #1C55B8)',
+      sky: 'linear-gradient(145deg, #4E9BE8, #2560A8)', green: 'linear-gradient(145deg, #4FAF7A, #26704A)',
+      violet: 'linear-gradient(145deg, #8E6CF0, #5133B8)', slate: 'linear-gradient(145deg, #454B5A, #1D2029)',
+      red: 'linear-gradient(145deg, #E5604F, #A8352A)', teal: 'linear-gradient(145deg, #2BA6C9, #14708A)',
+      orange: 'linear-gradient(145deg, #F07A3E, #B84716)', gold: 'linear-gradient(145deg, #C99A1F, #8A640C)'
+    };
+    const defs = [
+      ['Personal', 'M12 12a4 4 0 1 0 0-8a4 4 0 0 0 0 8zM4 21a8 8 0 0 1 16 0',
+        [['Chrome', 'blue'], ['Ocula', 'violet'], ['Spotify', 'green'], ['Capta', 'orange'], ['Photos', 'violet'], ['Notepad', 'gold'], ['File Explorer', 'amber'], ['Calendar', 'red']],
+        'Switches to Personal after 6 PM and at weekends'],
+      ['Work', 'M4 7h16v12H4zM9 7V5h6v2',
+        [['Outlook', 'teal'], ['Word', 'sky'], ['Excel', 'green'], ['Teams', 'violet'], ['VS Code', 'sky'], ['Terminal', 'slate'], ['Remote Desktop', 'blue'], ['Calculator', 'green']],
+        'Switches to Work at 8 AM on weekdays'],
+      ['Games', 'M6 9h12a4 4 0 0 1 0 8l-2-2H8l-2 2a4 4 0 0 1 0-8zM8 11v2M7 12h2M15 12h.01M17 12h.01',
+        [['Steam', 'slate'], ['Red Dead 2', 'red'], ['Diablo IV', 'red'], ['Fortnite', 'teal'], ['Forza 5', 'green'], ['Discord', 'violet'], ['Xbox', 'green'], ['Epic Games', 'slate']],
+        '']
+    ];
+    const tabs = defs.map(([name, d], i) => ({
+      name, d, selected: i === tab ? 'true' : 'false',
+      color: i === tab ? '#F3F4F8' : '#A7ADBC', bar: i === tab ? accent : 'transparent',
+      pick: () => this.setState({ tab: i })
+    }));
+    const cur = defs[tab];
+    return {
+      tabs, pins: cur[2].map(([name, c]) => ({ name, initial: name[0], tile: G[c] })),
+      auto: !!cur[3], autoText: cur[3]
+    };
+  }
+}
+</script>
+</body>
+</html>

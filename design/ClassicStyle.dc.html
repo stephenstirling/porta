@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Porta classic style</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="width: 1440px; height: 900px; position: relative; overflow: hidden; font-family: 'Segoe UI Variable Text', 'Segoe UI', 'Onest', system-ui, sans-serif; color: #F3F4F8; background: radial-gradient(1100px 700px at 12% 18%, #3B2A7A 0%, rgba(59,42,122,0) 62%), radial-gradient(900px 650px at 88% 22%, #A4502C 0%, rgba(164,80,44,0) 58%), radial-gradient(1100px 700px at 55% 105%, #1C4A86 0%, rgba(28,74,134,0) 62%), #0B0D1A">
+
+  <!-- classic: one column, opens from the left-aligned Start button -->
+  <div style="position: absolute; left: 12px; bottom: 68px; width: 420px; height: 640px; display: flex; flex-direction: column; border-radius: 16px; background: rgba(18,20,28,0.82); border: 1px solid rgba(255,255,255,0.10); box-shadow: 0 30px 80px rgba(0,0,0,0.55); backdrop-filter: blur(40px) saturate(160%); -webkit-backdrop-filter: blur(40px) saturate(160%); overflow: hidden">
+
+    <div style="display: flex; align-items: center; gap: 12px; padding: 18px 18px 12px">
+      <span role="img" aria-label="Account picture" style="width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0; background: radial-gradient(circle at 50% 38%, #D8B79C 0 17%, rgba(0,0,0,0) 18%), radial-gradient(ellipse at 50% 100%, #3E5A86 0 46%, rgba(0,0,0,0) 47%), linear-gradient(160deg, #8EA9C9, #4B6386)"></span>
+      <span style="font-size: 15px; font-weight: 600; flex-grow: 1">[YOUR NAME]</span>
+      <button type="button" aria-label="Settings" style="width: 40px; height: 40px; border: 0; border-radius: 10px; background: transparent; color: #C9CDD8; cursor: pointer; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 12a3 3 0 1 0 6 0a3 3 0 1 0-6 0M12 2v3M12 19v3M4.9 4.9 7 7M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1 7 17M17 7l2.1-2.1"></path></svg></button>
+    </div>
+
+    <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 1px; padding: 0 10px; overflow: hidden">
+      <sc-if value="{{showPinned}}" hint-placeholder-val="{{ true }}">
+        <span style="font-size: 12px; font-weight: 600; letter-spacing: 0.04em; color: #A7ADBC; padding: 6px 10px">PINNED</span>
+        <sc-for list="{{pinned}}" as="p" hint-placeholder-count="7">
+          <button type="button" style="display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 0 10px; border: 0; border-radius: 10px; background: transparent; color: #F3F4F8; font: inherit; font-size: 14px; cursor: pointer; text-align: left">
+            <span style="width: 30px; height: 30px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: #FFFFFF; background: {{p.tile}}">{{p.initial}}</span>
+            <span style="flex-grow: 1">{{p.name}}</span>
+            <sc-if value="{{p.hasJump}}" hint-placeholder-val="{{ true }}">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8C93A3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-label="Has recent files"><path d="m9 6 6 6-6 6"></path></svg>
+            </sc-if>
+          </button>
+        </sc-for>
+        <span style="height: 1px; background: rgba(255,255,255,0.08); margin: 6px 10px"></span>
+        <button type="button" onClick="{{showAll}}" style="display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 0 10px; border: 0; border-radius: 10px; background: transparent; color: #F3F4F8; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; text-align: left">
+          <span style="width: 30px; height: 30px; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z"></path></svg></span>
+          <span style="flex-grow: 1">All apps</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8C93A3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"></path></svg>
+        </button>
+      </sc-if>
+
+      <sc-if value="{{showAllApps}}" hint-placeholder-val="{{ false }}">
+        <button type="button" onClick="{{back}}" style="display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 10px; border: 0; border-radius: 10px; background: transparent; color: #F3F4F8; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; text-align: left">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 6-6 6 6 6"></path></svg>
+          Back
+        </button>
+        <sc-for list="{{allApps}}" as="a" hint-placeholder-count="9">
+          <sc-if value="{{a.isHeader}}" hint-placeholder-val="{{ false }}">
+            <span style="font-size: 12px; font-weight: 700; color: {{accent}}; padding: 8px 10px 2px">{{a.name}}</span>
+          </sc-if>
+          <sc-if value="{{a.isApp}}" hint-placeholder-val="{{ true }}">
+            <button type="button" style="display: flex; align-items: center; gap: 12px; min-height: 40px; padding: 0 10px; border: 0; border-radius: 10px; background: transparent; color: #F3F4F8; font: inherit; font-size: 13.5px; cursor: pointer; text-align: left">
+              <span style="width: 26px; height: 26px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: #FFFFFF; background: {{a.tile}}">{{a.initial}}</span>
+              {{a.name}}
+            </button>
+          </sc-if>
+        </sc-for>
+      </sc-if>
+    </div>
+
+    <!-- search at the bottom, as in the classic menu -->
+    <div style="display: flex; align-items: center; gap: 8px; padding: 12px 14px; border-top: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.03)">
+      <label style="flex-grow: 1; display: flex; align-items: center; gap: 10px; height: 40px; padding: 0 12px; border-radius: 10px; background: rgba(255,255,255,0.07)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#A7ADBC" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 11a7 7 0 1 0 14 0a7 7 0 1 0-14 0M20 20l-4-4"></path></svg>
+        <input type="search" aria-label="Search" placeholder="Search" style="flex-grow: 1; border: 0; outline: none; background: transparent; color: #F3F4F8; font: inherit; font-size: 13.5px; min-width: 0">
+      </label>
+      <sc-for list="{{places}}" as="p" hint-placeholder-count="3">
+        <button type="button" aria-label="{{p.label}}" title="{{p.label}}" style="width: 40px; height: 40px; border: 0; border-radius: 10px; background: transparent; color: #C9CDD8; cursor: pointer; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{p.d}}"></path></svg></button>
+      </sc-for>
+    </div>
+  </div>
+
+  <!-- left-aligned taskbar -->
+  <div style="position: absolute; left: 0; right: 0; bottom: 0; height: 56px; display: flex; align-items: center; gap: 6px; padding: 0 12px; background: rgba(14,16,24,0.72); border-top: 1px solid rgba(255,255,255,0.08)">
+    <span style="width: 44px; height: 44px; border-radius: 10px; background: rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: center">
+      <svg width="26" height="26" viewBox="0 0 256 256" aria-label="Porta"><path d="M40 128a88 88 0 0 1 176 0" stroke="#8AA8FF" stroke-width="34" fill="none" stroke-linecap="round"></path><path d="M216 128a88 88 0 0 1-176 0" stroke="#5F7FE8" stroke-width="34" fill="none" stroke-linecap="round"></path><path d="M98 112a30 30 0 1 0 60 0a30 30 0 1 0-60 0M112 120l-13 64h58l-13-64z" fill="#3A4D70"></path></svg>
+    </span>
+    <span style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center"><span style="width: 26px; height: 26px; border-radius: 8px; background: linear-gradient(145deg, #E0A23A, #A9661A)"></span></span>
+    <span style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center"><span style="width: 26px; height: 26px; border-radius: 8px; background: linear-gradient(145deg, #3F8CF0, #1C55B8)"></span></span>
+  </div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#8AA8FF","options":["#8AA8FF","#9DB4FF","#6F8CF0"]},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const accent = this.props.accent ?? '#8AA8FF';
+    const s = this.state || {};
+    const view = s.view ?? 'pinned';
+    const G = ['linear-gradient(145deg, #3F8CF0, #1C55B8)', 'linear-gradient(145deg, #8E6CF0, #5133B8)', 'linear-gradient(145deg, #4FAF7A, #26704A)',
+      'linear-gradient(145deg, #F07A3E, #B84716)', 'linear-gradient(145deg, #E0A23A, #A9661A)', 'linear-gradient(145deg, #4E9BE8, #2560A8)',
+      'linear-gradient(145deg, #454B5A, #1D2029)', 'linear-gradient(145deg, #E5604F, #A8352A)'];
+    const pinnedNames = [['File Explorer', true], ['Google Chrome', true], ['Ocula', true], ['Capta', true], ['Word', true], ['Excel', true], ['Terminal', false]];
+    const pinned = pinnedNames.map(([name, hasJump], i) => ({ name, hasJump, initial: name[0], tile: G[i % G.length] }));
+    const appNames = ['Calculator', 'Calendar', 'Camera', 'Capta', 'Discord', 'Excel', 'File Explorer', 'Google Chrome'];
+    const allApps = [];
+    let last = '';
+    appNames.forEach((name, i) => {
+      if (name[0] !== last) { last = name[0]; allApps.push({ name: last, isHeader: true, isApp: false, initial: '', tile: '' }); }
+      allApps.push({ name, isHeader: false, isApp: true, initial: name[0], tile: G[i % G.length] });
+    });
+    const places = [
+      ['Documents', 'M6 3h8l4 4v14H6zM14 3v4h4'],
+      ['Pictures', 'M3 4h18v16H3zM21 16l-5-5-9 9'],
+      ['Power', 'M12 3v8M6.3 7.3a8 8 0 1 0 11.4 0']
+    ].map(([label, d]) => ({ label, d }));
+    return {
+      accent, pinned, allApps, places,
+      showPinned: view === 'pinned', showAllApps: view === 'all',
+      showAll: () => this.setState({ view: 'all' }), back: () => this.setState({ view: 'pinned' })
+    };
+  }
+}
+</script>
+</body>
+</html>

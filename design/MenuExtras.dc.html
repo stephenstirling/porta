@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Porta jump lists and toggles</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="width: 1440px; height: 900px; position: relative; overflow: hidden; font-family: 'Segoe UI Variable Text', 'Segoe UI', 'Onest', system-ui, sans-serif; color: #F3F4F8; background: radial-gradient(1100px 700px at 12% 18%, #3B2A7A 0%, rgba(59,42,122,0) 62%), radial-gradient(900px 650px at 88% 22%, #A4502C 0%, rgba(164,80,44,0) 58%), radial-gradient(1100px 700px at 55% 105%, #1C4A86 0%, rgba(28,74,134,0) 62%), #0B0D1A">
+
+  <div style="position: absolute; left: 340px; bottom: 72px; width: 760px; height: 680px; display: flex; border-radius: 20px; background: rgba(18,20,28,0.78); border: 1px solid rgba(255,255,255,0.10); box-shadow: 0 30px 80px rgba(0,0,0,0.55); backdrop-filter: blur(40px) saturate(160%); -webkit-backdrop-filter: blur(40px) saturate(160%)">
+
+    <!-- left -->
+    <div style="width: 500px; box-sizing: border-box; padding: 24px; display: flex; flex-direction: column; gap: 16px; position: relative">
+      <label style="display: flex; align-items: center; gap: 10px; height: 44px; padding: 0 14px; border-radius: 12px; background: rgba(255,255,255,0.07)">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#A7ADBC" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 11a7 7 0 1 0 14 0a7 7 0 1 0-14 0M20 20l-4-4"></path></svg>
+        <input type="search" aria-label="Search" placeholder="Search apps, files, settings and answers" style="flex-grow: 1; border: 0; outline: none; background: transparent; color: #F3F4F8; font: inherit; font-size: 14px; min-width: 0">
+      </label>
+
+      <div style="display: flex; gap: 4px; padding: 4px; border-radius: 12px; background: rgba(255,255,255,0.06); align-self: flex-start">
+        <button type="button" style="border: 0; height: 32px; padding: 0 16px; border-radius: 9px; font: inherit; font-size: 13px; font-weight: 600; background: {{accent}}; color: #0E1120; cursor: pointer">Pinned</button>
+        <a href="LetterJump.dc.html" style="height: 32px; padding: 0 16px; border-radius: 9px; font-size: 13px; font-weight: 600; color: #A7ADBC; display: flex; align-items: center; text-decoration: none">All apps</a>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px">
+        <sc-for list="{{pins}}" as="p" hint-placeholder-count="12">
+          <button type="button" onClick="{{p.pick}}" aria-label="{{p.name}}, right-click menu" aria-pressed="{{p.pressed}}" style="display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 12px 4px 10px; border: 0; border-radius: 12px; background: {{p.bg}}; color: #F3F4F8; font: inherit; cursor: pointer; min-height: 88px; position: relative">
+            <span style="width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 600; color: #FFFFFF; background: {{p.tile}}; box-shadow: 0 6px 16px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.28)">{{p.initial}}</span>
+            <span style="font-size: 12.5px">{{p.name}}</span>
+            <sc-if value="{{p.isNew}}" hint-placeholder-val="{{ false }}">
+              <span style="position: absolute; top: 6px; right: 14px; font-size: 10px; font-weight: 700; letter-spacing: 0.04em; padding: 2px 6px; border-radius: 999px; background: {{accent}}; color: #0E1120">NEW</span>
+            </sc-if>
+          </button>
+        </sc-for>
+      </div>
+
+      <!-- right-click menu with jump list -->
+      <div role="menu" aria-label="{{sel.name}} options" style="position: absolute; left: {{menuLeft}}; top: {{menuTop}}; width: 286px; padding: 6px; border-radius: 14px; background: rgba(30,33,44,0.98); border: 1px solid rgba(255,255,255,0.12); box-shadow: 0 20px 50px rgba(0,0,0,0.55); display: flex; flex-direction: column; gap: 1px; z-index: 5">
+        <span style="font-size: 11.5px; font-weight: 600; letter-spacing: 0.04em; color: #A7ADBC; padding: 8px 10px 4px">RECENT IN {{sel.upper}}</span>
+        <sc-for list="{{sel.recent}}" as="r" hint-placeholder-count="3">
+          <button type="button" role="menuitem" style="display: flex; align-items: center; gap: 10px; min-height: 40px; padding: 0 10px; border: 0; border-radius: 8px; background: transparent; color: #F3F4F8; font: inherit; font-size: 13px; cursor: pointer; text-align: left">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#A7ADBC" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h8l4 4v14H6zM14 3v4h4"></path></svg>
+            <span style="flex-grow: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{r.name}}</span>
+            <span style="font-size: 11.5px; color: #8C93A3">{{r.when}}</span>
+          </button>
+        </sc-for>
+        <span style="height: 1px; background: rgba(255,255,255,0.08); margin: 4px 6px"></span>
+        <sc-for list="{{actions}}" as="a" hint-placeholder-count="5">
+          <button type="button" role="menuitem" style="display: flex; align-items: center; gap: 10px; min-height: 40px; padding: 0 10px; border: 0; border-radius: 8px; background: transparent; color: {{a.color}}; font: inherit; font-size: 13px; cursor: pointer; text-align: left">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{a.d}}"></path></svg>
+            {{a.label}}
+          </button>
+        </sc-for>
+      </div>
+    </div>
+
+    <!-- right rail with quick toggles -->
+    <div style="width: 260px; box-sizing: border-box; padding: 28px 16px 16px; display: flex; flex-direction: column; gap: 4px; background: rgba(255,255,255,0.035); border-left: 1px solid rgba(255,255,255,0.08); border-radius: 0 20px 20px 0">
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 10px; padding-bottom: 14px">
+        <span role="img" aria-label="Account picture" style="width: 64px; height: 64px; border-radius: 50%; overflow: hidden; background: radial-gradient(circle at 50% 38%, #D8B79C 0 17%, rgba(0,0,0,0) 18%), radial-gradient(ellipse at 50% 100%, #3E5A86 0 46%, rgba(0,0,0,0) 47%), linear-gradient(160deg, #8EA9C9, #4B6386); box-shadow: 0 0 0 3px rgba(18,20,28,0.9), 0 0 0 5px rgba(138,168,255,0.4)"></span>
+        <span style="font-size: 16px; font-weight: 600">[YOUR NAME]</span>
+      </div>
+      <sc-for list="{{places}}" as="p" hint-placeholder-count="4">
+        <button type="button" style="display: flex; align-items: center; gap: 12px; height: 40px; padding: 0 12px; border: 0; border-radius: 10px; background: transparent; color: #F3F4F8; font: inherit; font-size: 13.5px; cursor: pointer; text-align: left"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{p.d}}"></path></svg>{{p.label}}</button>
+      </sc-for>
+      <div style="flex-grow: 1"></div>
+
+      <span style="font-size: 12px; font-weight: 600; letter-spacing: 0.04em; color: #A7ADBC; padding: 0 4px 6px">QUICK TOGGLES</span>
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+        <sc-for list="{{toggles}}" as="t" hint-placeholder-count="4">
+          <button type="button" onClick="{{t.flip}}" aria-pressed="{{t.pressed}}" style="display: flex; flex-direction: column; align-items: flex-start; gap: 8px; height: 72px; padding: 10px 12px; box-sizing: border-box; border-radius: 12px; border: 1px solid {{t.border}}; background: {{t.bg}}; color: {{t.color}}; font: inherit; cursor: pointer; text-align: left">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{t.d}}"></path></svg>
+            <span style="display: flex; flex-direction: column; gap: 1px">
+              <span style="font-size: 12.5px; font-weight: 600">{{t.label}}</span>
+              <span style="font-size: 11px; opacity: 0.8">{{t.state}}</span>
+            </span>
+          </button>
+        </sc-for>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 6px; padding-top: 10px">
+        <button type="button" aria-label="Lock" style="width: 44px; height: 44px; border: 0; border-radius: 12px; background: transparent; color: #F3F4F8; cursor: pointer; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 11h14v10H5zM8 11V7a4 4 0 0 1 8 0v4"></path></svg></button>
+        <button type="button" aria-label="Power options" style="width: 44px; height: 44px; border: 0; border-radius: 12px; background: transparent; color: #F3F4F8; cursor: pointer; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v8M6.3 7.3a8 8 0 1 0 11.4 0"></path></svg></button>
+      </div>
+    </div>
+  </div>
+
+  <div style="position: absolute; left: 0; right: 0; bottom: 0; height: 56px; display: flex; align-items: center; justify-content: center; gap: 6px; background: rgba(14,16,24,0.72); border-top: 1px solid rgba(255,255,255,0.08)">
+    <span style="width: 44px; height: 44px; border-radius: 10px; background: rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: center">
+      <svg width="26" height="26" viewBox="0 0 256 256" aria-label="Porta"><path d="M40 128a88 88 0 0 1 176 0" stroke="#8AA8FF" stroke-width="34" fill="none" stroke-linecap="round"></path><path d="M216 128a88 88 0 0 1-176 0" stroke="#5F7FE8" stroke-width="34" fill="none" stroke-linecap="round"></path><path d="M98 112a30 30 0 1 0 60 0a30 30 0 1 0-60 0M112 120l-13 64h58l-13-64z" fill="#3A4D70"></path></svg>
+    </span>
+    <span style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center"><span style="width: 26px; height: 26px; border-radius: 8px; background: linear-gradient(145deg, #E0A23A, #A9661A)"></span></span>
+    <span style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center"><span style="width: 26px; height: 26px; border-radius: 8px; background: linear-gradient(145deg, #3F8CF0, #1C55B8)"></span></span>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#8AA8FF","options":["#8AA8FF","#9DB4FF","#6F8CF0"]},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const accent = this.props.accent ?? '#8AA8FF';
+    const s = this.state || {};
+    const picked = s.picked ?? 1;
+    const G = {
+      amber: 'linear-gradient(145deg, #E0A23A, #A9661A)', blue: 'linear-gradient(145deg, #3F8CF0, #1C55B8)',
+      sky: 'linear-gradient(145deg, #4E9BE8, #2560A8)', green: 'linear-gradient(145deg, #4FAF7A, #26704A)',
+      violet: 'linear-gradient(145deg, #8E6CF0, #5133B8)', gold: 'linear-gradient(145deg, #C99A1F, #8A640C)',
+      slate: 'linear-gradient(145deg, #454B5A, #1D2029)', red: 'linear-gradient(145deg, #E5604F, #A8352A)',
+      teal: 'linear-gradient(145deg, #2BA6C9, #14708A)', grey: 'linear-gradient(145deg, #6B7385, #3E4555)',
+      orange: 'linear-gradient(145deg, #F07A3E, #B84716)'
+    };
+    const pinDefs = [
+      ['File Explorer', 'amber', ['Documents', 'Downloads', 'Pictures']],
+      ['Word', 'sky', ['Quarterly report.docx', 'Notes from Monday.docx', 'Cover letter.docx']],
+      ['Excel', 'green', ['budget-2026.xlsx', 'Mileage log.xlsx', 'Garden plan.xlsx']],
+      ['Chrome', 'blue', ['New window', 'New incognito window', 'herunposed.com']],
+      ['Ocula', 'violet', ['Pictures', 'Lisbon trip', 'Pictures\\Capta']],
+      ['Capta', 'orange', ['Capta 2026-10-02 16.42.07.png', 'Capta 2026-10-01 09.12.40.png', 'Capta 2026-09-30 14.05.11.png'], true],
+      ['Notepad', 'gold', ['todo.txt', 'hosts', 'ideas.md']],
+      ['Terminal', 'slate', ['PowerShell', 'Command Prompt', 'Ubuntu']],
+      ['Outlook', 'teal', ['New email', 'Calendar', 'Contacts']],
+      ['Calendar', 'red', ['New event', 'Today', 'This week']],
+      ['Settings', 'grey', ['Display', 'Bluetooth & devices', 'Windows Update']],
+      ['Calculator', 'green', ['Standard', 'Scientific', 'Converter']]
+    ];
+    const whens = ['2h ago', 'Yesterday', 'Mon'];
+    const pins = pinDefs.map(([name, c, recent, isNew], i) => ({
+      name, initial: name[0], tile: G[c], isNew: !!isNew,
+      pressed: i === picked ? 'true' : 'false',
+      bg: i === picked ? 'rgba(255,255,255,0.08)' : 'transparent',
+      pick: () => this.setState({ picked: i })
+    }));
+    const sp = pinDefs[picked];
+    const col = picked % 4, row = Math.floor(picked / 4);
+    const left = Math.min(24 + col * 113 + 70, 500 - 286 - 8);
+    const top = Math.min(160 + row * 92 + 60, 250);
+
+    const actions = [
+      ['Open', 'M7 17 17 7M8 7h9v9', '#F3F4F8'],
+      ['Run as administrator', 'M12 3 5 6v6c0 4 3 7 7 9 4-2 7-5 7-9V6z', '#F3F4F8'],
+      ['Open file location', 'M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z', '#F3F4F8'],
+      ['Unpin from Start', 'M9 4h6l-1 6 3 3H7l3-3zM12 13v8M4 4l16 16', '#F3F4F8'],
+      ['App settings', 'M9 12a3 3 0 1 0 6 0a3 3 0 1 0-6 0M12 2v3M12 19v3M4.9 4.9 7 7M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1 7 17M17 7l2.1-2.1', '#F3F4F8'],
+      ['Uninstall', 'M4 7h16M9 7V4h6v3M6 7l1 14h10l1-14', '#FF9A8F']
+    ].map(([label, d, color]) => ({ label, d, color }));
+
+    const on = Object.assign({ wifi: true, bt: true, dark: true, focus: false }, s.on || {});
+    const toggles = [
+      ['wifi', 'Wi-Fi', 'Home-5G', 'Off', 'M2 9a15 15 0 0 1 20 0M5 12.5a10 10 0 0 1 14 0M8.5 16a5 5 0 0 1 7 0M12 19.5h.01'],
+      ['bt', 'Bluetooth', '2 connected', 'Off', 'M7 7l10 10-5 4V3l5 4L7 17'],
+      ['dark', 'Dark mode', 'On', 'Off', 'M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z'],
+      ['focus', 'Focus', '30 min', 'Off', 'M3 12a9 9 0 1 0 18 0a9 9 0 1 0-18 0M12 7v5l3 2']
+    ].map(([k, label, onText, offText, d]) => ({
+      label, d, state: on[k] ? onText : offText,
+      pressed: on[k] ? 'true' : 'false',
+      bg: on[k] ? accent : 'rgba(255,255,255,0.05)', color: on[k] ? '#0E1120' : '#F3F4F8',
+      border: on[k] ? accent : 'rgba(255,255,255,0.10)',
+      flip: () => this.setState({ on: Object.assign({}, on, { [k]: !on[k] }) })
+    }));
+
+    const places = [
+      ['Documents', 'M6 3h8l4 4v14H6zM14 3v4h4'], ['Downloads', 'M12 4v11M7 10l5 5 5-5M5 20h14'],
+      ['Pictures', 'M3 4h18v16H3zM21 16l-5-5-9 9'], ['Settings', 'M9 12a3 3 0 1 0 6 0a3 3 0 1 0-6 0M12 2v3M12 19v3M2 12h3M19 12h3']
+    ].map(([label, d]) => ({ label, d }));
+
+    return {
+      accent, pins, actions, toggles, places,
+      sel: { name: sp[0], upper: sp[0].toUpperCase(), recent: sp[2].map((name, i) => ({ name, when: whens[i] })) },
+      menuLeft: left + 'px', menuTop: top + 'px'
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Porta app icon</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="width: 1440px; height: 900px; box-sizing: border-box; padding: 48px; background: #E9EAEC; font-family: 'Segoe UI Variable Text', 'Segoe UI', 'Onest', system-ui, sans-serif; color: #1B1E23; display: flex; flex-direction: column; gap: 28px">
+
+  <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px">
+    <sc-for list="{{options}}" as="o" hint-placeholder-count="3">
+      <button type="button" onClick="{{o.pick}}" aria-pressed="{{o.pressed}}" style="display: flex; flex-direction: column; padding: 0; border: 0; border-radius: 18px; overflow: hidden; background: #FFFFFF; box-shadow: 0 0 0 3px {{o.ring}}; color: inherit; font: inherit; cursor: pointer; text-align: left">
+        <span style="display: flex; height: 260px; width: 100%">
+          <span style="flex: 1; background: #F7F7F8; display: flex; align-items: center; justify-content: center">
+            <svg width="168" height="168" viewBox="0 0 256 256" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <sc-for list="{{o.light}}" as="p" hint-placeholder-count="4"><path d="{{p.d}}" fill="{{p.fill}}" stroke="{{p.stroke}}" stroke-width="{{p.sw}}"></path></sc-for>
+            </svg>
+          </span>
+          <span style="flex: 1; background: #1B1E23; display: flex; align-items: center; justify-content: center">
+            <svg width="168" height="168" viewBox="0 0 256 256" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <sc-for list="{{o.dark}}" as="p" hint-placeholder-count="4"><path d="{{p.d}}" fill="{{p.fill}}" stroke="{{p.stroke}}" stroke-width="{{p.sw}}"></path></sc-for>
+            </svg>
+          </span>
+        </span>
+        <span style="display: flex; flex-direction: column; gap: 4px; padding: 16px 20px">
+          <span style="display: flex; align-items: center; gap: 8px; font-size: 16px; font-weight: 700">{{o.name}}
+            <sc-if value="{{o.chosen}}" hint-placeholder-val="{{ false }}"><span style="font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 10px; background: {{accent}}; color: #10162A">Chosen</span></sc-if>
+          </span>
+          <span style="font-size: 13px; color: #4A505A">{{o.note}}</span>
+        </span>
+      </button>
+    </sc-for>
+  </div>
+
+  <div style="display: flex; gap: 24px; flex-grow: 1">
+    <div style="flex: 1.1; background: #FFFFFF; border-radius: 18px; padding: 22px 24px; display: flex; flex-direction: column; gap: 16px">
+      <span style="font-size: 15px; font-weight: 700">{{chosen.name}} at every size</span>
+      <div style="display: flex; align-items: flex-end; gap: 26px">
+        <sc-for list="{{ramp}}" as="r" hint-placeholder-count="5">
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 8px">
+            <svg width="{{r.px}}" height="{{r.px}}" viewBox="0 0 256 256" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <sc-for list="{{r.parts}}" as="p" hint-placeholder-count="4"><path d="{{p.d}}" fill="{{p.fill}}" stroke="{{p.stroke}}" stroke-width="{{p.sw}}"></path></sc-for>
+            </svg>
+            <span style="font-size: 12px; color: #4A505A">{{r.px}}</span>
+          </div>
+        </sc-for>
+      </div>
+      <span style="font-size: 12.5px; color: #4A505A; line-height: 1.5">Lines thicken as the icon shrinks and the highlight drops below 32 px, the same rules Capta's Aperture follows.</span>
+    </div>
+
+    <div style="flex: 1; background: #FFFFFF; border-radius: 18px; padding: 22px 24px; display: flex; flex-direction: column; gap: 14px">
+      <span style="font-size: 15px; font-weight: 700">Beside Capta on the taskbar</span>
+      <div style="height: 52px; border-radius: 10px; background: #1C1F25; display: flex; align-items: center; padding: 0 14px; gap: 10px">
+        <span style="flex-grow: 1"></span>
+        <span style="width: 40px; height: 40px; border-radius: 6px; background: rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: center">
+          <svg width="24" height="24" viewBox="0 0 256 256" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-label="Porta"><sc-for list="{{tbDark}}" as="p" hint-placeholder-count="4"><path d="{{p.d}}" fill="{{p.fill}}" stroke="{{p.stroke}}" stroke-width="{{p.sw}}"></path></sc-for></svg>
+        </span>
+        <span style="width: 40px; height: 40px; border-radius: 6px; display: flex; align-items: center; justify-content: center">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke-linecap="round" aria-label="Capta"><path d="M3 9V5.5A2.5 2.5 0 0 1 5.5 3H9M15 3h3.5A2.5 2.5 0 0 1 21 5.5V9" stroke="#FFB547" stroke-width="2.6"></path><path d="M3 15v3.5A2.5 2.5 0 0 0 5.5 21H9M21 15v3.5a2.5 2.5 0 0 1-2.5 2.5H15" stroke="#F0962E" stroke-width="2.6"></path><circle cx="12" cy="12" r="4.2" fill="#3A4D70"></circle><circle cx="12" cy="12" r="1.8" fill="#FFB547"></circle></svg>
+        </span>
+        <span style="width: 40px; height: 40px; border-radius: 6px; display: flex; align-items: center; justify-content: center"><span style="width: 24px; height: 24px; border-radius: 5px; border: 1.5px dashed #6B7280; box-sizing: border-box"></span></span>
+        <span style="flex-grow: 1"></span>
+        <span style="display: flex; align-items: center; gap: 12px; color: #FFFFFF">
+          <svg width="16" height="16" viewBox="0 0 256 256" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><sc-for list="{{trayWhite}}" as="p" hint-placeholder-count="3"><path d="{{p.d}}" fill="{{p.fill}}" stroke="{{p.stroke}}" stroke-width="{{p.sw}}"></path></sc-for></svg>
+          <span style="font-size: 12px">14:32</span>
+        </span>
+      </div>
+      <div style="height: 52px; border-radius: 10px; background: #EEF0F3; border: 1px solid #D9DCE1; display: flex; align-items: center; padding: 0 14px; gap: 10px">
+        <span style="flex-grow: 1"></span>
+        <span style="width: 40px; height: 40px; border-radius: 6px; background: rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: center">
+          <svg width="24" height="24" viewBox="0 0 256 256" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-label="Porta"><sc-for list="{{tbLight}}" as="p" hint-placeholder-count="4"><path d="{{p.d}}" fill="{{p.fill}}" stroke="{{p.stroke}}" stroke-width="{{p.sw}}"></path></sc-for></svg>
+        </span>
+        <span style="width: 40px; height: 40px; border-radius: 6px; display: flex; align-items: center; justify-content: center">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke-linecap="round" aria-label="Capta"><path d="M3 9V5.5A2.5 2.5 0 0 1 5.5 3H9M15 3h3.5A2.5 2.5 0 0 1 21 5.5V9" stroke="#FFB547" stroke-width="2.6"></path><path d="M3 15v3.5A2.5 2.5 0 0 0 5.5 21H9M21 15v3.5a2.5 2.5 0 0 1-2.5 2.5H15" stroke="#F0962E" stroke-width="2.6"></path><circle cx="12" cy="12" r="4.2" fill="#22304A"></circle><circle cx="12" cy="12" r="1.8" fill="#FFB547"></circle></svg>
+        </span>
+        <span style="width: 40px; height: 40px; border-radius: 6px; display: flex; align-items: center; justify-content: center"><span style="width: 24px; height: 24px; border-radius: 5px; border: 1.5px dashed #8A919C; box-sizing: border-box"></span></span>
+        <span style="flex-grow: 1"></span>
+        <span style="display: flex; align-items: center; gap: 12px; color: #1B1E23">
+          <svg width="16" height="16" viewBox="0 0 256 256" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><sc-for list="{{trayBlack}}" as="p" hint-placeholder-count="3"><path d="{{p.d}}" fill="{{p.fill}}" stroke="{{p.stroke}}" stroke-width="{{p.sw}}"></path></sc-for></svg>
+          <span style="font-size: 12px">14:32</span>
+        </span>
+      </div>
+      <span style="font-size: 12.5px; color: #4A505A; line-height: 1.5">Porta, Capta, and a dashed slot for [OCULA ICON]. The tray icon is single-colour and follows the Windows theme.</span>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#8AA8FF","options":["#8AA8FF","#7C9BFF","#9DB4FF","#6F8CF0"]},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const accent = this.props.accent ?? '#8AA8FF';
+    const deep = '#5F7FE8';
+    const s = this.state || {};
+    const picked = s.picked ?? 2;
+    const circle = (cx, cy, r) => `M${cx - r} ${cy}a${r} ${r} 0 1 0 ${2 * r} 0a${r} ${r} 0 1 0 ${-2 * r} 0`;
+
+    // Each part: d, role (top | bottom | navy | accentFill | highlight), sw for strokes
+    const defs = [
+      {
+        name: 'A · Doorway',
+        note: 'An open door with light coming through. Closest to the name.',
+        parts: [
+          { d: 'M64 128V64a24 24 0 0 1 24-24h80a24 24 0 0 1 24 24v64', role: 'top', sw: 24 },
+          { d: 'M64 128v84M192 128v84M36 216h184', role: 'bottom', sw: 24 },
+          { d: 'M92 66l60-14v172l-60-12z', role: 'navy' },
+          { d: circle(138, 138, 10), role: 'accentFill' },
+          { d: circle(108, 84, 6), role: 'highlight' }
+        ]
+      },
+      {
+        name: 'B · Archway',
+        note: 'A rounded portal around a solid opening. Calm and simple at small sizes.',
+        parts: [
+          { d: 'M52 128V116a76 76 0 0 1 152 0v12', role: 'top', sw: 24 },
+          { d: 'M52 128v88M204 128v88', role: 'bottom', sw: 24 },
+          { d: 'M96 216V124a32 32 0 0 1 64 0v92z', role: 'navy' },
+          { d: circle(128, 176, 13), role: 'accentFill' },
+          { d: circle(116, 128, 6), role: 'highlight' }
+        ]
+      },
+      {
+        name: 'C · Keyhole',
+        note: 'A ring around a keyhole: the way in. Most symbol-like.',
+        parts: [
+          { d: 'M40 128a88 88 0 0 1 176 0', role: 'top', sw: 24 },
+          { d: 'M216 128a88 88 0 0 1-176 0', role: 'bottom', sw: 24 },
+          { d: circle(128, 112, 30) + 'M112 120l-13 64h58l-13-64z', role: 'navy' },
+          { d: circle(128, 112, 12), role: 'accentFill' },
+          { d: circle(118, 100, 5), role: 'highlight' }
+        ]
+      }
+    ];
+
+    const paint = (parts, bg, scale, mono) => parts
+      .filter((p) => !(p.role === 'highlight' && (scale >= 1.25 || mono)))
+      .map((p) => {
+        const navy = bg === 'dark' ? '#3A4D70' : '#22304A';
+        const colorOf = {
+          top: accent, bottom: deep, navy, accentFill: accent, highlight: 'rgba(255,255,255,0.85)'
+        }[p.role];
+        const c = mono ? mono : colorOf;
+        const isStroke = p.role === 'top' || p.role === 'bottom';
+        return {
+          d: p.d,
+          stroke: isStroke ? c : 'none',
+          fill: isStroke ? 'none' : (mono && p.role === 'accentFill' ? (bg === 'dark' ? '#1C1F25' : '#EEF0F3') : c),
+          sw: isStroke ? Math.round(p.sw * scale) : 0
+        };
+      });
+
+    const options = defs.map((d, i) => ({
+      name: d.name, note: d.note,
+      light: paint(d.parts, 'light', 1),
+      dark: paint(d.parts, 'dark', 1),
+      chosen: i === picked,
+      pressed: i === picked ? 'true' : 'false',
+      ring: i === picked ? accent : 'transparent',
+      pick: () => this.setState({ picked: i })
+    }));
+    const chosen = defs[picked];
+    const ramp = [[96, 1], [48, 1.1], [32, 1.25], [24, 1.4], [16, 1.6]].map(([px, sc]) => ({ px, parts: paint(chosen.parts, 'light', sc) }));
+
+    return {
+      accent, options, chosen, ramp,
+      tbDark: paint(chosen.parts, 'dark', 1.4),
+      tbLight: paint(chosen.parts, 'light', 1.4),
+      trayWhite: paint(chosen.parts, 'dark', 1.6, '#FFFFFF'),
+      trayBlack: paint(chosen.parts, 'light', 1.6, '#1B1E23')
+    };
+  }
+}
+</script>
+</body>
+</html>
