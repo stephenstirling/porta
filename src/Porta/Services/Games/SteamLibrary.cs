@@ -1,4 +1,6 @@
+using System.Collections.Concurrent;
 using System.Globalization;
+using System.Text.Json;
 using System.Net.Http.Json;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
@@ -114,8 +116,13 @@ public static partial class SteamLibrary
         var cc = RegionInfo.CurrentRegion.TwoLetterISORegionName;
         var url = $"https://store.steampowered.com/api/storesearch/?term={Uri.EscapeDataString(term)}&l=english&cc={cc}";
         var result = await Http.GetFromJsonAsync<StoreSearch>(url, ct).ConfigureAwait(false);
-        return (result?.Items ?? [])
+        var candidates = (result?.Items ?? [])
             .Where(i => i.Type == "app" && !installedIds.Contains(i.Id.ToString()))
+            .Take(6) // extra, so a few can be dropped as adult and still leave 3
+            .ToList();
+        var adult = await Task.WhenAll(candidates.Select(i => IsAdultAsync(i.Id, ct))).ConfigureAwait(false);
+        return candidates
+            .Where((_, index) => !adult[index])
             .Take(3)
             .Select(i => new GameEntry
             {
@@ -127,6 +134,43 @@ public static partial class SteamLibrary
                 LauncherId = i.Id.ToString(),
             })
             .ToList();
+    }
+
+    // Steam content descriptors: 1 some nudity or sexual content, 3 adult only sexual content,
+    // 4 frequent nudity or sexual content. (2 violence/gore and 5 general mature are allowed.)
+    private static readonly int[] AdultDescriptors = [1, 3, 4];
+    private static readonly ConcurrentDictionary<long, bool> AdultCache = new();
+
+    /// <summary>
+    /// Whether a store game has sexual or nudity content descriptors. The quick store search doesn't say,
+    /// so this asks Steam's app details. If Steam can't be reached, the game is treated as adult and hidden.
+    /// </summary>
+    private static async Task<bool> IsAdultAsync(long id, CancellationToken ct)
+    {
+        if (AdultCache.TryGetValue(id, out var cached)) return cached;
+        try
+        {
+            var url = $"https://store.steampowered.com/api/appdetails?appids={id}&filters=content_descriptors";
+            using var doc = await JsonDocument.ParseAsync(
+                await Http.GetStreamAsync(url, ct).ConfigureAwait(false), cancellationToken: ct).ConfigureAwait(false);
+            if (!doc.RootElement.TryGetProperty(id.ToString(), out var app) ||
+                !app.TryGetProperty("success", out var ok) || ok.ValueKind != JsonValueKind.True)
+                return true; // not returned for this region or anonymous visitors: don't show it
+
+            bool adult = false;
+            if (app.TryGetProperty("data", out var data) && data.ValueKind == JsonValueKind.Object &&
+                data.TryGetProperty("content_descriptors", out var cd) &&
+                cd.TryGetProperty("ids", out var ids) && ids.ValueKind == JsonValueKind.Array)
+            {
+                adult = ids.EnumerateArray().Any(x => x.TryGetInt32(out var n) && AdultDescriptors.Contains(n));
+            }
+            AdultCache[id] = adult;
+            return adult;
+        }
+        catch (Exception ex) when (ex is HttpRequestException or JsonException or TaskCanceledException && !ct.IsCancellationRequested)
+        {
+            return true;
+        }
     }
 
     private sealed record StoreSearch([property: JsonPropertyName("items")] List<StoreItem>? Items);
