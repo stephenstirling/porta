@@ -8,6 +8,17 @@
             <ResourceDictionary.MergedDictionaries>
                 <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
             </ResourceDictionary.MergedDictionaries>
+
+            <!-- Porta's own accent (periwinkle #8AA8FF) instead of the Windows accent colour.
+                 WinUI derives every accent brush (focus underline, selection, active tab, accent text)
+                 from these. Dark mode uses the Light shades, light mode the Dark shades. -->
+            <Color x:Key="SystemAccentColor">#8AA8FF</Color>
+            <Color x:Key="SystemAccentColorLight1">#7E9DF5</Color>
+            <Color x:Key="SystemAccentColorLight2">#8AA8FF</Color>
+            <Color x:Key="SystemAccentColorLight3">#8AA8FF</Color>
+            <Color x:Key="SystemAccentColorDark1">#5F7EE0</Color>
+            <Color x:Key="SystemAccentColorDark2">#4A66C4</Color>
+            <Color x:Key="SystemAccentColorDark3">#3650A3</Color>
         </ResourceDictionary>
     </Application.Resources>
 </Application>
