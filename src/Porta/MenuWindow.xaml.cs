@@ -208,6 +208,7 @@ public sealed partial class MenuWindow : Window
         }
 
         ShowPanel(SearchPanel);
+        ResultsScroller.ChangeView(null, 0, null, disableAnimation: true);
 
         if (CommandRunner.IsCommand(query))
         {
@@ -380,16 +381,23 @@ public sealed partial class MenuWindow : Window
 
             case VirtualKey.Down when searching && _results.Count > 0:
                 ResultsList.SelectedIndex = Math.Min(ResultsList.SelectedIndex + 1, _results.Count - 1);
-                ResultsList.ScrollIntoView(ResultsList.SelectedItem);
+                BringSelectedResultIntoView();
                 e.Handled = true;
                 break;
 
             case VirtualKey.Up when searching && _results.Count > 0:
                 ResultsList.SelectedIndex = Math.Max(ResultsList.SelectedIndex - 1, 0);
-                ResultsList.ScrollIntoView(ResultsList.SelectedItem);
+                BringSelectedResultIntoView();
                 e.Handled = true;
                 break;
         }
+    }
+
+    /// <summary>The results list doesn't scroll by itself (the whole results column does), so scroll that.</summary>
+    private void BringSelectedResultIntoView()
+    {
+        if (ResultsList.ContainerFromIndex(ResultsList.SelectedIndex) is UIElement row)
+            row.StartBringIntoView(new BringIntoViewOptions { AnimationDesired = false });
     }
 
     private void ViewSelector_SelectionChanged(SelectorBar sender, SelectorBarSelectionChangedEventArgs args)
