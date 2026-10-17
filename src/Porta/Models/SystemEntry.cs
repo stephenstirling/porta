@@ -35,7 +35,7 @@ public sealed class SystemEntry
 
     public string Subtitle => Kind switch
     {
-        SystemKind.Tool => AsksForAdmin ? "System tool · Windows asks for admin" : "System tool",
+        SystemKind.Tool => AsksForAdmin ? "System tool · Admin" : "System tool",
         SystemKind.Settings => "Settings",
         _ => "Power",
     };

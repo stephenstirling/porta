@@ -18,7 +18,8 @@ public static class SystemCatalog
         new() { Name = name, Kind = SystemKind.Power, Power = action, Glyph = glyph, Confirm = confirm, Aliases = aliases };
 
     // AsksForAdmin follows each tool's own manifest: mmc.exe (every .msc console), regedit.exe and
-    // perfmon.exe declare "highestAvailable", so Windows shows its admin prompt for administrators.
+    // perfmon.exe declare "highestAvailable", so Windows shows its admin prompt for administrators
+    // (or elevates silently, if UAC is set to "Elevate without prompting").
     public static IReadOnlyList<SystemEntry> All { get; } =
     [
         // ---- System tools ----
@@ -28,7 +29,8 @@ public static class SystemCatalog
         Tool("Services", "services.msc", "", admin: true, aliases: ["services.msc", "windows services"]),
         Tool("Event Viewer", "eventvwr.msc", "", admin: true, aliases: ["events", "logs", "event log", "eventvwr"]),
         Tool("Task Scheduler", "taskschd.msc", "", admin: true, aliases: ["scheduled tasks", "taskschd"]),
-        Tool("Resource Monitor", "resmon.exe", "", aliases: ["resmon"]),
+        // resmon.exe itself runs as the user but hands off to "perfmon.exe /res", which asks for admin.
+        Tool("Resource Monitor", "resmon.exe", "", admin: true, aliases: ["resmon"]),
         Tool("System Information", "msinfo32.exe", "", aliases: ["msinfo", "msinfo32", "system info", "specs"]),
         Tool("Performance Monitor", "perfmon.msc", "", admin: true, aliases: ["perfmon"]),
         Tool("Registry Editor", "regedit.exe", "", admin: true, aliases: ["regedit", "registry"]),
