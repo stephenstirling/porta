@@ -39,7 +39,7 @@ public sealed partial class MenuWindow : Window
         InitializeComponent();
         _hwnd = WindowNative.GetWindowHandle(this);
 
-        SystemBackdrop = new DesktopAcrylicBackdrop();
+        SystemBackdrop = new PanelBackdrop();
         ExtendsContentIntoTitleBar = true;
 
         var presenter = OverlappedPresenter.Create();
@@ -50,6 +50,11 @@ public sealed partial class MenuWindow : Window
         presenter.SetBorderAndTitleBar(hasBorder: true, hasTitleBar: false);
         AppWindow.SetPresenter(presenter);
         AppWindow.IsShownInSwitchers = false; // keep it out of Alt+Tab and the taskbar
+
+        // A hairline border a little lighter than the panel, instead of Windows' accent colour.
+        Native.SetRoundCorners(_hwnd);
+        ApplyFrameBorder();
+        Root.ActualThemeChanged += (_, _) => ApplyFrameBorder();
 
         AppWindow.Closing += (_, e) => { e.Cancel = true; HideMenu(); }; // Alt+F4 hides instead of quitting
         Activated += (_, e) =>
@@ -74,6 +79,12 @@ public sealed partial class MenuWindow : Window
             RebuildPinned();
             if (App.Catalog.IsLoaded) RebuildAllApps();
         });
+    }
+
+    private void ApplyFrameBorder()
+    {
+        if (Root.ActualTheme == ElementTheme.Light) Native.SetBorderColor(_hwnd, 0xD6, 0xD8, 0xE0);
+        else Native.SetBorderColor(_hwnd, 0x3A, 0x3D, 0x48);
     }
 
     /// <summary>Window handle, for file pickers opened from the tray menu.</summary>

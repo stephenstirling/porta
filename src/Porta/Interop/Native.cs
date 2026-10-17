@@ -109,6 +109,25 @@ internal static class Native
         return GetDpiForMonitor(monitor, 0, out uint dpi, out _) == 0 ? dpi / 96.0 : 1.0;
     }
 
+    // ---- Window frame (Windows 11; ignored on Windows 10) ----
+    public const int DWMWA_WINDOW_CORNER_PREFERENCE = 33, DWMWA_BORDER_COLOR = 34;
+    public const int DWMWCP_ROUND = 2; // Windows' largest corner rounding (about 8 px)
+
+    [DllImport("dwmapi.dll")] public static extern int DwmSetWindowAttribute(IntPtr hwnd, int attribute, ref int value, int size);
+
+    /// <summary>Sets the 1 px border Windows draws around the window, replacing the accent colour.</summary>
+    public static void SetBorderColor(IntPtr hwnd, byte r, byte g, byte b)
+    {
+        int colorRef = r | (g << 8) | (b << 16);
+        DwmSetWindowAttribute(hwnd, DWMWA_BORDER_COLOR, ref colorRef, sizeof(int));
+    }
+
+    public static void SetRoundCorners(IntPtr hwnd)
+    {
+        int preference = DWMWCP_ROUND;
+        DwmSetWindowAttribute(hwnd, DWMWA_WINDOW_CORNER_PREFERENCE, ref preference, sizeof(int));
+    }
+
     // ---- Power and session ----
     [DllImport("user32.dll")] public static extern bool LockWorkStation();
     [DllImport("powrprof.dll")] public static extern bool SetSuspendState(bool hibernate, bool forceCritical, bool disableWakeEvent);

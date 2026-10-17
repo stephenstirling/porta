@@ -8,6 +8,20 @@
 
     <Grid x:Name="Root" PreviewKeyDown="Root_PreviewKeyDown">
         <Grid.Resources>
+          <ResourceDictionary>
+            <!-- Panel colours from design/Main.dc.html -->
+            <ResourceDictionary.ThemeDictionaries>
+                <ResourceDictionary x:Key="Default">
+                    <!-- Right pane: a touch darker than the left -->
+                    <SolidColorBrush x:Key="PortaRailBrush" Color="#000000" Opacity="0.14" />
+                    <SolidColorBrush x:Key="PortaHairlineBrush" Color="#FFFFFF" Opacity="0.08" />
+                </ResourceDictionary>
+                <ResourceDictionary x:Key="Light">
+                    <SolidColorBrush x:Key="PortaRailBrush" Color="#0F1428" Opacity="0.04" />
+                    <SolidColorBrush x:Key="PortaHairlineBrush" Color="#0F1428" Opacity="0.08" />
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
+
             <!-- Flat buttons for the right-hand panel -->
             <Style x:Key="RailButton" TargetType="Button" BasedOn="{StaticResource DefaultButtonStyle}">
                 <Setter Property="Background" Value="Transparent" />
@@ -67,6 +81,7 @@
                                Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
                 </Grid>
             </DataTemplate>
+          </ResourceDictionary>
         </Grid.Resources>
 
         <Grid.ColumnDefinitions>
@@ -215,8 +230,8 @@
 
         <!-- ===== Right: account, places, clock, power ===== -->
         <Grid Grid.Column="1" Padding="14,28,14,14" RowSpacing="2"
-              Background="{ThemeResource LayerOnAcrylicFillColorDefaultBrush}"
-              BorderThickness="1,0,0,0" BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}">
+              Background="{ThemeResource PortaRailBrush}"
+              BorderThickness="1,0,0,0" BorderBrush="{ThemeResource PortaHairlineBrush}">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
