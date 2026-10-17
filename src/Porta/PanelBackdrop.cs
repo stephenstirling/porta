@@ -19,7 +19,8 @@ internal sealed class PanelBackdrop : SystemBackdrop
     protected override void OnTargetConnected(ICompositionSupportsSystemBackdrop connectedTarget, XamlRoot xamlRoot)
     {
         base.OnTargetConnected(connectedTarget, xamlRoot);
-        _controller = new DesktopAcrylicController { Kind = DesktopAcrylicKind.Base };
+        // Thin is Windows' lighter, more see-through acrylic recipe.
+        _controller = new DesktopAcrylicController { Kind = DesktopAcrylicKind.Thin };
         _controller.SetSystemBackdropConfiguration(GetDefaultSystemBackdropConfiguration(connectedTarget, xamlRoot));
         _controller.AddSystemBackdropTarget(connectedTarget);
 
@@ -48,16 +49,16 @@ internal sealed class PanelBackdrop : SystemBackdrop
         if (light)
         {
             _controller.TintColor = Color.FromArgb(255, 0xF7, 0xF7, 0xFA);
-            _controller.TintOpacity = 0.20f;
-            _controller.LuminosityOpacity = 0.62f;
+            _controller.TintOpacity = 0.10f;
+            _controller.LuminosityOpacity = 0.40f;
             _controller.FallbackColor = Color.FromArgb(255, 0xF3, 0xF3, 0xF6);
         }
         else
         {
             _controller.TintColor = Color.FromArgb(255, 0x12, 0x14, 0x1C);
             // Low tint and luminosity let more wallpaper colour through; white text stays readable.
-            _controller.TintOpacity = 0.25f;
-            _controller.LuminosityOpacity = 0.55f;
+            _controller.TintOpacity = 0.10f;
+            _controller.LuminosityOpacity = 0.30f;
             _controller.FallbackColor = Color.FromArgb(255, 0x17, 0x19, 0x22);
         }
     }
