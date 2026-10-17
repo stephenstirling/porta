@@ -136,13 +136,13 @@ public static partial class SteamLibrary
             .ToList();
     }
 
-    // Steam content descriptors: 1 some nudity or sexual content, 3 adult only sexual content,
-    // 4 frequent nudity or sexual content. (2 violence/gore and 5 general mature are allowed.)
-    private static readonly int[] AdultDescriptors = [1, 3, 4];
+    // Steam content descriptors: 3 adult only sexual content, 4 frequent nudity or sexual content.
+    // (1 some nudity, 2 violence/gore and 5 general mature are allowed.)
+    private static readonly int[] AdultDescriptors = [3, 4];
     private static readonly ConcurrentDictionary<long, bool> AdultCache = new();
 
     /// <summary>
-    /// Whether a store game has sexual or nudity content descriptors. The quick store search doesn't say,
+    /// Whether a store game has adult-only or frequent nudity content descriptors. The quick store search doesn't say,
     /// so this asks Steam's app details. If Steam can't be reached, the game is treated as adult and hidden.
     /// </summary>
     private static async Task<bool> IsAdultAsync(long id, CancellationToken ct)
