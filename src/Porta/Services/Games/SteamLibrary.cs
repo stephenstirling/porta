@@ -116,8 +116,11 @@ public static partial class SteamLibrary
         var cc = RegionInfo.CurrentRegion.TwoLetterISORegionName;
         var url = $"https://store.steampowered.com/api/storesearch/?term={Uri.EscapeDataString(term)}&l=english&cc={cc}";
         var result = await Http.GetFromJsonAsync<StoreSearch>(url, ct).ConfigureAwait(false);
+        // Steam's search is loose ("red dead" also returns unrelated games); keep names containing the whole phrase.
+        var phrase = Simplify(term);
         var candidates = (result?.Items ?? [])
             .Where(i => i.Type == "app" && !installedIds.Contains(i.Id.ToString()))
+            .Where(i => phrase.Length > 0 && Simplify(i.Name).Contains(phrase, StringComparison.Ordinal))
             .Take(6) // extra, so a few can be dropped as adult and still leave 3
             .ToList();
         var adult = await Task.WhenAll(candidates.Select(i => IsAdultAsync(i.Id, ct))).ConfigureAwait(false);
@@ -134,6 +137,18 @@ public static partial class SteamLibrary
                 LauncherId = i.Id.ToString(),
             })
             .ToList();
+    }
+
+    /// <summary>Lower case, letters and digits only, single spaces: "The Witcher® 3: Wild Hunt" → "the witcher 3 wild hunt".</summary>
+    internal static string Simplify(string text)
+    {
+        var sb = new System.Text.StringBuilder(text.Length);
+        foreach (var c in text.ToLowerInvariant())
+        {
+            if (char.IsLetterOrDigit(c)) sb.Append(c);
+            else if (sb.Length > 0 && sb[^1] != ' ') sb.Append(' ');
+        }
+        return sb.ToString().Trim();
     }
 
     // Steam content descriptors: 3 adult only sexual content, 4 frequent nudity or sexual content.
