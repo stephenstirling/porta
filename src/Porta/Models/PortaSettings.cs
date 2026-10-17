@@ -21,6 +21,9 @@ public sealed class PortaSettings
     public string Theme { get; set; } = "System";
     public string? AccentColor { get; set; }
 
+    /// <summary>How frosted the menu's glass is: 0 clearest, 100 most frosted.</summary>
+    public int GlassStrength { get; set; } = 50;
+
     // Start button (used from milestone 2)
     public bool ReplaceStartButton { get; set; } = true;
     public string StartIcon { get; set; } = "Keyhole";

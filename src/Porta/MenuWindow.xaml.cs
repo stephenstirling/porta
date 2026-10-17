@@ -25,6 +25,7 @@ public sealed partial class MenuWindow : Window
     private const int GapAboveTaskbar = 12;
 
     private readonly IntPtr _hwnd;
+    private readonly PanelBackdrop _backdrop;
     private readonly ObservableCollection<AppEntry> _pinned = [];
     private readonly ObservableCollection<RecentItem> _recent = [];
     private readonly ObservableCollection<AppEntry> _results = [];
@@ -39,7 +40,8 @@ public sealed partial class MenuWindow : Window
         InitializeComponent();
         _hwnd = WindowNative.GetWindowHandle(this);
 
-        SystemBackdrop = new PanelBackdrop();
+        _backdrop = new PanelBackdrop { Strength = App.Settings.Current.GlassStrength };
+        SystemBackdrop = _backdrop;
         ExtendsContentIntoTitleBar = true;
 
         var presenter = OverlappedPresenter.Create();
@@ -78,7 +80,9 @@ public sealed partial class MenuWindow : Window
         {
             RebuildPinned();
             if (App.Catalog.IsLoaded) RebuildAllApps();
+            GlassSlider.Value = App.Settings.Current.GlassStrength; // also updates the glass
         });
+        GlassSlider.Value = App.Settings.Current.GlassStrength;
     }
 
     private void ApplyFrameBorder()
@@ -482,6 +486,17 @@ public sealed partial class MenuWindow : Window
         App.Settings.SetPinOrder(_pinned.Select(a => a.Id));
 
     // ---------- Right-hand panel ----------
+
+    /// <summary>Live preview while dragging; saved when the flyout closes, not on every step.</summary>
+    private void GlassSlider_ValueChanged(object sender, Microsoft.UI.Xaml.Controls.Primitives.RangeBaseValueChangedEventArgs e) =>
+        _backdrop.Strength = (int)e.NewValue;
+
+    private void GlassFlyout_Closed(object sender, object e)
+    {
+        if (App.Settings.Current.GlassStrength == _backdrop.Strength) return;
+        App.Settings.Current.GlassStrength = _backdrop.Strength;
+        App.Settings.Save();
+    }
 
     private void Folder_Click(object sender, RoutedEventArgs e)
     {
