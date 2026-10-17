@@ -48,15 +48,16 @@ internal sealed class PanelBackdrop : SystemBackdrop
         if (light)
         {
             _controller.TintColor = Color.FromArgb(255, 0xF7, 0xF7, 0xFA);
-            _controller.TintOpacity = 0.45f;
-            _controller.LuminosityOpacity = 0.80f;
+            _controller.TintOpacity = 0.20f;
+            _controller.LuminosityOpacity = 0.62f;
             _controller.FallbackColor = Color.FromArgb(255, 0xF3, 0xF3, 0xF6);
         }
         else
         {
             _controller.TintColor = Color.FromArgb(255, 0x12, 0x14, 0x1C);
-            _controller.TintOpacity = 0.55f;
-            _controller.LuminosityOpacity = 0.80f;
+            // Low tint and luminosity let more wallpaper colour through; white text stays readable.
+            _controller.TintOpacity = 0.25f;
+            _controller.LuminosityOpacity = 0.55f;
             _controller.FallbackColor = Color.FromArgb(255, 0x17, 0x19, 0x22);
         }
     }
