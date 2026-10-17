@@ -84,19 +84,13 @@ public static class SearchService
         int index = n.IndexOf(q, StringComparison.Ordinal);
         if (index >= 0) return 500 - index;
 
-        // Letters in order with gaps: "phts" -> "Photos"
-        int qi = 0, gaps = 0, last = -1;
-        for (int i = 0; i < n.Length && qi < q.Length; i++)
-        {
-            if (n[i] != q[qi]) continue;
-            if (last >= 0) gaps += i - last - 1;
-            last = i;
-            qi++;
-        }
-        if (qi == q.Length && q.Length >= 2) return Math.Max(10, 300 - gaps * 15);
+        // Letters in order with a few gaps, starting at a word start: "phts" -> "Photos".
+        // Not letters picked from across the whole name ("note" must not match "coNtrOl cenTEr").
+        int gaps = InOrderGaps(n, q);
+        if (gaps >= 0) return 300 - gaps * 15;
 
-        // One typo against the start of any word
-        if (q.Length >= 4)
+        // One typo against the start of any word. Short queries are too ambiguous ("calc" vs "cali").
+        if (q.Length >= 5)
         {
             foreach (var w in words)
             {
@@ -106,6 +100,32 @@ public static class SearchService
         }
 
         return 0;
+    }
+
+    /// <summary>
+    /// Fewest skipped letters when the query's letters appear in order from the start of a word,
+    /// or -1 if they don't, or only with more than <c>query.Length - 1</c> skips.
+    /// </summary>
+    private static int InOrderGaps(string name, string query)
+    {
+        if (query.Length < 2) return -1;
+        int best = -1;
+        for (int start = 0; start < name.Length; start++)
+        {
+            bool wordStart = start == 0 || Array.IndexOf(WordBreaks, name[start - 1]) >= 0;
+            if (!wordStart || name[start] != query[0]) continue;
+
+            int qi = 1, gaps = 0, last = start;
+            for (int i = start + 1; i < name.Length && qi < query.Length; i++)
+            {
+                if (name[i] != query[qi]) continue;
+                gaps += i - last - 1;
+                last = i;
+                qi++;
+            }
+            if (qi == query.Length && gaps <= query.Length - 1 && (best < 0 || gaps < best)) best = gaps;
+        }
+        return best;
     }
 
     private static int Distance(string a, string b)
