@@ -68,7 +68,10 @@ public static partial class SteamLibrary
         return games;
     }
 
-    /// <summary>Steam's cached header image. The folder layout changed in 2024, so try both.</summary>
+    /// <summary>
+    /// Steam's cached header image. The folder layout has changed over time: flat files, then a folder
+    /// per game, and now most images sit one level deeper in hash-named subfolders as library_header.jpg.
+    /// </summary>
     private static string? Cover(string steam, string id)
     {
         var cache = Path.Combine(steam, "appcache", "librarycache");
@@ -78,7 +81,19 @@ public static partial class SteamLibrary
             Path.Combine(cache, id, "header.jpg"),
             Path.Combine(cache, $"{id}_library_hero.jpg"),
         ];
-        return candidates.FirstOrDefault(File.Exists);
+        var found = candidates.FirstOrDefault(File.Exists);
+        if (found is not null) return found;
+
+        var folder = Path.Combine(cache, id);
+        if (!Directory.Exists(folder)) return null;
+        try
+        {
+            return Directory.EnumerateFiles(folder, "library_header.jpg", SearchOption.AllDirectories).FirstOrDefault();
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            return null;
+        }
     }
 
     private static string? Field(string acf, string key)
