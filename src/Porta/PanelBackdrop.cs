@@ -16,17 +16,23 @@ internal sealed class PanelBackdrop : SystemBackdrop
     private DesktopAcrylicController? _controller;
     private FrameworkElement? _root;
 
+    // Porta's own configuration instead of GetDefaultSystemBackdropConfiguration: for the menu window the
+    // default one kept reporting IsInputActive = false even while the menu was the active foreground
+    // window, so acrylic only ever drew its solid fallback colour. The menu hides as soon as it loses
+    // focus, so whenever it's visible it is active.
+    private readonly SystemBackdropConfiguration _config = new() { IsInputActive = true };
+
     protected override void OnTargetConnected(ICompositionSupportsSystemBackdrop connectedTarget, XamlRoot xamlRoot)
     {
         base.OnTargetConnected(connectedTarget, xamlRoot);
         // Thin is Windows' lighter, more see-through acrylic recipe.
         _controller = new DesktopAcrylicController { Kind = DesktopAcrylicKind.Thin };
-        _controller.SetSystemBackdropConfiguration(GetDefaultSystemBackdropConfiguration(connectedTarget, xamlRoot));
+        _controller.SetSystemBackdropConfiguration(_config);
         _controller.AddSystemBackdropTarget(connectedTarget);
 
         _root = xamlRoot.Content as FrameworkElement;
         if (_root is not null) _root.ActualThemeChanged += OnThemeChanged;
-        ApplyTint();
+        ApplyTheme();
     }
 
     protected override void OnTargetDisconnected(ICompositionSupportsSystemBackdrop disconnectedTarget)
@@ -38,15 +44,20 @@ internal sealed class PanelBackdrop : SystemBackdrop
         _controller = null;
     }
 
-    private void OnThemeChanged(FrameworkElement sender, object args) => ApplyTint();
+    private void OnThemeChanged(FrameworkElement sender, object args) => ApplyTheme();
 
-    /// <summary>Custom tints replace the theme defaults, so they're set again whenever the theme changes.</summary>
-    private void ApplyTint()
+    private bool IsLight => _root?.ActualTheme == ElementTheme.Light ||
+                            (_root is null && Application.Current.RequestedTheme == ApplicationTheme.Light);
+
+    /// <summary>
+    /// Our own configuration doesn't follow the theme by itself, and custom tints replace the theme
+    /// defaults, so both are set again whenever the theme changes.
+    /// </summary>
+    private void ApplyTheme()
     {
+        _config.Theme = IsLight ? SystemBackdropTheme.Light : SystemBackdropTheme.Dark;
         if (_controller is null) return;
-        bool light = _root?.ActualTheme == ElementTheme.Light ||
-                     (_root is null && Application.Current.RequestedTheme == ApplicationTheme.Light);
-        if (light)
+        if (IsLight)
         {
             _controller.TintColor = Color.FromArgb(255, 0xF7, 0xF7, 0xFA);
             _controller.TintOpacity = 0.10f;
@@ -56,7 +67,6 @@ internal sealed class PanelBackdrop : SystemBackdrop
         else
         {
             _controller.TintColor = Color.FromArgb(255, 0x12, 0x14, 0x1C);
-            // Low tint and luminosity let more wallpaper colour through; white text stays readable.
             _controller.TintOpacity = 0.10f;
             _controller.LuminosityOpacity = 0.30f;
             _controller.FallbackColor = Color.FromArgb(255, 0x17, 0x19, 0x22);
