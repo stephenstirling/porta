@@ -62,6 +62,7 @@
                      PlaceholderText="Search apps, files and settings"
                      AutomationProperties.Name="Search"
                      Height="40" CornerRadius="10" VerticalContentAlignment="Center"
+                     IsSpellCheckEnabled="False" IsTextPredictionEnabled="False"
                      TextChanged="SearchBox_TextChanged" />
 
             <SelectorBar x:Name="ViewSelector" Grid.Row="1" SelectionChanged="ViewSelector_SelectionChanged">
