@@ -31,7 +31,7 @@ public static class Program
         instance.Activated += (_, _) => App.ShowMenuFromAnotherLaunch();
 
         XamlCheckProcessRequirements();
-        Application.Start(_ =>
+        Application.Start(p =>
         {
             var context = new DispatcherQueueSynchronizationContext(DispatcherQueue.GetForCurrentThread());
             SynchronizationContext.SetSynchronizationContext(context);
