@@ -22,7 +22,7 @@ public sealed class PortaSettings
     public string? AccentColor { get; set; }
 
     /// <summary>How frosted the menu's glass is: 0 clearest, 100 most frosted.</summary>
-    public int GlassStrength { get; set; } = 50;
+    public int GlassStrength { get; set; } = 30;
 
     // Start button (used from milestone 2)
     public bool ReplaceStartButton { get; set; } = true;

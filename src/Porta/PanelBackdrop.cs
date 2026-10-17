@@ -46,7 +46,7 @@ internal sealed class PanelBackdrop : SystemBackdrop
 
     private void OnThemeChanged(FrameworkElement sender, object args) => ApplyTheme();
 
-    private int _strength = 50;
+    private int _strength = 30;
 
     /// <summary>Glass strength, 0 (clearest) to 100 (most frosted). Applies immediately.</summary>
     public int Strength
