@@ -18,4 +18,7 @@ First real run of milestone 1 on the owner's PC (Windows 11 Pro 10.0.26300, bran
 | 5 | Microsoft account picture at top right | pending | Picture found in the registry path the code reads |
 | 6 | Hide from All apps; still appears in search | pending | |
 | 7 | Tray: Back up / Restore settings with a `.portabackup` file | pending | |
+| 3f | No Windows text suggestion bar on the search box | pending | `IsTextPredictionEnabled` only affects the touch keyboard. Now uses `InputScope="SearchIncremental"` (prediction "always disabled" per Microsoft's table). Needs on-screen check |
+| 3g | Store results directly below installed results; only names containing the whole search phrase | pending | Layout fixed (one scrolling column). Phrase filter checked against the live store: "red dead" drops Dead Red Bennie, Deadrock Redemption 2. Needs on-screen check |
+| - | Thin red window border | not a bug | It's the Windows accent colour (red, 226/36/26) because "Show accent colour on title bars and window borders" is on. Porta asks for a normal window border |
 | 8 | Second launch opens the menu in the first copy | pass | Second copy exited with code 0; first copy's menu window became visible and foreground |
