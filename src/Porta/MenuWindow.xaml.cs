@@ -20,8 +20,8 @@ namespace Porta;
 /// <summary>The Start menu itself. Created once at startup and shown or hidden, never closed.</summary>
 public sealed partial class MenuWindow : Window
 {
-    private const int MenuWidth = 760;   // device-independent pixels
-    private const int MenuHeight = 640;
+    private const int MenuWidth = 676;   // device-independent pixels
+    private const int MenuHeight = 620;
     private const int GapAboveTaskbar = 12;
 
     private readonly IntPtr _hwnd;

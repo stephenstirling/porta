@@ -86,7 +86,7 @@
 
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
-            <ColumnDefinition Width="248" />
+            <ColumnDefinition Width="200" />
         </Grid.ColumnDefinitions>
 
         <!-- ===== Left: search, pinned, all apps ===== -->
@@ -124,7 +124,7 @@
                               DragItemsCompleted="PinnedGrid_DragItemsCompleted">
                         <GridView.ItemsPanel>
                             <ItemsPanelTemplate>
-                                <ItemsWrapGrid Orientation="Horizontal" MaximumRowsOrColumns="5" ItemWidth="92" ItemHeight="88" />
+                                <ItemsWrapGrid Orientation="Horizontal" MaximumRowsOrColumns="4" ItemWidth="92" ItemHeight="88" />
                             </ItemsPanelTemplate>
                         </GridView.ItemsPanel>
                         <GridView.ItemTemplate>
@@ -144,7 +144,7 @@
                         </GridView.ItemTemplate>
                     </GridView>
 
-                    <TextBlock x:Name="RecentHeader" Grid.Row="1" Text="Recent" FontWeight="SemiBold" Margin="4,8,0,0" />
+                    <TextBlock x:Name="RecentHeader" Grid.Row="1" Text="Recent" FontWeight="SemiBold" Margin="4,2,0,0" />
 
                     <ListView x:Name="RecentList" Grid.Row="2" SelectionMode="None" IsItemClickEnabled="True" ItemClick="Recent_ItemClick">
                         <ListView.ItemTemplate>
