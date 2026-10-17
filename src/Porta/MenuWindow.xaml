@@ -221,7 +221,8 @@
                         <TextBlock Text="Search stores:" FontSize="12" VerticalAlignment="Center" Margin="4,0,4,0"
                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                         <HyperlinkButton x:Name="SteamStoreLink" Content="Steam" FontSize="12" Click="StoreLink_Click" Tag="steam" />
-                        <HyperlinkButton x:Name="EpicStoreLink" Content="Epic" FontSize="12" Click="StoreLink_Click" Tag="epic" />
+                        <HyperlinkButton x:Name="EpicStoreLink" Content="Epic Games" FontSize="12" Click="StoreLink_Click" Tag="epic" />
+                        <HyperlinkButton x:Name="BattleNetStoreLink" Content="Battle.net" FontSize="12" Click="StoreLink_Click" Tag="battlenet" />
                         <HyperlinkButton x:Name="MsStoreLink" Content="Microsoft Store" FontSize="12" Click="StoreLink_Click" Tag="xbox" />
                     </StackPanel>
                 </Grid>

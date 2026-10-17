@@ -272,7 +272,7 @@ public sealed partial class MenuWindow : Window
 
         var launchers = App.Games.Launchers;
         SteamStoreLink.Visibility = launchers.Contains(GameLauncher.Steam) ? Visibility.Visible : Visibility.Collapsed;
-        EpicStoreLink.Visibility = launchers.Contains(GameLauncher.Epic) ? Visibility.Visible : Visibility.Collapsed;
+        // Epic and Battle.net open in the browser, so they're offered even when the launcher isn't installed.
         MsStoreLink.Visibility = Visibility.Visible;
         // Offer store searches when the query looks like it might be a game: no app answered it,
         // or games already matched.
@@ -323,6 +323,7 @@ public sealed partial class MenuWindow : Window
         {
             "steam" => $"steam://openurl/https://store.steampowered.com/search/?term={Uri.EscapeDataString(q)}",
             "epic" => EpicLibrary.StoreSearchUrl(q),
+            "battlenet" => BattleNetLibrary.ShopUrl,
             _ => XboxLibrary.StoreSearchUrl(q),
         };
         HideMenu();

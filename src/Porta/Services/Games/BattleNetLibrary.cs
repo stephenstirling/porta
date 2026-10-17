@@ -15,6 +15,12 @@ namespace Porta.Services.Games;
 /// </summary>
 public static partial class BattleNetLibrary
 {
+    /// <summary>
+    /// The Battle.net shop has no public search page (every /search URL tried returns 404), so the
+    /// "Search stores" link opens the shop home, which redirects to the visitor's region.
+    /// </summary>
+    public const string ShopUrl = "https://shop.battle.net/";
+
     public static string? LauncherPath()
     {
         string[] candidates =
