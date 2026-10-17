@@ -235,9 +235,10 @@
             </Grid>
         </Grid>
 
-        <!-- The cut window loses Windows' border along the panel's top edge, so draw that hairline here -->
-        <Border Grid.Row="1" Grid.ColumnSpan="2" BorderThickness="0,1,0,0" BorderBrush="{ThemeResource PortaHairlineBrush}"
-                CornerRadius="8,8,0,0" IsHitTestVisible="False" />
+        <!-- The one hairline around the visible panel. Windows' own border is off because it would outline
+             the whole window rectangle, not the cut shape. The picture's ring continues it above the edge. -->
+        <Border Grid.Row="1" Grid.ColumnSpan="2" BorderThickness="1" BorderBrush="{ThemeResource PortaHairlineBrush}"
+                CornerRadius="8" IsHitTestVisible="False" />
 
         <!-- Account picture, centred on the right pane's top edge (72 px with a thin ring = 76 px circle) -->
         <Grid Grid.RowSpan="2" Grid.Column="1" Width="76" Height="76" Margin="0,-2,0,0"

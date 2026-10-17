@@ -55,10 +55,15 @@ public sealed partial class MenuWindow : Window
         AppWindow.SetPresenter(presenter);
         AppWindow.IsShownInSwitchers = false; // keep it out of Alt+Tab and the taskbar
 
-        // A hairline border a little lighter than the panel, instead of Windows' accent colour.
-        Native.SetRoundCorners(_hwnd);
-        ApplyFrameBorder();
-        Root.ActualThemeChanged += (_, _) => ApplyFrameBorder();
+        // The window is cut to the panel plus the avatar circle (CutWindowToPanelAndPicture). Windows would
+        // still draw its border around the whole window rectangle, so it's turned off; the menu draws its
+        // own hairline around the panel shape (MenuWindow.xaml).
+        Native.HideBorder(_hwnd);
+        // Keep the cut in step with the window: after any move or resize, including a DPI change.
+        AppWindow.Changed += (_, e) =>
+        {
+            if (e.DidSizeChange || e.DidPositionChange) CutWindowToPanelAndPicture(Root.XamlRoot?.RasterizationScale ?? _scale);
+        };
 
         AppWindow.Closing += (_, e) => { e.Cancel = true; HideMenu(); }; // Alt+F4 hides instead of quitting
         Activated += (_, e) =>
@@ -85,12 +90,6 @@ public sealed partial class MenuWindow : Window
             GlassSlider.Value = App.Settings.Current.GlassStrength; // also updates the glass
         });
         GlassSlider.Value = App.Settings.Current.GlassStrength;
-    }
-
-    private void ApplyFrameBorder()
-    {
-        if (Root.ActualTheme == ElementTheme.Light) Native.SetBorderColor(_hwnd, 0xD6, 0xD8, 0xE0);
-        else Native.SetBorderColor(_hwnd, 0x3A, 0x3D, 0x48);
     }
 
     /// <summary>Window handle, for file pickers opened from the tray menu.</summary>
@@ -138,9 +137,12 @@ public sealed partial class MenuWindow : Window
         int x = work.X + (work.Width - width) / 2;
         int y = work.Y + work.Height - height - (int)(GapAboveTaskbar * scale);
 
+        _scale = scale;
         AppWindow.MoveAndResize(new RectInt32(x, y, width, height));
         CutWindowToPanelAndPicture(scale);
     }
+
+    private double _scale = 1.0; // display scale the menu was last placed at
 
     /// <summary>
     /// Cuts the window to the panel plus the account picture's circle above its top edge, so the strip
