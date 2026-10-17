@@ -88,9 +88,15 @@
             <ColumnDefinition Width="*" />
             <ColumnDefinition Width="200" />
         </Grid.ColumnDefinitions>
+        <!-- Row 0 is the strip above the panel where the account picture breaks out; the window is
+             cut to the panel plus the picture's circle, so the rest of that strip isn't drawn. -->
+        <Grid.RowDefinitions>
+            <RowDefinition Height="36" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
 
         <!-- ===== Left: search, pinned, all apps ===== -->
-        <Grid Padding="24,24,20,16" RowSpacing="14">
+        <Grid Grid.Row="1" Padding="24,24,20,16" RowSpacing="14">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
@@ -229,8 +235,19 @@
             </Grid>
         </Grid>
 
+        <!-- The cut window loses Windows' border along the panel's top edge, so draw that hairline here -->
+        <Border Grid.Row="1" Grid.ColumnSpan="2" BorderThickness="0,1,0,0" BorderBrush="{ThemeResource PortaHairlineBrush}"
+                CornerRadius="8,8,0,0" IsHitTestVisible="False" />
+
+        <!-- Account picture, centred on the right pane's top edge (72 px with a thin ring = 76 px circle) -->
+        <Grid Grid.RowSpan="2" Grid.Column="1" Width="76" Height="76" Margin="0,-2,0,0"
+              HorizontalAlignment="Center" VerticalAlignment="Top">
+            <Ellipse Fill="{ThemeResource PortaRailBrush}" Stroke="{ThemeResource PortaHairlineBrush}" StrokeThickness="2" />
+            <PersonPicture x:Name="Avatar" Width="72" Height="72" />
+        </Grid>
+
         <!-- ===== Right: account, places, clock, power ===== -->
-        <Grid Grid.Column="1" Padding="14,28,14,14" RowSpacing="2"
+        <Grid Grid.Row="1" Grid.Column="1" Padding="14,28,14,14" RowSpacing="2"
               Background="{ThemeResource PortaRailBrush}"
               BorderThickness="1,0,0,0" BorderBrush="{ThemeResource PortaHairlineBrush}">
             <Grid.RowDefinitions>
@@ -241,10 +258,9 @@
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
-            <StackPanel Spacing="8" HorizontalAlignment="Center" Margin="0,0,0,16">
-                <PersonPicture x:Name="Avatar" Width="64" Height="64" />
-                <TextBlock x:Name="UserNameText" FontSize="16" FontWeight="SemiBold" HorizontalAlignment="Center" TextTrimming="CharacterEllipsis" />
-            </StackPanel>
+            <!-- The picture itself sits on the panel's top edge (below); the name goes under it. -->
+            <TextBlock x:Name="UserNameText" Margin="0,16,0,16" FontSize="16" FontWeight="SemiBold"
+                       HorizontalAlignment="Center" TextTrimming="CharacterEllipsis" />
 
             <StackPanel Grid.Row="1" Spacing="2">
                 <Button Style="{StaticResource RailButton}" Tag="shell:Personal" Click="Folder_Click">

@@ -22,6 +22,8 @@ public sealed partial class MenuWindow : Window
 {
     private const int MenuWidth = 676;   // device-independent pixels
     private const int MenuHeight = 620;
+    private const int AvatarOverhang = 36; // half the account picture's circle sticks out above the panel
+    private const int RightPaneWidth = 200;
     private const int GapAboveTaskbar = 12;
 
     private readonly IntPtr _hwnd;
@@ -131,12 +133,40 @@ public sealed partial class MenuWindow : Window
         double scale = Native.ScaleAtPoint(cursor);
 
         int width = (int)(MenuWidth * scale);
-        int height = (int)(MenuHeight * scale);
+        int height = (int)((MenuHeight + AvatarOverhang) * scale);
         var work = area.WorkArea;
         int x = work.X + (work.Width - width) / 2;
         int y = work.Y + work.Height - height - (int)(GapAboveTaskbar * scale);
 
         AppWindow.MoveAndResize(new RectInt32(x, y, width, height));
+        CutWindowToPanelAndPicture(scale);
+    }
+
+    /// <summary>
+    /// Cuts the window to the panel plus the account picture's circle above its top edge, so the strip
+    /// above the panel is neither drawn nor clickable. Windows draws a cut window without its own
+    /// rounded corners, border or shadow, and the cut edges aren't smoothed.
+    /// </summary>
+    private void CutWindowToPanelAndPicture(double scale)
+    {
+        Native.GetWindowRect(_hwnd, out var window);
+        var origin = new Native.POINT();
+        Native.ClientToScreen(_hwnd, ref origin);
+        Native.GetClientRect(_hwnd, out var client);
+        int dx = origin.X - window.Left, dy = origin.Y - window.Top; // region is relative to the window, content to the client
+
+        int overhang = (int)Math.Round(AvatarOverhang * scale);
+        int corner = (int)Math.Round(16 * scale); // 8 px radius, like Windows' own corners
+        var panel = Native.CreateRoundRectRgn(dx, dy + overhang, dx + client.Right + 1, dy + client.Bottom + 1, corner, corner);
+
+        int radius = (int)Math.Round(38 * scale);
+        int cx = dx + client.Right - (int)Math.Round(RightPaneWidth / 2.0 * scale);
+        int cy = dy + overhang;
+        var circle = Native.CreateEllipticRgn(cx - radius, cy - radius, cx + radius + 1, cy + radius + 1);
+
+        Native.CombineRgn(panel, panel, circle, Native.RGN_OR);
+        Native.DeleteObject(circle);
+        Native.SetWindowRgn(_hwnd, panel, true); // Windows owns the region from here
     }
 
     private void ResetView()
