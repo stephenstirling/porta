@@ -29,6 +29,7 @@ public sealed partial class MenuWindow : Window
     private readonly ObservableCollection<RecentItem> _recent = [];
     private readonly ObservableCollection<AppEntry> _results = [];
     private readonly ObservableCollection<GameEntry> _games = [];
+    private readonly ObservableCollection<GameEntry> _store = []; // Steam store results, shown below installed items
     private CancellationTokenSource? _storeSearch;
     private DateTime _pictureStamp;
     private bool _isOpen;
@@ -60,6 +61,7 @@ public sealed partial class MenuWindow : Window
         RecentList.ItemsSource = _recent;
         ResultsList.ItemsSource = _results;
         GamesList.ItemsSource = _games;
+        StoreList.ItemsSource = _store;
 
         var name = Native.GetDisplayName();
         UserNameText.Text = name;
@@ -197,6 +199,8 @@ public sealed partial class MenuWindow : Window
     {
         var query = SearchBox.Text.Trim();
         _storeSearch?.Cancel();
+        _store.Clear();
+        StoreSection.Visibility = Visibility.Collapsed;
         if (query.Length == 0)
         {
             ShowPanel(ViewSelector.SelectedItem == AllAppsTab ? AllAppsList : PinnedPanel);
@@ -204,6 +208,7 @@ public sealed partial class MenuWindow : Window
         }
 
         ShowPanel(SearchPanel);
+        ResultsScroller.ChangeView(null, 0, null, disableAnimation: true);
 
         if (CommandRunner.IsCommand(query))
         {
@@ -248,7 +253,9 @@ public sealed partial class MenuWindow : Window
     {
         GamesSection.Visibility = _games.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
 
-        bool none = _results.Count == 0 && _games.Count == 0;
+        StoreSection.Visibility = _store.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+
+        bool none = _results.Count == 0 && _games.Count == 0 && _store.Count == 0;
         NoResultsText.Text = $"Nothing matches “{query}”";
         NoResultsText.Visibility = none ? Visibility.Visible : Visibility.Collapsed;
 
@@ -273,10 +280,13 @@ public sealed partial class MenuWindow : Window
             var store = await SteamLibrary.SearchStoreAsync(query, installed, cts.Token);
             if (cts.IsCancellationRequested || SearchBox.Text.Trim() != query) return;
 
-            foreach (var g in store.Take(3 - Math.Min(_games.Count, 2)))
+            _store.Clear();
+            foreach (var g in store)
             {
-                if (_games.Any(x => x.Name.Equals(g.Name, StringComparison.OrdinalIgnoreCase))) continue;
-                _games.Add(g);
+                if (_store.Count == 3) break;
+                if (_games.Any(x => x.Name.Equals(g.Name, StringComparison.OrdinalIgnoreCase)) ||
+                    _results.Any(x => x.Name.Equals(g.Name, StringComparison.OrdinalIgnoreCase))) continue;
+                _store.Add(g);
                 if (g.CoverPath is not null) g.Icon = new Microsoft.UI.Xaml.Media.Imaging.BitmapImage(new Uri(g.CoverPath));
             }
             UpdateSearchSections(query);
@@ -371,16 +381,23 @@ public sealed partial class MenuWindow : Window
 
             case VirtualKey.Down when searching && _results.Count > 0:
                 ResultsList.SelectedIndex = Math.Min(ResultsList.SelectedIndex + 1, _results.Count - 1);
-                ResultsList.ScrollIntoView(ResultsList.SelectedItem);
+                BringSelectedResultIntoView();
                 e.Handled = true;
                 break;
 
             case VirtualKey.Up when searching && _results.Count > 0:
                 ResultsList.SelectedIndex = Math.Max(ResultsList.SelectedIndex - 1, 0);
-                ResultsList.ScrollIntoView(ResultsList.SelectedItem);
+                BringSelectedResultIntoView();
                 e.Handled = true;
                 break;
         }
+    }
+
+    /// <summary>The results list doesn't scroll by itself (the whole results column does), so scroll that.</summary>
+    private void BringSelectedResultIntoView()
+    {
+        if (ResultsList.ContainerFromIndex(ResultsList.SelectedIndex) is UIElement row)
+            row.StartBringIntoView(new BringIntoViewOptions { AnimationDesired = false });
     }
 
     private void ViewSelector_SelectionChanged(SelectorBar sender, SelectorBarSelectionChangedEventArgs args)

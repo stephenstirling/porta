@@ -1,4 +1,6 @@
+using System.Collections.Concurrent;
 using System.Globalization;
+using System.Text.Json;
 using System.Net.Http.Json;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
@@ -68,7 +70,10 @@ public static partial class SteamLibrary
         return games;
     }
 
-    /// <summary>Steam's cached header image. The folder layout changed in 2024, so try both.</summary>
+    /// <summary>
+    /// Steam's cached header image. The folder layout has changed over time: flat files, then a folder
+    /// per game, and now most images sit one level deeper in hash-named subfolders as library_header.jpg.
+    /// </summary>
     private static string? Cover(string steam, string id)
     {
         var cache = Path.Combine(steam, "appcache", "librarycache");
@@ -78,7 +83,19 @@ public static partial class SteamLibrary
             Path.Combine(cache, id, "header.jpg"),
             Path.Combine(cache, $"{id}_library_hero.jpg"),
         ];
-        return candidates.FirstOrDefault(File.Exists);
+        var found = candidates.FirstOrDefault(File.Exists);
+        if (found is not null) return found;
+
+        var folder = Path.Combine(cache, id);
+        if (!Directory.Exists(folder)) return null;
+        try
+        {
+            return Directory.EnumerateFiles(folder, "library_header.jpg", SearchOption.AllDirectories).FirstOrDefault();
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            return null;
+        }
     }
 
     private static string? Field(string acf, string key)
@@ -99,8 +116,16 @@ public static partial class SteamLibrary
         var cc = RegionInfo.CurrentRegion.TwoLetterISORegionName;
         var url = $"https://store.steampowered.com/api/storesearch/?term={Uri.EscapeDataString(term)}&l=english&cc={cc}";
         var result = await Http.GetFromJsonAsync<StoreSearch>(url, ct).ConfigureAwait(false);
-        return (result?.Items ?? [])
+        // Steam's search is loose ("red dead" also returns unrelated games); keep names containing the whole phrase.
+        var phrase = Simplify(term);
+        var candidates = (result?.Items ?? [])
             .Where(i => i.Type == "app" && !installedIds.Contains(i.Id.ToString()))
+            .Where(i => phrase.Length > 0 && Simplify(i.Name).Contains(phrase, StringComparison.Ordinal))
+            .Take(6) // extra, so a few can be dropped as adult and still leave 3
+            .ToList();
+        var adult = await Task.WhenAll(candidates.Select(i => IsAdultAsync(i.Id, ct))).ConfigureAwait(false);
+        return candidates
+            .Where((_, index) => !adult[index])
             .Take(3)
             .Select(i => new GameEntry
             {
@@ -112,6 +137,55 @@ public static partial class SteamLibrary
                 LauncherId = i.Id.ToString(),
             })
             .ToList();
+    }
+
+    /// <summary>Lower case, letters and digits only, single spaces: "The Witcher® 3: Wild Hunt" → "the witcher 3 wild hunt".</summary>
+    internal static string Simplify(string text)
+    {
+        var sb = new System.Text.StringBuilder(text.Length);
+        foreach (var c in text.ToLowerInvariant())
+        {
+            if (char.IsLetterOrDigit(c)) sb.Append(c);
+            else if (sb.Length > 0 && sb[^1] != ' ') sb.Append(' ');
+        }
+        return sb.ToString().Trim();
+    }
+
+    // Steam content descriptors: 3 adult only sexual content, 4 frequent nudity or sexual content.
+    // (1 some nudity, 2 violence/gore and 5 general mature are allowed.)
+    private static readonly int[] AdultDescriptors = [3, 4];
+    private static readonly ConcurrentDictionary<long, bool> AdultCache = new();
+
+    /// <summary>
+    /// Whether a store game has adult-only or frequent nudity content descriptors. The quick store search doesn't say,
+    /// so this asks Steam's app details. If Steam can't be reached, the game is treated as adult and hidden.
+    /// </summary>
+    private static async Task<bool> IsAdultAsync(long id, CancellationToken ct)
+    {
+        if (AdultCache.TryGetValue(id, out var cached)) return cached;
+        try
+        {
+            var url = $"https://store.steampowered.com/api/appdetails?appids={id}&filters=content_descriptors";
+            using var doc = await JsonDocument.ParseAsync(
+                await Http.GetStreamAsync(url, ct).ConfigureAwait(false), cancellationToken: ct).ConfigureAwait(false);
+            if (!doc.RootElement.TryGetProperty(id.ToString(), out var app) ||
+                !app.TryGetProperty("success", out var ok) || ok.ValueKind != JsonValueKind.True)
+                return true; // not returned for this region or anonymous visitors: don't show it
+
+            bool adult = false;
+            if (app.TryGetProperty("data", out var data) && data.ValueKind == JsonValueKind.Object &&
+                data.TryGetProperty("content_descriptors", out var cd) &&
+                cd.TryGetProperty("ids", out var ids) && ids.ValueKind == JsonValueKind.Array)
+            {
+                adult = ids.EnumerateArray().Any(x => x.TryGetInt32(out var n) && AdultDescriptors.Contains(n));
+            }
+            AdultCache[id] = adult;
+            return adult;
+        }
+        catch (Exception ex) when (ex is HttpRequestException or JsonException or TaskCanceledException && !ct.IsCancellationRequested)
+        {
+            return true;
+        }
     }
 
     private sealed record StoreSearch([property: JsonPropertyName("items")] List<StoreItem>? Items);

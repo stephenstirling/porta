@@ -43,6 +43,30 @@
                     <TextBlock Grid.Column="1" Text="{x:Bind Name}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
                 </Grid>
             </DataTemplate>
+
+            <!-- One game in search: installed games and Steam store results -->
+            <DataTemplate x:Key="GameRowTemplate" x:DataType="m:GameEntry">
+                <Grid ColumnSpacing="12" Height="56">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="92" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Border Width="92" Height="43" CornerRadius="6" Background="{ThemeResource SubtleFillColorSecondaryBrush}">
+                        <Grid>
+                            <TextBlock Text="{x:Bind Initial}" FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                       Visibility="{x:Bind InitialVisibility, Mode=OneWay}" />
+                            <Image Source="{x:Bind Icon, Mode=OneWay}" Stretch="Uniform" />
+                        </Grid>
+                    </Border>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                        <TextBlock Text="{x:Bind Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                        <TextBlock Text="{x:Bind Subtitle}" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    </StackPanel>
+                    <TextBlock Grid.Column="2" Text="{x:Bind ActionText}" VerticalAlignment="Center" FontWeight="SemiBold"
+                               Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+                </Grid>
+            </DataTemplate>
         </Grid.Resources>
 
         <Grid.ColumnDefinitions>
@@ -62,6 +86,7 @@
                      PlaceholderText="Search apps, files and settings"
                      AutomationProperties.Name="Search"
                      Height="40" CornerRadius="10" VerticalContentAlignment="Center"
+                     IsSpellCheckEnabled="False" IsTextPredictionEnabled="False" InputScope="SearchIncremental"
                      TextChanged="SearchBox_TextChanged" />
 
             <SelectorBar x:Name="ViewSelector" Grid.Row="1" SelectionChanged="ViewSelector_SelectionChanged">
@@ -143,50 +168,41 @@
                 <!-- Search results -->
                 <Grid x:Name="SearchPanel" Visibility="Collapsed" RowSpacing="6">
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
                         <RowDefinition Height="*" />
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
-                    <!-- Games from Steam, Epic, Battle.net and Xbox -->
-                    <StackPanel x:Name="GamesSection" Visibility="Collapsed" Spacing="4">
-                        <TextBlock Text="Games" FontSize="12" FontWeight="SemiBold" Margin="4,0,0,0"
-                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                        <ListView x:Name="GamesList" SelectionMode="None" IsItemClickEnabled="True" ItemClick="Game_ItemClick">
-                            <ListView.ItemTemplate>
-                                <DataTemplate x:DataType="m:GameEntry">
-                                    <Grid ColumnSpacing="12" Height="56">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="92" />
-                                            <ColumnDefinition Width="*" />
-                                            <ColumnDefinition Width="Auto" />
-                                        </Grid.ColumnDefinitions>
-                                        <Border Width="92" Height="43" CornerRadius="6" Background="{ThemeResource SubtleFillColorSecondaryBrush}">
-                                            <Grid>
-                                                <TextBlock Text="{x:Bind Initial}" FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center"
-                                                           Visibility="{x:Bind InitialVisibility, Mode=OneWay}" />
-                                                <Image Source="{x:Bind Icon, Mode=OneWay}" Stretch="Uniform" />
-                                            </Grid>
-                                        </Border>
-                                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
-                                            <TextBlock Text="{x:Bind Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
-                                            <TextBlock Text="{x:Bind Subtitle}" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                                        </StackPanel>
-                                        <TextBlock Grid.Column="2" Text="{x:Bind ActionText}" VerticalAlignment="Center" FontWeight="SemiBold"
-                                                   Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
-                                    </Grid>
-                                </DataTemplate>
-                            </ListView.ItemTemplate>
-                        </ListView>
-                    </StackPanel>
+                    <!-- Installed games, then apps, then store results, each directly below the last; scrolls as one -->
+                    <ScrollViewer x:Name="ResultsScroller" VerticalScrollBarVisibility="Auto">
+                        <StackPanel Spacing="6">
+                            <!-- Games from Steam, Epic, Battle.net and Xbox -->
+                            <StackPanel x:Name="GamesSection" Visibility="Collapsed" Spacing="4">
+                                <TextBlock Text="Games" FontSize="12" FontWeight="SemiBold" Margin="4,0,0,0"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                <ListView x:Name="GamesList" SelectionMode="None" IsItemClickEnabled="True" ItemClick="Game_ItemClick"
+                                          ItemTemplate="{StaticResource GameRowTemplate}"
+                                          ScrollViewer.VerticalScrollMode="Disabled" ScrollViewer.VerticalScrollBarVisibility="Disabled" />
+                            </StackPanel>
 
-                    <ListView x:Name="ResultsList" Grid.Row="1" SelectionMode="Single" IsItemClickEnabled="True" ItemClick="App_ItemClick"
-                              ItemTemplate="{StaticResource AppRowTemplate}" />
-                    <TextBlock x:Name="NoResultsText" Grid.Row="1" Visibility="Collapsed" HorizontalAlignment="Center" Margin="0,40,0,0"
+                            <ListView x:Name="ResultsList" SelectionMode="Single" IsItemClickEnabled="True" ItemClick="App_ItemClick"
+                                      ItemTemplate="{StaticResource AppRowTemplate}"
+                                      ScrollViewer.VerticalScrollMode="Disabled" ScrollViewer.VerticalScrollBarVisibility="Disabled" />
+
+                            <!-- Games from the Steam store that aren't installed: always below installed apps and games -->
+                            <StackPanel x:Name="StoreSection" Visibility="Collapsed" Spacing="4">
+                                <TextBlock Text="From the Steam store" FontSize="12" FontWeight="SemiBold" Margin="4,0,0,0"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                <ListView x:Name="StoreList" SelectionMode="None" IsItemClickEnabled="True" ItemClick="Game_ItemClick"
+                                          ItemTemplate="{StaticResource GameRowTemplate}"
+                                          ScrollViewer.VerticalScrollMode="Disabled" ScrollViewer.VerticalScrollBarVisibility="Disabled" />
+                            </StackPanel>
+                        </StackPanel>
+                    </ScrollViewer>
+                    <TextBlock x:Name="NoResultsText" Visibility="Collapsed" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,40,0,0"
                                Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />
 
                     <!-- Search a game store for what was typed -->
-                    <StackPanel x:Name="StoreLinks" Grid.Row="2" Orientation="Horizontal" Spacing="4" Visibility="Collapsed">
+                    <StackPanel x:Name="StoreLinks" Grid.Row="1" Orientation="Horizontal" Spacing="4" Visibility="Collapsed">
                         <TextBlock Text="Search stores:" FontSize="12" VerticalAlignment="Center" Margin="4,0,4,0"
                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                         <HyperlinkButton x:Name="SteamStoreLink" Content="Steam" FontSize="12" Click="StoreLink_Click" Tag="steam" />
