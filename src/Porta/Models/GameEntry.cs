@@ -16,7 +16,7 @@ public sealed class GameEntry : IconItem
     public string? Arguments { get; init; }
 
     /// <summary>Wide cover art on disk or on the web, if the launcher has one.</summary>
-    public string? CoverPath { get; init; }
+    public string? CoverPath { get; set; }
 
     /// <summary>Where to load a square icon from when there's no cover (exe, shell path).</summary>
     public string? IconSource { get; init; }
