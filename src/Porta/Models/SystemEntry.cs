@@ -21,6 +21,9 @@ public sealed class SystemEntry
     public string? Arguments { get; init; }
     public PowerAction? Power { get; init; }
 
+    /// <summary>Where a Settings page sits, as Settings shows it: "System > Display > HDR".</summary>
+    public string? Path { get; init; }
+
     /// <summary>
     /// The tool declares it wants admin rights, so Windows shows its normal admin prompt when it opens.
     /// Porta doesn't elevate anything itself.
@@ -36,7 +39,7 @@ public sealed class SystemEntry
     public string Subtitle => Kind switch
     {
         SystemKind.Tool => AsksForAdmin ? "System tool · Admin" : "System tool",
-        SystemKind.Settings => "Settings",
+        SystemKind.Settings => Path is null ? "Settings" : $"Settings · {Path}",
         _ => "Power",
     };
 }
