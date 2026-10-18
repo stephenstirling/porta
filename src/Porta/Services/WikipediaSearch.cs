@@ -70,6 +70,10 @@ public static class WikipediaSearch
                     $"https://{lang}.wikipedia.org/wiki/{Uri.EscapeDataString(p.Key!)}",
                     Absolute(p.Thumbnail?.Url)))
                 .ToList();
+
+            // Disambiguation pages ("Python: topics referred to by the same term") go after real articles.
+            var disambiguation = await DisambiguationTitlesAsync(lang, results, ct).ConfigureAwait(false);
+            results = results.OrderBy(r => disambiguation.Contains(r.Title)).ToList(); // stable: keeps the rest in order
             lock (Cache)
             {
                 if (Cache.Count > 200) Cache.Clear();
@@ -87,6 +91,47 @@ public static class WikipediaSearch
             LastError = $"{lang}.wikipedia.org: {ex.GetType().Name}: {ex.Message}";
             Debug.WriteLine("Porta: Wikipedia search failed: " + LastError);
             return null;
+        }
+    }
+
+    /// <summary>
+    /// Which of these articles are disambiguation pages, from their "disambiguation" page property (one small
+    /// request). If that fails, falls back to the title or the standard English description.
+    /// </summary>
+    private static async Task<HashSet<string>> DisambiguationTitlesAsync(string lang, List<WikiResult> results, CancellationToken ct)
+    {
+        var found = new HashSet<string>(StringComparer.Ordinal);
+        if (results.Count == 0) return found;
+        try
+        {
+            var titles = string.Join("|", results.Select(r => r.Title));
+            var url = $"https://{lang}.wikipedia.org/w/api.php?action=query&prop=pageprops&ppprop=disambiguation" +
+                      $"&redirects=1&format=json&formatversion=2&titles={Uri.EscapeDataString(titles)}";
+            using var doc = JsonDocument.Parse(await Http.GetStringAsync(url, ct).ConfigureAwait(false));
+            if (doc.RootElement.TryGetProperty("query", out var query) && query.TryGetProperty("pages", out var pages))
+            {
+                foreach (var page in pages.EnumerateArray())
+                {
+                    if (page.TryGetProperty("pageprops", out var props) && props.TryGetProperty("disambiguation", out _) &&
+                        page.TryGetProperty("title", out var title) && title.GetString() is { } t)
+                        found.Add(t);
+                }
+            }
+            return found;
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or JsonException or InvalidOperationException)
+        {
+            foreach (var r in results)
+            {
+                if (r.Title.EndsWith("(disambiguation)", StringComparison.OrdinalIgnoreCase) ||
+                    r.Description == "Topics referred to by the same term")
+                    found.Add(r.Title);
+            }
+            return found;
         }
     }
 
