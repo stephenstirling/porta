@@ -8,21 +8,17 @@ public sealed class GameEntry : IconItem
     public required string Name { get; init; }
     public required GameLauncher Launcher { get; init; }
     public required bool Installed { get; init; }
-
-    /// <summary>A link or command that starts the game (or opens its store page if not installed).</summary>
     public required string Target { get; init; }
-
-    /// <summary>Arguments when <see cref="Target"/> is an exe (Battle.net); otherwise null.</summary>
     public string? Arguments { get; init; }
-
     /// <summary>Wide cover art on disk or on the web, if the launcher has one.</summary>
     public string? CoverPath { get; set; }
-
     /// <summary>Where to load a square icon from when there's no cover (exe, shell path).</summary>
     public string? IconSource { get; init; }
-
-    /// <summary>Launcher's id for the game (Steam app id, Epic AppName, Battle.net product code, package name).</summary>
     public string? LauncherId { get; init; }
+    /// <summary>Epic catalog namespace, used to retrieve optional cover artwork.</summary>
+    public string? CatalogNamespace { get; init; }
+    /// <summary>Epic catalog item identifier, used to retrieve optional cover artwork.</summary>
+    public string? CatalogItemId { get; init; }
 
     public string LauncherName => Launcher switch
     {
@@ -34,8 +30,6 @@ public sealed class GameEntry : IconItem
     };
 
     public string Subtitle => Installed ? $"{LauncherName} · Installed" : $"{LauncherName} store · Not installed";
-
     public string ActionText => Installed ? "Play" : "View";
-
     public string Initial => Name.Length > 0 ? char.ToUpperInvariant(Name[0]).ToString() : "?";
 }
