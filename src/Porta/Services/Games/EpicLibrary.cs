@@ -44,6 +44,8 @@ public static class EpicLibrary
                     Target = $"com.epicgames.launcher://apps/{ns}%3A{item}%3A{appName}?action=launch&silent=true",
                     IconSource = exePath is not null && File.Exists(exePath) ? exePath : null,
                     LauncherId = appName,
+                    CatalogNamespace = ns,
+                    CatalogItemId = item,
                 });
             }
             catch (Exception ex) when (ex is IOException or JsonException or InvalidOperationException)
