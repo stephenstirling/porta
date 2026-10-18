@@ -14,7 +14,7 @@ namespace Porta.Services.Games;
 /// </summary>
 public static partial class BattleNetLibrary
 {
-    private const string AgentProductDb = @"Battle.net\\Agent\\product.db";
+    private const string AgentProductDb = "Battle.net\\\\Agent\\\\product.db";
 
     /// <summary>
     /// The Battle.net shop has no reliable public search endpoint; open the regional shop instead.
@@ -150,7 +150,7 @@ public static partial class BattleNetLibrary
 
     private static IEnumerable<(string Name, string Uninstall, string? Icon)> UninstallEntries()
     {
-        const string path = @"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall";
+        const string path = "SOFTWARE\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Uninstall";
         foreach (var view in new[] { RegistryView.Registry64, RegistryView.Registry32 })
         {
             using var hive = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, view);
@@ -174,17 +174,17 @@ public static partial class BattleNetLibrary
     private static IEnumerable<ProductInstall> ReadProductDb()
     {
         var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), AgentProductDb);
-        byte[] data;
+        byte[]? data;
         try
         {
-            if (!File.Exists(path)) yield break;
-            data = File.ReadAllBytes(path);
+            data = File.Exists(path) ? File.ReadAllBytes(path) : null;
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
             Debug.WriteLine($"Porta: couldn't read Battle.net product.db: {ex.Message}");
-            yield break;
+            data = null;
         }
+        if (data is null) yield break;
 
         // ProductDb.product_installs is repeated field 1. Each ProductInstall uses field 2 for
         // product_code and field 3 for settings; ProductInstallSettings.install_path is field 1.
