@@ -21,6 +21,29 @@ public static class Launcher
 
     public static void OpenApp(AppEntry app, bool asAdmin = false) => Open(app.ShellPath, asAdmin ? "runas" : null);
 
+    /// <summary>Opens a Windows tool or Settings page, or runs a power action. Confirmation is the caller's job.</summary>
+    public static void OpenSystem(SystemEntry entry)
+    {
+        switch (entry.Power)
+        {
+            case PowerAction.Lock: Lock(); return;
+            case PowerAction.SignOut: SignOut(); return;
+            case PowerAction.Sleep: Sleep(); return;
+            case PowerAction.Restart: Restart(); return;
+            case PowerAction.ShutDown: ShutDown(); return;
+        }
+        if (entry.Target is null) return;
+        try
+        {
+            // Normal open: Windows itself shows the admin prompt for tools whose manifest asks for it.
+            Process.Start(new ProcessStartInfo(entry.Target, entry.Arguments ?? "") { UseShellExecute = true });
+        }
+        catch (Win32Exception ex) when (ex.NativeErrorCode == 1223)
+        {
+            // The user said no to the admin prompt.
+        }
+    }
+
     public static void OpenFolder(string shellFolder) =>
         Process.Start(new ProcessStartInfo("explorer.exe", shellFolder) { UseShellExecute = true });
 
