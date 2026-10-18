@@ -63,6 +63,8 @@ public sealed partial class MenuWindow : Window
         // still draw its border around the whole window rectangle, so it's turned off; the menu draws its
         // own hairline around the panel shape (MenuWindow.xaml).
         Native.HideBorder(_hwnd);
+        // A plain tool window, so title-bar add-ons (e.g. DisplayFusion's buttons) don't draw over the menu.
+        Native.MakeToolWindow(_hwnd);
         // Keep the cut in step with the window: after any move or resize, including a DPI change.
         AppWindow.Changed += (_, e) =>
         {
@@ -119,6 +121,7 @@ public sealed partial class MenuWindow : Window
         ClockText.Text = DateTime.Now.ToString("t");
         DateText.Text = DateTime.Now.ToString("dddd, MMMM d");
 
+        Native.MakeToolWindow(_hwnd); // again before placing: WinUI can restore its frame styles
         PlaceAboveTaskbar();
         AppWindow.Show(true);
         Native.ForceForeground(_hwnd);
