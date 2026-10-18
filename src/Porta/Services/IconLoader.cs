@@ -26,7 +26,11 @@ public sealed class IconLoader
         {
             var pixels = ShellIcons.GetPixels(path, size);
             if (pixels is not null)
-                _ui.TryEnqueue(() => item.Icon = ShellIcons.ToBitmap(pixels));
+                _ui.TryEnqueue(() =>
+                {
+                    // A store cover may have arrived while this executable icon was loading.
+                    if (item.Icon is null) item.Icon = ShellIcons.ToBitmap(pixels);
+                });
         }
     }
 }
