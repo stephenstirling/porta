@@ -13,6 +13,7 @@ public partial class App : Application
     public static SettingsStore Settings { get; } = new();
     public static AppCatalog Catalog { get; } = new();
     public static IconLoader Icons { get; private set; } = null!;
+    public static DispatcherQueue UiDispatcher { get; private set; } = null!;
     public static Services.Games.GameLibrary Games { get; } = new();
 
     /// <summary>Where "Buy me a coffee" links go, in the tray menu and (from milestone 2) Settings › About.</summary>
@@ -35,7 +36,8 @@ public partial class App : Application
     protected override async void OnLaunched(LaunchActivatedEventArgs args)
     {
         Settings.Load();
-        Icons = new IconLoader(DispatcherQueue.GetForCurrentThread());
+        UiDispatcher = DispatcherQueue.GetForCurrentThread();
+        Icons = new IconLoader(UiDispatcher);
 
         _menu = new MenuWindow();
 
