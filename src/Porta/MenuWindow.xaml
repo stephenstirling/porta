@@ -8,6 +8,20 @@
 
     <Grid x:Name="Root" PreviewKeyDown="Root_PreviewKeyDown">
         <Grid.Resources>
+          <ResourceDictionary>
+            <!-- Panel colours from design/Main.dc.html -->
+            <ResourceDictionary.ThemeDictionaries>
+                <ResourceDictionary x:Key="Default">
+                    <!-- Right pane: a touch darker than the left -->
+                    <SolidColorBrush x:Key="PortaRailBrush" Color="#000000" Opacity="0.14" />
+                    <SolidColorBrush x:Key="PortaHairlineBrush" Color="#FFFFFF" Opacity="0.08" />
+                </ResourceDictionary>
+                <ResourceDictionary x:Key="Light">
+                    <SolidColorBrush x:Key="PortaRailBrush" Color="#0F1428" Opacity="0.04" />
+                    <SolidColorBrush x:Key="PortaHairlineBrush" Color="#0F1428" Opacity="0.08" />
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
+
             <!-- Flat buttons for the right-hand panel -->
             <Style x:Key="RailButton" TargetType="Button" BasedOn="{StaticResource DefaultButtonStyle}">
                 <Setter Property="Background" Value="Transparent" />
@@ -67,15 +81,22 @@
                                Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
                 </Grid>
             </DataTemplate>
+          </ResourceDictionary>
         </Grid.Resources>
 
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
-            <ColumnDefinition Width="248" />
+            <ColumnDefinition Width="200" />
         </Grid.ColumnDefinitions>
+        <!-- Row 0 is the strip above the panel where the account picture breaks out; the window is
+             cut to the panel plus the picture's circle, so the rest of that strip isn't drawn. -->
+        <Grid.RowDefinitions>
+            <RowDefinition Height="36" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
 
         <!-- ===== Left: search, pinned, all apps ===== -->
-        <Grid Padding="24,24,20,16" RowSpacing="14">
+        <Grid Grid.Row="1" Padding="24,24,20,16" RowSpacing="14">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
@@ -109,7 +130,7 @@
                               DragItemsCompleted="PinnedGrid_DragItemsCompleted">
                         <GridView.ItemsPanel>
                             <ItemsPanelTemplate>
-                                <ItemsWrapGrid Orientation="Horizontal" MaximumRowsOrColumns="5" ItemWidth="92" ItemHeight="88" />
+                                <ItemsWrapGrid Orientation="Horizontal" MaximumRowsOrColumns="4" ItemWidth="92" ItemHeight="88" />
                             </ItemsPanelTemplate>
                         </GridView.ItemsPanel>
                         <GridView.ItemTemplate>
@@ -129,7 +150,7 @@
                         </GridView.ItemTemplate>
                     </GridView>
 
-                    <TextBlock x:Name="RecentHeader" Grid.Row="1" Text="Recent" FontWeight="SemiBold" Margin="4,8,0,0" />
+                    <TextBlock x:Name="RecentHeader" Grid.Row="1" Text="Recent" FontWeight="SemiBold" Margin="4,2,0,0" />
 
                     <ListView x:Name="RecentList" Grid.Row="2" SelectionMode="None" IsItemClickEnabled="True" ItemClick="Recent_ItemClick">
                         <ListView.ItemTemplate>
@@ -206,17 +227,30 @@
                         <TextBlock Text="Search stores:" FontSize="12" VerticalAlignment="Center" Margin="4,0,4,0"
                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                         <HyperlinkButton x:Name="SteamStoreLink" Content="Steam" FontSize="12" Click="StoreLink_Click" Tag="steam" />
-                        <HyperlinkButton x:Name="EpicStoreLink" Content="Epic" FontSize="12" Click="StoreLink_Click" Tag="epic" />
+                        <HyperlinkButton x:Name="EpicStoreLink" Content="Epic Games" FontSize="12" Click="StoreLink_Click" Tag="epic" />
+                        <HyperlinkButton x:Name="BattleNetStoreLink" Content="Battle.net" FontSize="12" Click="StoreLink_Click" Tag="battlenet" />
                         <HyperlinkButton x:Name="MsStoreLink" Content="Microsoft Store" FontSize="12" Click="StoreLink_Click" Tag="xbox" />
                     </StackPanel>
                 </Grid>
             </Grid>
         </Grid>
 
+        <!-- The one hairline around the visible panel. Windows' own border is off because it would outline
+             the whole window rectangle, not the cut shape. The picture's ring continues it above the edge. -->
+        <Border Grid.Row="1" Grid.ColumnSpan="2" BorderThickness="1" BorderBrush="{ThemeResource PortaHairlineBrush}"
+                CornerRadius="8" IsHitTestVisible="False" />
+
+        <!-- Account picture, centred on the right pane's top edge (72 px with a thin ring = 76 px circle) -->
+        <Grid Grid.RowSpan="2" Grid.Column="1" Width="76" Height="76" Margin="0,-2,0,0"
+              HorizontalAlignment="Center" VerticalAlignment="Top">
+            <Ellipse Fill="{ThemeResource PortaRailBrush}" Stroke="{ThemeResource PortaHairlineBrush}" StrokeThickness="2" />
+            <PersonPicture x:Name="Avatar" Width="72" Height="72" />
+        </Grid>
+
         <!-- ===== Right: account, places, clock, power ===== -->
-        <Grid Grid.Column="1" Padding="14,28,14,14" RowSpacing="2"
-              Background="{ThemeResource LayerOnAcrylicFillColorDefaultBrush}"
-              BorderThickness="1,0,0,0" BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}">
+        <Grid Grid.Row="1" Grid.Column="1" Padding="14,28,14,14" RowSpacing="2"
+              Background="{ThemeResource PortaRailBrush}"
+              BorderThickness="1,0,0,0" BorderBrush="{ThemeResource PortaHairlineBrush}">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
@@ -225,10 +259,9 @@
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
-            <StackPanel Spacing="8" HorizontalAlignment="Center" Margin="0,0,0,16">
-                <PersonPicture x:Name="Avatar" Width="64" Height="64" />
-                <TextBlock x:Name="UserNameText" FontSize="16" FontWeight="SemiBold" HorizontalAlignment="Center" TextTrimming="CharacterEllipsis" />
-            </StackPanel>
+            <!-- The picture itself sits on the panel's top edge (below); the name goes under it. -->
+            <TextBlock x:Name="UserNameText" Margin="0,16,0,16" FontSize="16" FontWeight="SemiBold"
+                       HorizontalAlignment="Center" TextTrimming="CharacterEllipsis" />
 
             <StackPanel Grid.Row="1" Spacing="2">
                 <Button Style="{StaticResource RailButton}" Tag="shell:Personal" Click="Folder_Click">
@@ -260,6 +293,24 @@
             </Border>
 
             <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="4" Margin="0,10,0,0">
+                <!-- Glass strength (moves to Settings › Appearance when that window exists) -->
+                <Button Style="{StaticResource RailIconButton}"
+                        AutomationProperties.Name="Glass strength" ToolTipService.ToolTip="Glass strength">
+                    <FontIcon Glyph="&#xE790;" FontSize="16" />
+                    <Button.Flyout>
+                        <Flyout Placement="TopEdgeAlignedRight" Closed="GlassFlyout_Closed">
+                            <StackPanel Width="220" Spacing="4">
+                                <TextBlock Text="Glass strength" FontSize="13" FontWeight="SemiBold" />
+                                <Slider x:Name="GlassSlider" Minimum="0" Maximum="100" StepFrequency="5"
+                                        AutomationProperties.Name="Glass strength" ValueChanged="GlassSlider_ValueChanged" />
+                                <Grid>
+                                    <TextBlock Text="Clear" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                    <TextBlock Text="Frosted" FontSize="12" HorizontalAlignment="Right" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                </Grid>
+                            </StackPanel>
+                        </Flyout>
+                    </Button.Flyout>
+                </Button>
                 <Button Style="{StaticResource RailIconButton}" Click="Lock_Click"
                         AutomationProperties.Name="Lock" ToolTipService.ToolTip="Lock">
                     <FontIcon Glyph="&#xE72E;" FontSize="16" />
