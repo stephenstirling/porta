@@ -145,12 +145,48 @@
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
 
-            <TextBox x:Name="SearchBox"
-                     PlaceholderText="Search apps, files and settings"
-                     AutomationProperties.Name="Search"
-                     Height="40" CornerRadius="10" VerticalContentAlignment="Center"
-                     IsSpellCheckEnabled="False" IsTextPredictionEnabled="False" InputScope="SearchIncremental"
-                     TextChanged="SearchBox_TextChanged" />
+            <!-- Pill search bar: fully rounded, subtle fill that lets the glass through, magnifier on the left,
+                 thin periwinkle ring when focused (instead of WinUI's underline, which looks odd on a pill). -->
+            <Grid>
+                <TextBox x:Name="SearchBox"
+                         PlaceholderText="Search apps, files and settings"
+                         AutomationProperties.Name="Search"
+                         Height="40" CornerRadius="20" Padding="40,9,8,0"
+                         IsSpellCheckEnabled="False" IsTextPredictionEnabled="False" InputScope="SearchIncremental"
+                         TextChanged="SearchBox_TextChanged">
+                    <TextBox.Resources>
+                        <ResourceDictionary>
+                            <ResourceDictionary.ThemeDictionaries>
+                                <ResourceDictionary x:Key="Default">
+                                    <SolidColorBrush x:Key="TextControlBackground" Color="#FFFFFF" Opacity="0.07" />
+                                    <SolidColorBrush x:Key="TextControlBackgroundPointerOver" Color="#FFFFFF" Opacity="0.10" />
+                                    <SolidColorBrush x:Key="TextControlBackgroundFocused" Color="#FFFFFF" Opacity="0.12" />
+                                    <SolidColorBrush x:Key="TextControlElevationBorderBrush" Color="#FFFFFF" Opacity="0.10" />
+                                    <SolidColorBrush x:Key="TextControlBorderBrush" Color="#FFFFFF" Opacity="0.10" />
+                                    <SolidColorBrush x:Key="TextControlBorderBrushPointerOver" Color="#FFFFFF" Opacity="0.18" />
+                                    <SolidColorBrush x:Key="TextControlElevationBorderFocusedBrush" Color="#8AA8FF" />
+                                    <SolidColorBrush x:Key="TextControlBorderBrushFocused" Color="#8AA8FF" />
+                                </ResourceDictionary>
+                                <ResourceDictionary x:Key="Light">
+                                    <SolidColorBrush x:Key="TextControlBackground" Color="#0F1428" Opacity="0.05" />
+                                    <SolidColorBrush x:Key="TextControlBackgroundPointerOver" Color="#0F1428" Opacity="0.08" />
+                                    <SolidColorBrush x:Key="TextControlBackgroundFocused" Color="#FFFFFF" Opacity="0.70" />
+                                    <SolidColorBrush x:Key="TextControlElevationBorderBrush" Color="#0F1428" Opacity="0.10" />
+                                    <SolidColorBrush x:Key="TextControlBorderBrush" Color="#0F1428" Opacity="0.10" />
+                                    <SolidColorBrush x:Key="TextControlBorderBrushPointerOver" Color="#0F1428" Opacity="0.18" />
+                                    <SolidColorBrush x:Key="TextControlElevationBorderFocusedBrush" Color="#5F7EE0" />
+                                    <SolidColorBrush x:Key="TextControlBorderBrushFocused" Color="#5F7EE0" />
+                                </ResourceDictionary>
+                            </ResourceDictionary.ThemeDictionaries>
+                            <!-- Same 1 px all round when focused: a ring, not a thicker bottom line -->
+                            <Thickness x:Key="TextControlBorderThemeThickness">1</Thickness>
+                            <Thickness x:Key="TextControlBorderThemeThicknessFocused">1</Thickness>
+                        </ResourceDictionary>
+                    </TextBox.Resources>
+                </TextBox>
+                <FontIcon Glyph="&#xE721;" FontSize="14" Margin="16,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Center"
+                          Foreground="{ThemeResource TextFillColorSecondaryBrush}" IsHitTestVisible="False" />
+            </Grid>
 
             <SelectorBar x:Name="ViewSelector" Grid.Row="1" SelectionChanged="ViewSelector_SelectionChanged">
                 <SelectorBarItem x:Name="PinnedTab" Text="Pinned" IsSelected="True" />
