@@ -331,18 +331,6 @@
             </Grid>
         </Grid>
 
-        <!-- The one hairline around the visible panel. Windows' own border is off because it would outline
-             the whole window rectangle, not the cut shape. The picture's ring continues it above the edge. -->
-        <Border Grid.Row="1" Grid.ColumnSpan="2" BorderThickness="1" BorderBrush="{ThemeResource PortaHairlineBrush}"
-                CornerRadius="8" IsHitTestVisible="False" />
-
-        <!-- Account picture, centred on the right pane's top edge (72 px with a thin ring = 76 px circle) -->
-        <Grid Grid.RowSpan="2" Grid.Column="1" Width="76" Height="76" Margin="0,-2,0,0"
-              HorizontalAlignment="Center" VerticalAlignment="Top">
-            <Ellipse Fill="{ThemeResource PortaRailBrush}" Stroke="{ThemeResource PortaHairlineBrush}" StrokeThickness="2" />
-            <PersonPicture x:Name="Avatar" Width="72" Height="72" />
-        </Grid>
-
         <!-- ===== Right: account, places, clock, power ===== -->
         <Grid Grid.Row="1" Grid.Column="1" Padding="14,28,14,14" RowSpacing="2"
               Background="{ThemeResource PortaRailBrush}"
@@ -435,6 +423,26 @@
                     </Button.Flyout>
                 </Button>
             </StackPanel>
+        </Grid>
+
+        <!-- The one hairline around the visible panel (Windows' own border is off: it would outline the whole
+             window rectangle, not the cut shape). Drawn after both panes so nothing covers it. The top edge
+             is two pieces that stop 4 px short of the picture's ring, so the edge looks cut out around it:
+             the circle's centre is the middle of the 200 px right column, its ring 38 px in radius, so each
+             piece ends 38 + 4 = 42 px from the centre, i.e. 58 px into the column from either side. -->
+        <Border Grid.Row="1" Grid.ColumnSpan="2" Margin="0,0,142,0" Height="8" VerticalAlignment="Top"
+                BorderThickness="1,1,0,0" CornerRadius="8,0,0,0" BorderBrush="{ThemeResource PortaHairlineBrush}" IsHitTestVisible="False" />
+        <Border Grid.Row="1" Grid.Column="1" Width="58" Height="8" HorizontalAlignment="Right" VerticalAlignment="Top"
+                BorderThickness="0,1,1,0" CornerRadius="0,8,0,0" BorderBrush="{ThemeResource PortaHairlineBrush}" IsHitTestVisible="False" />
+        <Border Grid.Row="1" Grid.ColumnSpan="2" Margin="0,8,0,0"
+                BorderThickness="1,0,1,1" CornerRadius="0,0,8,8" BorderBrush="{ThemeResource PortaHairlineBrush}" IsHitTestVisible="False" />
+
+        <!-- Account picture, centred on the right pane's top edge (72 px with a thin ring = 76 px circle).
+             Last in the file so it's drawn above both panes and the hairline: nothing crosses the photo. -->
+        <Grid Grid.RowSpan="2" Grid.Column="1" Width="76" Height="76" Margin="0,-2,0,0"
+              HorizontalAlignment="Center" VerticalAlignment="Top">
+            <Ellipse Fill="{ThemeResource PortaRailBrush}" Stroke="{ThemeResource PortaHairlineBrush}" StrokeThickness="2" />
+            <PersonPicture x:Name="Avatar" Width="72" Height="72" />
         </Grid>
     </Grid>
 </Window>
