@@ -370,6 +370,8 @@
                                 <!-- Until the Settings window exists (milestone 2) -->
                                 <ToggleSwitch x:Name="WikipediaToggle" Header="Search Wikipedia" Margin="0,8,0,0"
                                               Toggled="WikipediaToggle_Toggled" />
+                                <ToggleSwitch x:Name="EpicLibraryToggle" Header="Epic library"
+                                              Toggled="EpicLibraryToggle_Toggled" />
                             </StackPanel>
                         </Flyout>
                     </Button.Flyout>

@@ -83,6 +83,7 @@ public sealed partial class MenuWindow : Window
         SystemList.ItemsSource = _system;
         WikiList.ItemsSource = _wiki;
         WikipediaToggle.IsOn = App.Settings.Current.SearchWikipedia;
+        EpicLibraryToggle.IsOn = App.Settings.Current.SearchEpicLibrary;
 
         var name = Native.GetDisplayName();
         UserNameText.Text = name;
@@ -96,6 +97,7 @@ public sealed partial class MenuWindow : Window
             if (App.Catalog.IsLoaded) RebuildAllApps();
             GlassSlider.Value = App.Settings.Current.GlassStrength; // also updates the glass
             WikipediaToggle.IsOn = App.Settings.Current.SearchWikipedia;
+            EpicLibraryToggle.IsOn = App.Settings.Current.SearchEpicLibrary;
         });
         GlassSlider.Value = App.Settings.Current.GlassStrength;
     }
@@ -116,6 +118,7 @@ public sealed partial class MenuWindow : Window
         RefreshRecent();
         RefreshPictureIfChanged();
         if (App.Catalog.IsLoaded) App.Games.RefreshIfStale(App.Catalog.Apps);
+        if (App.Settings.Current.SearchEpicLibrary) EpicCatalogCache.RefreshIfChanged(); // background, only if the file changed
         ClockText.Text = DateTime.Now.ToString("t");
         DateText.Text = DateTime.Now.ToString("dddd, MMMM d");
 
@@ -295,6 +298,17 @@ public sealed partial class MenuWindow : Window
             _games.Add(g);
         }
 
+        // Then Epic games from the launcher's local catalog cache (offline). The same game installed from
+        // Epic is shown once; a Steam game with the same title still shows, each with its store label.
+        if (query.Length >= 2 && App.Settings.Current.SearchEpicLibrary)
+        {
+            foreach (var g in GameLibrary.Rank(EpicCatalogCache.Games, query))
+            {
+                if (games.Any(x => x.Launcher == GameLauncher.Epic && x.Name.Equals(g.Name, StringComparison.Ordinal))) continue;
+                _games.Add(g);
+            }
+        }
+
         // App results, minus the shortcuts for games already shown above.
         _results.Clear();
         foreach (var app in SearchService.Rank(App.Catalog.Apps, query))
@@ -360,7 +374,9 @@ public sealed partial class MenuWindow : Window
             foreach (var g in store)
             {
                 if (_store.Count == 3) break;
-                if (_games.Any(x => x.Name.Equals(g.Name, StringComparison.OrdinalIgnoreCase)) ||
+                // Skip a store result only for a game already shown from Steam itself; the same title from
+                // Epic stays, so both stores show with their labels.
+                if (_games.Any(x => x.Launcher == GameLauncher.Steam && x.Name.Equals(g.Name, StringComparison.OrdinalIgnoreCase)) ||
                     _results.Any(x => x.Name.Equals(g.Name, StringComparison.OrdinalIgnoreCase))) continue;
                 _store.Add(g);
                 if (g.CoverPath is not null) g.Icon = new Microsoft.UI.Xaml.Media.Imaging.BitmapImage(new Uri(g.CoverPath));
@@ -405,6 +421,13 @@ public sealed partial class MenuWindow : Window
         if (e.ClickedItem is not WikiEntry article) return;
         HideMenu();
         Launcher.Open(article.Url);
+    }
+
+    private void EpicLibraryToggle_Toggled(object sender, RoutedEventArgs e)
+    {
+        if (App.Settings.Current.SearchEpicLibrary == EpicLibraryToggle.IsOn) return;
+        App.Settings.Current.SearchEpicLibrary = EpicLibraryToggle.IsOn;
+        App.Settings.Save();
     }
 
     private void WikipediaToggle_Toggled(object sender, RoutedEventArgs e)

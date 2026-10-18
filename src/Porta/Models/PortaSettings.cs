@@ -20,6 +20,9 @@ public sealed class PortaSettings
     /// <summary>Show Wikipedia articles for what's typed (asks Wikipedia online). When off, nothing is sent.</summary>
     public bool SearchWikipedia { get; set; } = true;
 
+    /// <summary>Show games from the Epic launcher's local catalog cache (read on this PC only, never online).</summary>
+    public bool SearchEpicLibrary { get; set; } = true;
+
     // Appearance (used from milestone 2)
     public string Theme { get; set; } = "System";
     public string? AccentColor { get; set; }
