@@ -110,23 +110,36 @@ internal static class Native
     }
 
     // ---- Window frame (Windows 11; ignored on Windows 10) ----
-    public const int DWMWA_WINDOW_CORNER_PREFERENCE = 33, DWMWA_BORDER_COLOR = 34;
-    public const int DWMWCP_ROUND = 2; // Windows' largest corner rounding (about 8 px)
+    public const int DWMWA_NCRENDERING_POLICY = 2, DWMWA_WINDOW_CORNER_PREFERENCE = 33, DWMWA_BORDER_COLOR = 34;
 
     [DllImport("dwmapi.dll")] public static extern int DwmSetWindowAttribute(IntPtr hwnd, int attribute, ref int value, int size);
 
-    /// <summary>Sets the 1 px border Windows draws around the window, replacing the accent colour.</summary>
-    public static void SetBorderColor(IntPtr hwnd, byte r, byte g, byte b)
+    /// <summary>
+    /// No Windows border at all. Needed for a window cut to a custom shape: Windows draws its border
+    /// around the full window rectangle, ignoring the cut, which shows as a box around the menu.
+    /// </summary>
+    public static void HideBorder(IntPtr hwnd)
     {
-        int colorRef = r | (g << 8) | (b << 16);
-        DwmSetWindowAttribute(hwnd, DWMWA_BORDER_COLOR, ref colorRef, sizeof(int));
+        int none = unchecked((int)0xFFFFFFFE); // DWMWA_COLOR_NONE
+        DwmSetWindowAttribute(hwnd, DWMWA_BORDER_COLOR, ref none, sizeof(int));
+        // Also no rounded frame rim: it outlines the full window rectangle too.
+        int doNotRound = 1; // DWMWCP_DONOTROUND
+        DwmSetWindowAttribute(hwnd, DWMWA_WINDOW_CORNER_PREFERENCE, ref doNotRound, sizeof(int));
+        int ncDisabled = 1; // DWMNCRP_DISABLED: no Windows-drawn frame or shadow
+        DwmSetWindowAttribute(hwnd, DWMWA_NCRENDERING_POLICY, ref ncDisabled, sizeof(int));
     }
 
-    public static void SetRoundCorners(IntPtr hwnd)
-    {
-        int preference = DWMWCP_ROUND;
-        DwmSetWindowAttribute(hwnd, DWMWA_WINDOW_CORNER_PREFERENCE, ref preference, sizeof(int));
-    }
+    // ---- Window shape ----
+    [StructLayout(LayoutKind.Sequential)] public struct RECT { public int Left, Top, Right, Bottom; }
+    [DllImport("user32.dll")] public static extern bool GetWindowRect(IntPtr hwnd, out RECT rect);
+    [DllImport("user32.dll")] public static extern bool GetClientRect(IntPtr hwnd, out RECT rect);
+    [DllImport("user32.dll")] public static extern bool ClientToScreen(IntPtr hwnd, ref POINT point);
+    [DllImport("gdi32.dll")] public static extern IntPtr CreateRoundRectRgn(int left, int top, int right, int bottom, int widthEllipse, int heightEllipse);
+    [DllImport("gdi32.dll")] public static extern IntPtr CreateEllipticRgn(int left, int top, int right, int bottom);
+    [DllImport("gdi32.dll")] public static extern int CombineRgn(IntPtr dest, IntPtr src1, IntPtr src2, int mode);
+    [DllImport("gdi32.dll")] public static extern bool DeleteObject(IntPtr obj);
+    [DllImport("user32.dll")] public static extern int SetWindowRgn(IntPtr hwnd, IntPtr region, bool redraw);
+    public const int RGN_OR = 2;
 
     // ---- Power and session ----
     [DllImport("user32.dll")] public static extern bool LockWorkStation();

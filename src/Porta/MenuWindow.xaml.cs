@@ -20,11 +20,14 @@ namespace Porta;
 /// <summary>The Start menu itself. Created once at startup and shown or hidden, never closed.</summary>
 public sealed partial class MenuWindow : Window
 {
-    private const int MenuWidth = 760;   // device-independent pixels
-    private const int MenuHeight = 640;
+    private const int MenuWidth = 676;   // device-independent pixels
+    private const int MenuHeight = 620;
+    private const int AvatarOverhang = 36; // half the account picture's circle sticks out above the panel
+    private const int RightPaneWidth = 200;
     private const int GapAboveTaskbar = 12;
 
     private readonly IntPtr _hwnd;
+    private readonly PanelBackdrop _backdrop;
     private readonly ObservableCollection<AppEntry> _pinned = [];
     private readonly ObservableCollection<RecentItem> _recent = [];
     private readonly ObservableCollection<AppEntry> _results = [];
@@ -33,6 +36,8 @@ public sealed partial class MenuWindow : Window
     private readonly ObservableCollection<SystemEntry> _system = []; // Windows tools, Settings pages, power actions
     private ContentDialog? _confirmDialog;
     private CancellationTokenSource? _storeSearch;
+    private readonly ObservableCollection<WikiEntry> _wiki = []; // Wikipedia articles, below the store results
+    private CancellationTokenSource? _wikiSearch;
     private DateTime _pictureStamp;
     private bool _isOpen;
 
@@ -41,7 +46,8 @@ public sealed partial class MenuWindow : Window
         InitializeComponent();
         _hwnd = WindowNative.GetWindowHandle(this);
 
-        SystemBackdrop = new PanelBackdrop();
+        _backdrop = new PanelBackdrop { Strength = App.Settings.Current.GlassStrength };
+        SystemBackdrop = _backdrop;
         ExtendsContentIntoTitleBar = true;
 
         var presenter = OverlappedPresenter.Create();
@@ -53,10 +59,15 @@ public sealed partial class MenuWindow : Window
         AppWindow.SetPresenter(presenter);
         AppWindow.IsShownInSwitchers = false; // keep it out of Alt+Tab and the taskbar
 
-        // A hairline border a little lighter than the panel, instead of Windows' accent colour.
-        Native.SetRoundCorners(_hwnd);
-        ApplyFrameBorder();
-        Root.ActualThemeChanged += (_, _) => ApplyFrameBorder();
+        // The window is cut to the panel plus the avatar circle (CutWindowToPanelAndPicture). Windows would
+        // still draw its border around the whole window rectangle, so it's turned off; the menu draws its
+        // own hairline around the panel shape (MenuWindow.xaml).
+        Native.HideBorder(_hwnd);
+        // Keep the cut in step with the window: after any move or resize, including a DPI change.
+        AppWindow.Changed += (_, e) =>
+        {
+            if (e.DidSizeChange || e.DidPositionChange) CutWindowToPanelAndPicture(Root.XamlRoot?.RasterizationScale ?? _scale);
+        };
 
         AppWindow.Closing += (_, e) => { e.Cancel = true; HideMenu(); }; // Alt+F4 hides instead of quitting
         Activated += (_, e) =>
@@ -70,6 +81,8 @@ public sealed partial class MenuWindow : Window
         GamesList.ItemsSource = _games;
         StoreList.ItemsSource = _store;
         SystemList.ItemsSource = _system;
+        WikiList.ItemsSource = _wiki;
+        WikipediaToggle.IsOn = App.Settings.Current.SearchWikipedia;
 
         var name = Native.GetDisplayName();
         UserNameText.Text = name;
@@ -81,13 +94,10 @@ public sealed partial class MenuWindow : Window
         {
             RebuildPinned();
             if (App.Catalog.IsLoaded) RebuildAllApps();
+            GlassSlider.Value = App.Settings.Current.GlassStrength; // also updates the glass
+            WikipediaToggle.IsOn = App.Settings.Current.SearchWikipedia;
         });
-    }
-
-    private void ApplyFrameBorder()
-    {
-        if (Root.ActualTheme == ElementTheme.Light) Native.SetBorderColor(_hwnd, 0xD6, 0xD8, 0xE0);
-        else Native.SetBorderColor(_hwnd, 0x3A, 0x3D, 0x48);
+        GlassSlider.Value = App.Settings.Current.GlassStrength;
     }
 
     /// <summary>Window handle, for file pickers opened from the tray menu.</summary>
@@ -131,12 +141,43 @@ public sealed partial class MenuWindow : Window
         double scale = Native.ScaleAtPoint(cursor);
 
         int width = (int)(MenuWidth * scale);
-        int height = (int)(MenuHeight * scale);
+        int height = (int)((MenuHeight + AvatarOverhang) * scale);
         var work = area.WorkArea;
         int x = work.X + (work.Width - width) / 2;
         int y = work.Y + work.Height - height - (int)(GapAboveTaskbar * scale);
 
+        _scale = scale;
         AppWindow.MoveAndResize(new RectInt32(x, y, width, height));
+        CutWindowToPanelAndPicture(scale);
+    }
+
+    private double _scale = 1.0; // display scale the menu was last placed at
+
+    /// <summary>
+    /// Cuts the window to the panel plus the account picture's circle above its top edge, so the strip
+    /// above the panel is neither drawn nor clickable. Windows draws a cut window without its own
+    /// rounded corners, border or shadow, and the cut edges aren't smoothed.
+    /// </summary>
+    private void CutWindowToPanelAndPicture(double scale)
+    {
+        Native.GetWindowRect(_hwnd, out var window);
+        var origin = new Native.POINT();
+        Native.ClientToScreen(_hwnd, ref origin);
+        Native.GetClientRect(_hwnd, out var client);
+        int dx = origin.X - window.Left, dy = origin.Y - window.Top; // region is relative to the window, content to the client
+
+        int overhang = (int)Math.Round(AvatarOverhang * scale);
+        int corner = (int)Math.Round(16 * scale); // 8 px radius, like Windows' own corners
+        var panel = Native.CreateRoundRectRgn(dx, dy + overhang, dx + client.Right + 1, dy + client.Bottom + 1, corner, corner);
+
+        int radius = (int)Math.Round(38 * scale);
+        int cx = dx + client.Right - (int)Math.Round(RightPaneWidth / 2.0 * scale);
+        int cy = dy + overhang;
+        var circle = Native.CreateEllipticRgn(cx - radius, cy - radius, cx + radius + 1, cy + radius + 1);
+
+        Native.CombineRgn(panel, panel, circle, Native.RGN_OR);
+        Native.DeleteObject(circle);
+        Native.SetWindowRgn(_hwnd, panel, true); // Windows owns the region from here
     }
 
     private void ResetView()
@@ -216,6 +257,9 @@ public sealed partial class MenuWindow : Window
         _storeSearch?.Cancel();
         _store.Clear();
         StoreSection.Visibility = Visibility.Collapsed;
+        _wikiSearch?.Cancel();
+        _wiki.Clear();
+        WikiSection.Visibility = Visibility.Collapsed;
         if (query.Length == 0)
         {
             ShowPanel(ViewSelector.SelectedItem == AllAppsTab ? AllAppsList : PinnedPanel);
@@ -272,6 +316,8 @@ public sealed partial class MenuWindow : Window
 
         if (query.Length >= 3 && App.Settings.Current.SearchSteamStore && App.Games.Launchers.Contains(GameLauncher.Steam))
             _ = AddSteamStoreResultsAsync(query);
+        if (query.Length >= 3 && App.Settings.Current.SearchWikipedia)
+            _ = AddWikipediaResultsAsync(query);
     }
 
     private void UpdateSearchSections(string query)
@@ -281,7 +327,10 @@ public sealed partial class MenuWindow : Window
         SystemSection.Visibility = _system.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
         StoreSection.Visibility = _store.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
 
-        bool none = _results.Count == 0 && _games.Count == 0 && _system.Count == 0 && _store.Count == 0;
+        WikiSection.Visibility = _wiki.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+
+        // "Nothing matches" only when every section is empty.
+        bool none = _results.Count == 0 && _games.Count == 0 && _system.Count == 0 && _store.Count == 0 && _wiki.Count == 0;
         NoResultsText.Text = $"Nothing matches “{query}”";
         NoResultsText.Visibility = none ? Visibility.Visible : Visibility.Collapsed;
 
@@ -322,6 +371,52 @@ public sealed partial class MenuWindow : Window
         catch (Exception)
         {
             // Offline or Steam is slow: installed results are already showing, so stay quiet.
+        }
+    }
+
+    /// <summary>
+    /// Wikipedia articles, after typing pauses. Runs beside the other results and never holds them up;
+    /// offline, slow or failing lookups just show nothing. Nothing is sent when the setting is off.
+    /// </summary>
+    private async Task AddWikipediaResultsAsync(string query)
+    {
+        var cts = _wikiSearch = new CancellationTokenSource();
+        try
+        {
+            await Task.Delay(300, cts.Token); // wait for typing to pause
+            var articles = await WikipediaSearch.SearchAsync(query, cts.Token);
+            if (cts.IsCancellationRequested || SearchBox.Text.Trim() != query || !App.Settings.Current.SearchWikipedia) return;
+
+            _wiki.Clear();
+            foreach (var a in articles)
+            {
+                var entry = new WikiEntry { Title = a.Title, Description = a.Description, Url = a.Url, ThumbnailUrl = a.ThumbnailUrl };
+                if (a.ThumbnailUrl is not null && Uri.TryCreate(a.ThumbnailUrl, UriKind.Absolute, out var thumb))
+                    entry.Icon = new Microsoft.UI.Xaml.Media.Imaging.BitmapImage(thumb) { DecodePixelWidth = 80 };
+                _wiki.Add(entry);
+            }
+            UpdateSearchSections(query);
+        }
+        catch (OperationCanceledException) { }
+    }
+
+    private void Wiki_ItemClick(object sender, ItemClickEventArgs e)
+    {
+        if (e.ClickedItem is not WikiEntry article) return;
+        HideMenu();
+        Launcher.Open(article.Url);
+    }
+
+    private void WikipediaToggle_Toggled(object sender, RoutedEventArgs e)
+    {
+        if (App.Settings.Current.SearchWikipedia == WikipediaToggle.IsOn) return;
+        App.Settings.Current.SearchWikipedia = WikipediaToggle.IsOn;
+        App.Settings.Save();
+        if (!WikipediaToggle.IsOn)
+        {
+            _wikiSearch?.Cancel(); // stop anything in flight; nothing more is sent
+            _wiki.Clear();
+            WikiSection.Visibility = Visibility.Collapsed;
         }
     }
 
@@ -526,6 +621,17 @@ public sealed partial class MenuWindow : Window
         App.Settings.SetPinOrder(_pinned.Select(a => a.Id));
 
     // ---------- Right-hand panel ----------
+
+    /// <summary>Live preview while dragging; saved when the flyout closes, not on every step.</summary>
+    private void GlassSlider_ValueChanged(object sender, Microsoft.UI.Xaml.Controls.Primitives.RangeBaseValueChangedEventArgs e) =>
+        _backdrop.Strength = (int)e.NewValue;
+
+    private void GlassFlyout_Closed(object sender, object e)
+    {
+        if (App.Settings.Current.GlassStrength == _backdrop.Strength) return;
+        App.Settings.Current.GlassStrength = _backdrop.Strength;
+        App.Settings.Save();
+    }
 
     private void Folder_Click(object sender, RoutedEventArgs e)
     {
