@@ -33,9 +33,13 @@ public sealed class GameEntry : IconItem
         _ => "",
     };
 
-    public string Subtitle => Installed ? $"{LauncherName} · Installed" : $"{LauncherName} store · Not installed";
+    /// <summary>From Epic's local catalog cache: may not be owned, so labelled just "Epic" and opened in the launcher.</summary>
+    public bool FromCatalogCache { get; init; }
 
-    public string ActionText => Installed ? "Play" : "View";
+    public string Subtitle => FromCatalogCache ? "Epic"
+        : Installed ? $"{LauncherName} · Installed" : $"{LauncherName} store · Not installed";
+
+    public string ActionText => FromCatalogCache ? "Open" : Installed ? "Play" : "View";
 
     public string Initial => Name.Length > 0 ? char.ToUpperInvariant(Name[0]).ToString() : "?";
 }
