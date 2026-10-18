@@ -33,7 +33,11 @@ public sealed partial class MenuWindow : Window
     private readonly ObservableCollection<AppEntry> _results = [];
     private readonly ObservableCollection<GameEntry> _games = [];
     private readonly ObservableCollection<GameEntry> _store = []; // Steam store results, shown below installed items
+    private readonly ObservableCollection<SystemEntry> _system = []; // Windows tools, Settings pages, power actions
+    private ContentDialog? _confirmDialog;
     private CancellationTokenSource? _storeSearch;
+    private readonly ObservableCollection<WikiEntry> _wiki = []; // Wikipedia articles, below the store results
+    private CancellationTokenSource? _wikiSearch;
     private DateTime _pictureStamp;
     private bool _isOpen;
 
@@ -76,6 +80,9 @@ public sealed partial class MenuWindow : Window
         ResultsList.ItemsSource = _results;
         GamesList.ItemsSource = _games;
         StoreList.ItemsSource = _store;
+        SystemList.ItemsSource = _system;
+        WikiList.ItemsSource = _wiki;
+        WikipediaToggle.IsOn = App.Settings.Current.SearchWikipedia;
 
         var name = Native.GetDisplayName();
         UserNameText.Text = name;
@@ -88,6 +95,7 @@ public sealed partial class MenuWindow : Window
             RebuildPinned();
             if (App.Catalog.IsLoaded) RebuildAllApps();
             GlassSlider.Value = App.Settings.Current.GlassStrength; // also updates the glass
+            WikipediaToggle.IsOn = App.Settings.Current.SearchWikipedia;
         });
         GlassSlider.Value = App.Settings.Current.GlassStrength;
     }
@@ -120,6 +128,7 @@ public sealed partial class MenuWindow : Window
 
     public void HideMenu()
     {
+        _confirmDialog?.Hide(); // don't leave a Restart/Shut down question waiting in the hidden menu
         _isOpen = false;
         AppWindow.Hide();
     }
@@ -248,6 +257,9 @@ public sealed partial class MenuWindow : Window
         _storeSearch?.Cancel();
         _store.Clear();
         StoreSection.Visibility = Visibility.Collapsed;
+        _wikiSearch?.Cancel();
+        _wiki.Clear();
+        WikiSection.Visibility = Visibility.Collapsed;
         if (query.Length == 0)
         {
             ShowPanel(ViewSelector.SelectedItem == AllAppsTab ? AllAppsList : PinnedPanel);
@@ -261,6 +273,8 @@ public sealed partial class MenuWindow : Window
         {
             _games.Clear();
             _results.Clear();
+            _system.Clear();
+            SystemSection.Visibility = Visibility.Collapsed;
             var command = CommandRunner.CommandText(query);
             GamesSection.Visibility = Visibility.Collapsed;
             StoreLinks.Visibility = Visibility.Collapsed;
@@ -289,20 +303,34 @@ public sealed partial class MenuWindow : Window
             _results.Add(app);
         }
 
+        // Windows tools, Settings pages and power actions, minus any already listed as an app.
+        _system.Clear();
+        foreach (var entry in SystemCatalog.Search(query))
+        {
+            if (_results.Any(a => a.Name.Equals(entry.Name, StringComparison.OrdinalIgnoreCase))) continue;
+            _system.Add(entry);
+        }
+
         UpdateSearchSections(query);
         if (_results.Count > 0) ResultsList.SelectedIndex = 0;
 
         if (query.Length >= 3 && App.Settings.Current.SearchSteamStore && App.Games.Launchers.Contains(GameLauncher.Steam))
             _ = AddSteamStoreResultsAsync(query);
+        if (query.Length >= 3 && App.Settings.Current.SearchWikipedia)
+            _ = AddWikipediaResultsAsync(query);
     }
 
     private void UpdateSearchSections(string query)
     {
         GamesSection.Visibility = _games.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
 
+        SystemSection.Visibility = _system.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
         StoreSection.Visibility = _store.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
 
-        bool none = _results.Count == 0 && _games.Count == 0 && _store.Count == 0;
+        WikiSection.Visibility = _wiki.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+
+        // "Nothing matches" only when every section is empty.
+        bool none = _results.Count == 0 && _games.Count == 0 && _system.Count == 0 && _store.Count == 0 && _wiki.Count == 0;
         NoResultsText.Text = $"Nothing matches “{query}”";
         NoResultsText.Visibility = none ? Visibility.Visible : Visibility.Collapsed;
 
@@ -310,9 +338,10 @@ public sealed partial class MenuWindow : Window
         SteamStoreLink.Visibility = launchers.Contains(GameLauncher.Steam) ? Visibility.Visible : Visibility.Collapsed;
         // Epic and Battle.net open in the browser, so they're offered even when the launcher isn't installed.
         MsStoreLink.Visibility = Visibility.Visible;
-        // Offer store searches when the query looks like it might be a game: no app answered it,
+        // Offer store searches when the query looks like it might be a game: nothing else answered it,
         // or games already matched.
-        StoreLinks.Visibility = query.Length >= 3 && (_games.Count > 0 || _results.Count == 0) ? Visibility.Visible : Visibility.Collapsed;
+        StoreLinks.Visibility = query.Length >= 3 && (_games.Count > 0 || (_results.Count == 0 && _system.Count == 0))
+            ? Visibility.Visible : Visibility.Collapsed;
     }
 
     /// <summary>Steam store results for games that aren't installed. Online; Settings › Search can turn it off.</summary>
@@ -343,6 +372,79 @@ public sealed partial class MenuWindow : Window
         {
             // Offline or Steam is slow: installed results are already showing, so stay quiet.
         }
+    }
+
+    /// <summary>
+    /// Wikipedia articles, after typing pauses. Runs beside the other results and never holds them up;
+    /// offline, slow or failing lookups just show nothing. Nothing is sent when the setting is off.
+    /// </summary>
+    private async Task AddWikipediaResultsAsync(string query)
+    {
+        var cts = _wikiSearch = new CancellationTokenSource();
+        try
+        {
+            await Task.Delay(300, cts.Token); // wait for typing to pause
+            var articles = await WikipediaSearch.SearchAsync(query, cts.Token);
+            if (cts.IsCancellationRequested || SearchBox.Text.Trim() != query || !App.Settings.Current.SearchWikipedia) return;
+
+            _wiki.Clear();
+            foreach (var a in articles)
+            {
+                var entry = new WikiEntry { Title = a.Title, Description = a.Description, Url = a.Url, ThumbnailUrl = a.ThumbnailUrl };
+                if (a.ThumbnailUrl is not null && Uri.TryCreate(a.ThumbnailUrl, UriKind.Absolute, out var thumb))
+                    entry.Icon = new Microsoft.UI.Xaml.Media.Imaging.BitmapImage(thumb) { DecodePixelWidth = 80 };
+                _wiki.Add(entry);
+            }
+            UpdateSearchSections(query);
+        }
+        catch (OperationCanceledException) { }
+    }
+
+    private void Wiki_ItemClick(object sender, ItemClickEventArgs e)
+    {
+        if (e.ClickedItem is not WikiEntry article) return;
+        HideMenu();
+        Launcher.Open(article.Url);
+    }
+
+    private void WikipediaToggle_Toggled(object sender, RoutedEventArgs e)
+    {
+        if (App.Settings.Current.SearchWikipedia == WikipediaToggle.IsOn) return;
+        App.Settings.Current.SearchWikipedia = WikipediaToggle.IsOn;
+        App.Settings.Save();
+        if (!WikipediaToggle.IsOn)
+        {
+            _wikiSearch?.Cancel(); // stop anything in flight; nothing more is sent
+            _wiki.Clear();
+            WikiSection.Visibility = Visibility.Collapsed;
+        }
+    }
+
+    private void System_ItemClick(object sender, ItemClickEventArgs e)
+    {
+        if (e.ClickedItem is SystemEntry entry) _ = OpenSystemAsync(entry);
+    }
+
+    /// <summary>Opens a tool or Settings page, or runs a power action. Restart and Shut down ask first.</summary>
+    private async Task OpenSystemAsync(SystemEntry entry)
+    {
+        if (entry.Confirm)
+        {
+            _confirmDialog = new ContentDialog
+            {
+                XamlRoot = Root.XamlRoot,
+                Title = $"{entry.Name} now?",
+                Content = "Save your work first. Open apps will close.",
+                PrimaryButtonText = entry.Name,
+                CloseButtonText = "Cancel",
+                DefaultButton = ContentDialogButton.Close,
+            };
+            var answer = await _confirmDialog.ShowAsync();
+            _confirmDialog = null;
+            if (answer != ContentDialogResult.Primary) return;
+        }
+        HideMenu();
+        Launcher.OpenSystem(entry);
     }
 
     private void Game_ItemClick(object sender, ItemClickEventArgs e)
@@ -424,6 +526,7 @@ public sealed partial class MenuWindow : Window
             case VirtualKey.Enter when searching:
                 if ((ResultsList.SelectedItem ?? _results.FirstOrDefault()) is AppEntry best) Launch(best);
                 else if (_games.FirstOrDefault() is { } game) { HideMenu(); GameLibrary.Launch(game); }
+                else if (_system.FirstOrDefault() is { } entry) _ = OpenSystemAsync(entry);
                 e.Handled = true;
                 break;
 

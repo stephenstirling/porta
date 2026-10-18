@@ -32,7 +32,12 @@ The app icon is the Keyhole (`Assets/Porta.ico`, with the source in `Assets/Port
 - Games in search from **Steam, Epic Games, Battle.net and the Xbox app**, read from each launcher's own files
   on this PC. Typing "red dead" or "rdr2" finds Red Dead Redemption 2 with a Play button that starts it through
   its launcher. Steam store results for games you don't have appear too (online; `SearchSteamStore` in settings
-  turns them off), plus quick links to search the Steam, Epic and Microsoft stores.
+  turns them off), plus quick links to search the Steam, Epic Games, Battle.net and Microsoft stores.
+- **Wikipedia in search:** up to 3 articles with a thumbnail and short description, from the Wikipedia in your
+  Windows language (English if that has no match). Open goes to the article in your browser. Turn it off with
+  the "Search Wikipedia" switch (in the glass-strength pop-up for now).
+- Your account picture **breaks out of the top edge** of the side panel; a glass-strength slider (palette button
+  beside Lock and Power) sets how frosted the menu is.
 - **Run commands from search:** type `>` then a command, like `> ping 1.1.1.1` or `> notepad notes.txt`.
   Enter runs it; Ctrl+Shift+Enter runs it as administrator.
 - **Shorthand names:** "rdp" finds Remote Desktop, "cmd" Command Prompt, "regedit" Registry Editor, and so on
@@ -42,6 +47,17 @@ The app icon is the Keyhole (`Assets/Porta.ico`, with the source in `Assets/Port
   hidden apps and preferences. A restore keeps your previous settings as `settings.before-restore.json`.
 - Your **Windows account picture and name** (your Microsoft account picture, as on the lock screen) at the
   top of the side panel. A new picture shows up the next time the menu opens.
+
+## Privacy
+
+Porta has no telemetry. Two search features go online, and only while they're switched on:
+
+- **Wikipedia** (`SearchWikipedia`, on by default): what you type in search (3 or more characters) is sent to
+  Wikipedia (`<language>.wikipedia.org`) to find articles.
+- **Steam store results** (`SearchSteamStore`, on by default, only when Steam is installed): what you type
+  (3 or more characters) is sent to the Steam store to find games you don't own.
+
+Everything else, including your apps, games and files, stays on your PC. `>` commands are never sent anywhere.
 
 ## Roadmap
 

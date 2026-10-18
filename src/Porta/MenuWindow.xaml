@@ -58,6 +58,48 @@
                 </Grid>
             </DataTemplate>
 
+            <!-- One Wikipedia article in search -->
+            <DataTemplate x:Key="WikiRowTemplate" x:DataType="m:WikiEntry">
+                <Grid ColumnSpacing="12" Height="52">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Border Width="40" Height="40" CornerRadius="6" Background="{ThemeResource SubtleFillColorSecondaryBrush}">
+                        <Grid>
+                            <TextBlock Text="{x:Bind Initial}" FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                       Visibility="{x:Bind InitialVisibility, Mode=OneWay}" />
+                            <Image Source="{x:Bind Icon, Mode=OneWay}" Stretch="UniformToFill" />
+                        </Grid>
+                    </Border>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                        <TextBlock Text="{x:Bind Title}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                        <TextBlock Text="{x:Bind Subtitle}" FontSize="12" TextTrimming="CharacterEllipsis"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    </StackPanel>
+                    <TextBlock Grid.Column="2" Text="Open" VerticalAlignment="Center" FontWeight="SemiBold"
+                               Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+                </Grid>
+            </DataTemplate>
+
+            <!-- One Windows tool, Settings page or power action in search -->
+            <DataTemplate x:Key="SystemRowTemplate" x:DataType="m:SystemEntry">
+                <Grid ColumnSpacing="12" Height="44" Background="Transparent">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Border Width="28" Height="28" CornerRadius="8" Background="{ThemeResource SubtleFillColorSecondaryBrush}">
+                        <FontIcon Glyph="{x:Bind Glyph}" FontSize="15" />
+                    </Border>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="1">
+                        <TextBlock Text="{x:Bind Name}" TextTrimming="CharacterEllipsis" />
+                        <TextBlock Text="{x:Bind Subtitle}" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    </StackPanel>
+                </Grid>
+            </DataTemplate>
+
             <!-- One game in search: installed games and Steam store results -->
             <DataTemplate x:Key="GameRowTemplate" x:DataType="m:GameEntry">
                 <Grid ColumnSpacing="12" Height="56">
@@ -209,12 +251,30 @@
                                       ItemTemplate="{StaticResource AppRowTemplate}"
                                       ScrollViewer.VerticalScrollMode="Disabled" ScrollViewer.VerticalScrollBarVisibility="Disabled" />
 
+                            <!-- Windows tools, Settings pages and power actions: below Apps -->
+                            <StackPanel x:Name="SystemSection" Visibility="Collapsed" Spacing="4">
+                                <TextBlock Text="System and settings" FontSize="12" FontWeight="SemiBold" Margin="4,0,0,0"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                <ListView x:Name="SystemList" SelectionMode="None" IsItemClickEnabled="True" ItemClick="System_ItemClick"
+                                          ItemTemplate="{StaticResource SystemRowTemplate}"
+                                          ScrollViewer.VerticalScrollMode="Disabled" ScrollViewer.VerticalScrollBarVisibility="Disabled" />
+                            </StackPanel>
+
                             <!-- Games from the Steam store that aren't installed: always below installed apps and games -->
                             <StackPanel x:Name="StoreSection" Visibility="Collapsed" Spacing="4">
                                 <TextBlock Text="From the Steam store" FontSize="12" FontWeight="SemiBold" Margin="4,0,0,0"
                                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                                 <ListView x:Name="StoreList" SelectionMode="None" IsItemClickEnabled="True" ItemClick="Game_ItemClick"
                                           ItemTemplate="{StaticResource GameRowTemplate}"
+                                          ScrollViewer.VerticalScrollMode="Disabled" ScrollViewer.VerticalScrollBarVisibility="Disabled" />
+                            </StackPanel>
+
+                            <!-- Wikipedia articles (online; "Search Wikipedia" turns it off) -->
+                            <StackPanel x:Name="WikiSection" Visibility="Collapsed" Spacing="4">
+                                <TextBlock Text="From Wikipedia" FontSize="12" FontWeight="SemiBold" Margin="4,0,0,0"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                <ListView x:Name="WikiList" SelectionMode="None" IsItemClickEnabled="True" ItemClick="Wiki_ItemClick"
+                                          ItemTemplate="{StaticResource WikiRowTemplate}"
                                           ScrollViewer.VerticalScrollMode="Disabled" ScrollViewer.VerticalScrollBarVisibility="Disabled" />
                             </StackPanel>
                         </StackPanel>
@@ -307,6 +367,9 @@
                                     <TextBlock Text="Clear" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                                     <TextBlock Text="Frosted" FontSize="12" HorizontalAlignment="Right" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                                 </Grid>
+                                <!-- Until the Settings window exists (milestone 2) -->
+                                <ToggleSwitch x:Name="WikipediaToggle" Header="Search Wikipedia" Margin="0,8,0,0"
+                                              Toggled="WikipediaToggle_Toggled" />
                             </StackPanel>
                         </Flyout>
                     </Button.Flyout>
