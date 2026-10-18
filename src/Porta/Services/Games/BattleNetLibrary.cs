@@ -14,7 +14,7 @@ namespace Porta.Services.Games;
 /// </summary>
 public static partial class BattleNetLibrary
 {
-    private const string AgentProductDb = "Battle.net\\\\Agent\\\\product.db";
+    private const string AgentProductDb = "Battle.net\\Agent\\product.db";
 
     /// <summary>
     /// The Battle.net shop has no reliable public search endpoint; open the regional shop instead.
@@ -150,7 +150,7 @@ public static partial class BattleNetLibrary
 
     private static IEnumerable<(string Name, string Uninstall, string? Icon)> UninstallEntries()
     {
-        const string path = "SOFTWARE\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Uninstall";
+        const string path = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall";
         foreach (var view in new[] { RegistryView.Registry64, RegistryView.Registry32 })
         {
             using var hive = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, view);
