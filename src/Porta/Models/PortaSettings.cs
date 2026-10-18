@@ -17,6 +17,9 @@ public sealed class PortaSettings
     /// <summary>Show Steam store results for games that aren't installed (asks Steam online).</summary>
     public bool SearchSteamStore { get; set; } = true;
 
+    /// <summary>Show Wikipedia articles for what's typed (asks Wikipedia online). When off, nothing is sent.</summary>
+    public bool SearchWikipedia { get; set; } = true;
+
     // Appearance (used from milestone 2)
     public string Theme { get; set; } = "System";
     public string? AccentColor { get; set; }
