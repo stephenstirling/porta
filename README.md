@@ -59,6 +59,12 @@ Porta has no telemetry. Two search features go online, and only while they're sw
 
 Everything else, including your apps, games and files, stays on your PC. `>` commands are never sent anywhere.
 
+**Epic library** (`SearchEpicLibrary`, on by default, "Epic library" switch in the glass-strength pop-up):
+Porta reads only the Epic Games Launcher's local catalog cache
+(`C:\ProgramData\Epic\EpicGamesLauncher\Data\Catalog\catcache.bin`), read-only, to show Epic games in search
+labelled "Epic". It never goes online for this, never writes to the file, and never reads Epic login, token or
+account files. The cache can include games you don't own; Open hands the game to the Epic launcher.
+
 ## Roadmap
 
 | Milestone | Contents |
