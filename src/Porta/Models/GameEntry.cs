@@ -15,10 +15,12 @@ public sealed class GameEntry : IconItem
     /// <summary>Where to load a square icon from when there's no cover (exe, shell path).</summary>
     public string? IconSource { get; init; }
     public string? LauncherId { get; init; }
-    /// <summary>Epic catalog namespace, used to retrieve optional cover artwork.</summary>
+    /// <summary>Epic catalog namespace.</summary>
     public string? CatalogNamespace { get; init; }
-    /// <summary>Epic catalog item identifier, used to retrieve optional cover artwork.</summary>
+    /// <summary>Epic catalog item identifier, used to find the game's cover link in the catalog cache.</summary>
     public string? CatalogItemId { get; init; }
+    /// <summary>Web link to the wide cover picture, from Epic's local catalog cache. Not downloaded unless shown.</summary>
+    public string? CoverUrl { get; set; }
 
     public string LauncherName => Launcher switch
     {

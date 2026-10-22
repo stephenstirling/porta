@@ -23,6 +23,9 @@ public sealed class PortaSettings
     /// <summary>Show games from the Epic launcher's local catalog cache (read on this PC only, never online).</summary>
     public bool SearchEpicLibrary { get; set; } = true;
 
+    /// <summary>Download Epic cover pictures for the Epic results being shown. When off, nothing is downloaded.</summary>
+    public bool EpicCoverImages { get; set; } = true;
+
     // Appearance (used from milestone 2)
     public string Theme { get; set; } = "System";
     public string? AccentColor { get; set; }

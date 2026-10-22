@@ -396,6 +396,8 @@
                                               Toggled="WikipediaToggle_Toggled" />
                                 <ToggleSwitch x:Name="EpicLibraryToggle" Header="Epic library"
                                               Toggled="EpicLibraryToggle_Toggled" />
+                                <ToggleSwitch x:Name="EpicCoversToggle" Header="Epic cover images"
+                                              Toggled="EpicCoversToggle_Toggled" />
                             </StackPanel>
                         </Flyout>
                     </Button.Flyout>

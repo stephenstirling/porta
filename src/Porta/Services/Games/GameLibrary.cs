@@ -53,13 +53,7 @@ public sealed class GameLibrary
         lock (Launchers) { Launchers.Clear(); Launchers.UnionWith(launchers); }
         _scannedAt = DateTime.UtcNow;
 
-        foreach (var game in found)
-        {
-            RequestIcon(game);
-            if (game.Launcher == GameLauncher.Epic &&
-                game.CatalogNamespace is not null && game.CatalogItemId is not null)
-                EpicArtworkService.Request(game, game.CatalogNamespace, game.CatalogItemId);
-        }
+        foreach (var game in found) RequestIcon(game); // Epic covers are fetched later, only when shown
     }
 
     private static void RequestIcon(GameEntry game)

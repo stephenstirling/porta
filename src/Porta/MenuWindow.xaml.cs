@@ -86,6 +86,7 @@ public sealed partial class MenuWindow : Window
         WikiList.ItemsSource = _wiki;
         WikipediaToggle.IsOn = App.Settings.Current.SearchWikipedia;
         EpicLibraryToggle.IsOn = App.Settings.Current.SearchEpicLibrary;
+        EpicCoversToggle.IsOn = App.Settings.Current.EpicCoverImages;
 
         var name = Native.GetDisplayName();
         UserNameText.Text = name;
@@ -100,6 +101,8 @@ public sealed partial class MenuWindow : Window
             GlassSlider.Value = App.Settings.Current.GlassStrength; // also updates the glass
             WikipediaToggle.IsOn = App.Settings.Current.SearchWikipedia;
             EpicLibraryToggle.IsOn = App.Settings.Current.SearchEpicLibrary;
+            EpicCoversToggle.IsOn = App.Settings.Current.EpicCoverImages;
+            if (!EpicCoversToggle.IsOn) EpicCoverCache.ForgetCovers(App.Games.Games.Concat(EpicCatalogCache.Games));
         });
         GlassSlider.Value = App.Settings.Current.GlassStrength;
     }
@@ -312,6 +315,9 @@ public sealed partial class MenuWindow : Window
             }
         }
 
+        // Epic covers: only for the results on screen.
+        foreach (var g in _games) EpicCoverCache.Request(g);
+
         // App results, minus the shortcuts for games already shown above.
         _results.Clear();
         foreach (var app in SearchService.Rank(App.Catalog.Apps, query))
@@ -431,6 +437,14 @@ public sealed partial class MenuWindow : Window
         if (App.Settings.Current.SearchEpicLibrary == EpicLibraryToggle.IsOn) return;
         App.Settings.Current.SearchEpicLibrary = EpicLibraryToggle.IsOn;
         App.Settings.Save();
+    }
+
+    private void EpicCoversToggle_Toggled(object sender, RoutedEventArgs e)
+    {
+        if (App.Settings.Current.EpicCoverImages == EpicCoversToggle.IsOn) return;
+        App.Settings.Current.EpicCoverImages = EpicCoversToggle.IsOn;
+        App.Settings.Save();
+        if (!EpicCoversToggle.IsOn) EpicCoverCache.ForgetCovers(App.Games.Games.Concat(EpicCatalogCache.Games));
     }
 
     private void WikipediaToggle_Toggled(object sender, RoutedEventArgs e)
