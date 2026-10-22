@@ -108,7 +108,15 @@
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
-                    <Border Width="92" Height="43" CornerRadius="6" Background="{ThemeResource SubtleFillColorSecondaryBrush}">
+                    <!-- Wide cover: fills the box (centre-cropped, rounded corners), nothing behind it while it loads -->
+                    <Border Width="92" Height="43" CornerRadius="6" Visibility="{x:Bind WideArtVisibility, Mode=OneWay}">
+                        <Border.Background>
+                            <ImageBrush ImageSource="{x:Bind Icon, Mode=OneWay}" Stretch="UniformToFill" AlignmentX="Center" AlignmentY="Center" />
+                        </Border.Background>
+                    </Border>
+                    <!-- No cover: the game's small icon, or the letter, on the usual tile -->
+                    <Border Width="92" Height="43" CornerRadius="6" Background="{ThemeResource SubtleFillColorSecondaryBrush}"
+                            Visibility="{x:Bind IconTileVisibility, Mode=OneWay}">
                         <Grid>
                             <TextBlock Text="{x:Bind Initial}" FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center"
                                        Visibility="{x:Bind InitialVisibility, Mode=OneWay}" />
