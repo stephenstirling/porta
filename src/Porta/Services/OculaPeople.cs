@@ -6,10 +6,17 @@ using Porta.Models;
 namespace Porta.Services;
 
 /// <summary>
-/// "People in Ocula": the names Ocula has put in %LocalAppData%\Stirling\Ocula\people-index.json (format
-/// version 1: id, name, aliases, description, photoCount, thumbnail). Read-only and offline. Only those six
-/// fields are ever read. The list is kept in memory and read again only when the file's timestamp or size
-/// changes. A missing, unreadable or odd file means no people and never an error.
+/// "People in Ocula": the names Ocula has put in people-index.json (format version 1: id, name, aliases,
+/// description, photoCount, thumbnail). Read-only and offline. Only those six fields are ever read. The list is
+/// kept in memory and read again only when the file's timestamp or size changes. A missing, unreadable or odd
+/// file means no people and never an error.
+///
+/// Where the file is: %LocalAppData%\Stirling\Ocula\people-index.json. A packaged Ocula (the Store or a
+/// sideloaded build) has its writes under %LocalAppData% redirected by Windows into its private package folder,
+/// so there the file is really in
+/// %LocalAppData%\Packages\StephenStirling.Ocula_*\LocalCache\Local\Stirling\Ocula\people-index.json. Both
+/// places are looked at and the most recently written file wins (a stale file left in one place never hides a
+/// fresh one in the other). Ocula writes the thumbnails' paths in the file as paths that work from outside it.
 /// </summary>
 public static class OculaPeople
 {
@@ -17,12 +24,51 @@ public static class OculaPeople
     private const long MaxFileBytes = 64 * 1024 * 1024;
     private const long MaxThumbnailBytes = 2 * 1024 * 1024;
 
-    private static string IndexFile => Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Stirling", "Ocula", "people-index.json");
+    /// <summary>%LocalAppData%; settable inside the app only so a check can point it at a scratch folder.</summary>
+    internal static string LocalAppData { get; set; } = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+
+    /// <summary>The package-family prefix of every Ocula build from this publisher; the suffix is the publisher id and differs after Store signing.</summary>
+    private const string OculaPackagePrefix = "StephenStirling.Ocula_";
+
+    /// <summary>
+    /// The people file to read: the newest of the real location and each packaged Ocula's package folder, or
+    /// null if there is none. Directory problems (a locked or odd folder) just mean that place is skipped.
+    /// </summary>
+    internal static string? FindIndexFile()
+    {
+        var candidates = new List<string> { Path.Combine(LocalAppData, "Stirling", "Ocula", "people-index.json") };
+        try
+        {
+            var packages = Path.Combine(LocalAppData, "Packages");
+            if (Directory.Exists(packages))
+                foreach (var dir in Directory.EnumerateDirectories(packages, OculaPackagePrefix + "*"))
+                    candidates.Add(Path.Combine(dir, "LocalCache", "Local", "Stirling", "Ocula", "people-index.json"));
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            // The real location still counts.
+        }
+
+        string? best = null;
+        var bestWritten = DateTime.MinValue;
+        foreach (var path in candidates)
+        {
+            try
+            {
+                var info = new FileInfo(path);
+                if (info.Exists && info.LastWriteTimeUtc >= bestWritten) { best = path; bestWritten = info.LastWriteTimeUtc; }
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                // Skip this candidate.
+            }
+        }
+        return best;
+    }
 
     private static readonly object Gate = new();
     private static List<PersonEntry> _people = [];
-    private static (DateTime Written, long Length) _loadedVersion;
+    private static (string Path, DateTime Written, long Length) _loadedVersion;
     private static Task? _loading;
 
     /// <summary>Ocula counts as installed when it has registered its ocula: link for this user.</summary>
@@ -72,12 +118,12 @@ public static class OculaPeople
 
     private static void RefreshIfChanged()
     {
-        (DateTime, long) version;
+        (string, DateTime, long) version;
         try
         {
-            var info = new FileInfo(IndexFile);
-            if (!info.Exists) { Clear(); return; }
-            version = (info.LastWriteTimeUtc, info.Length);
+            if (FindIndexFile() is not { } file) { Clear(); return; }
+            var info = new FileInfo(file);
+            version = (file, info.LastWriteTimeUtc, info.Length);
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
@@ -95,13 +141,13 @@ public static class OculaPeople
         if (first) Load(version);
     }
 
-    private static void Load((DateTime Written, long Length) version)
+    private static void Load((string Path, DateTime Written, long Length) version)
     {
         try
         {
             if (version.Length > MaxFileBytes) return;
             string text;
-            using (var stream = new FileStream(IndexFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
+            using (var stream = new FileStream(version.Path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
             using (var reader = new StreamReader(stream))
                 text = reader.ReadToEnd();
 
