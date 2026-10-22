@@ -59,6 +59,15 @@ Porta has no telemetry. Two search features go online, and only while they're sw
 
 Everything else, including your apps, games and files, stays on your PC. `>` commands are never sent anywhere.
 
+**People in Ocula** (`SearchOculaPeople`, **off** by default, "Search people in Ocula" switch in the glass-strength
+pop-up, saved and included in settings backups): when switched on, Porta reads the names Ocula keeps in
+`%LocalAppData%\Stirling\Ocula\people-index.json` (format version 1) so you can find a person from search. Only the
+fields `id`, `name`, `aliases`, `description`, `photoCount` and `thumbnail` are read. The file is only read, never
+written, and is read again only when its timestamp changes. Face thumbnails are loaded from the local picture
+files the index points to (network paths are ignored). Nothing about people is ever sent online. "Open" starts
+Ocula with an `ocula:person?id=...` link; if Ocula isn't installed the row shows without it. Turning the switch
+off forgets the list and the file isn't read again.
+
 ## Roadmap
 
 | Milestone | Contents |
