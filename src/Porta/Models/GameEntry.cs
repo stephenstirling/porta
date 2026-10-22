@@ -39,5 +39,8 @@ public sealed class GameEntry : IconItem
 
     public string ActionText => FromCatalogCache ? "Open" : Installed ? "Play" : "View";
 
+    /// <summary>The small launcher badge shown beside the label (Epic only, taken from the installed launcher).</summary>
+    public IconItem? Badge => Launcher == GameLauncher.Epic ? Services.Games.EpicBadge.Instance : null;
+
     public string Initial => Name.Length > 0 ? char.ToUpperInvariant(Name[0]).ToString() : "?";
 }
