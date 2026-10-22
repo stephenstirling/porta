@@ -23,6 +23,9 @@ public sealed class PortaSettings
     /// <summary>Show people named in Ocula (read from Ocula's local people index, never online). Off until switched on.</summary>
     public bool SearchOculaPeople { get; set; } = false;
 
+    /// <summary>Show article pictures on Wikipedia rows (downloaded from upload.wikimedia.org). Only matters while Search Wikipedia is on.</summary>
+    public bool WikipediaPictures { get; set; } = true;
+
     // Appearance (used from milestone 2)
     public string Theme { get; set; } = "System";
     public string? AccentColor { get; set; }

@@ -66,13 +66,18 @@
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
-                    <Border Width="40" Height="40" CornerRadius="6" Background="{ThemeResource SubtleFillColorSecondaryBrush}">
-                        <Grid>
-                            <TextBlock Text="{x:Bind Initial}" FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center"
-                                       Visibility="{x:Bind InitialVisibility, Mode=OneWay}" />
-                            <Image Source="{x:Bind Icon, Mode=OneWay}" Stretch="UniformToFill" />
-                        </Grid>
-                    </Border>
+                    <!-- Letter tile until (and unless) the article's picture arrives; the picture fills the box, centre-cropped -->
+                    <Grid Width="40" Height="40">
+                        <Border CornerRadius="6" Background="{ThemeResource SubtleFillColorSecondaryBrush}"
+                                Visibility="{x:Bind InitialVisibility, Mode=OneWay}">
+                            <TextBlock Text="{x:Bind Initial}" FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <Border CornerRadius="6" Visibility="{x:Bind IconVisibility, Mode=OneWay}">
+                            <Border.Background>
+                                <ImageBrush ImageSource="{x:Bind Icon, Mode=OneWay}" Stretch="UniformToFill" AlignmentX="Center" AlignmentY="Center" />
+                            </Border.Background>
+                        </Border>
+                    </Grid>
                     <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
                         <TextBlock Text="{x:Bind Title}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
                         <TextBlock Text="{x:Bind Subtitle}" FontSize="12" TextTrimming="CharacterEllipsis"
@@ -436,6 +441,8 @@
                                 <!-- Until the Settings window exists (milestone 2) -->
                                 <ToggleSwitch x:Name="WikipediaToggle" Header="Search Wikipedia" Margin="0,8,0,0"
                                               Toggled="WikipediaToggle_Toggled" />
+                                <ToggleSwitch x:Name="WikipediaPicturesToggle" Header="Wikipedia pictures"
+                                              Toggled="WikipediaPicturesToggle_Toggled" />
                                 <ToggleSwitch x:Name="OculaPeopleToggle" Header="Search people in Ocula"
                                               Toggled="OculaPeopleToggle_Toggled" />
                             </StackPanel>

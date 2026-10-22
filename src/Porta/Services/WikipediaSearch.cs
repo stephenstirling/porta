@@ -21,6 +21,9 @@ public static class WikipediaSearch
     /// <summary>Why the last lookup failed, for diagnosis; search itself stays quiet.</summary>
     public static string? LastError { get; private set; }
 
+    /// <summary>The same client (and User-Agent) for article pictures.</summary>
+    internal static HttpClient Client => Http;
+
     private static HttpClient CreateClient()
     {
         var http = new HttpClient { Timeout = TimeSpan.FromSeconds(4) };
@@ -41,18 +44,18 @@ public static class WikipediaSearch
     }
 
     /// <summary>Up to 3 articles. Empty on no network, timeouts or errors. Throws only when cancelled.</summary>
-    public static async Task<List<WikiResult>> SearchAsync(string query, CancellationToken ct)
+    public static async Task<List<WikiResult>> SearchAsync(string query, CancellationToken ct, bool pictures = false)
     {
         var lang = Language;
-        var results = await SearchSiteAsync(lang, query, ct).ConfigureAwait(false);
+        var results = await SearchSiteAsync(lang, query, pictures, ct).ConfigureAwait(false);
         if ((results is null || results.Count == 0) && lang != "en")
-            results = await SearchSiteAsync("en", query, ct).ConfigureAwait(false);
+            results = await SearchSiteAsync("en", query, pictures, ct).ConfigureAwait(false);
         return results ?? [];
     }
 
-    private static async Task<List<WikiResult>?> SearchSiteAsync(string lang, string query, CancellationToken ct)
+    private static async Task<List<WikiResult>?> SearchSiteAsync(string lang, string query, bool pictures, CancellationToken ct)
     {
-        var key = lang + "|" + query.Trim().ToLowerInvariant();
+        var key = lang + "|" + (pictures ? "p|" : "t|") + query.Trim().ToLowerInvariant();
         lock (Cache)
         {
             if (Cache.TryGetValue(key, out var hit) && DateTime.UtcNow - hit.At < CacheFor) return hit.Results;
@@ -68,12 +71,15 @@ public static class WikipediaSearch
                     p.Title!,
                     string.IsNullOrWhiteSpace(p.Description) ? null : p.Description,
                     $"https://{lang}.wikipedia.org/wiki/{Uri.EscapeDataString(p.Key!)}",
-                    Absolute(p.Thumbnail?.Url)))
+                    pictures ? Absolute(p.Thumbnail?.Url) : null))
                 .ToList();
 
             // Disambiguation pages ("Python: topics referred to by the same term") go after real articles.
-            var disambiguation = await DisambiguationTitlesAsync(lang, results, ct).ConfigureAwait(false);
-            results = results.OrderBy(r => disambiguation.Contains(r.Title)).ToList(); // stable: keeps the rest in order
+            // The same request also asks for each article's picture (96 px) when pictures are on.
+            var (disambiguation, thumbnails) = await DisambiguationTitlesAsync(lang, results, pictures, ct).ConfigureAwait(false);
+            results = results
+                .Select(r => r with { ThumbnailUrl = PictureOrNull(thumbnails.GetValueOrDefault(r.Title) ?? r.ThumbnailUrl) })
+                .OrderBy(r => disambiguation.Contains(r.Title)).ToList(); // stable: keeps the rest in order
             lock (Cache)
             {
                 if (Cache.Count > 200) Cache.Clear();
@@ -96,16 +102,20 @@ public static class WikipediaSearch
 
     /// <summary>
     /// Which of these articles are disambiguation pages, from their "disambiguation" page property (one small
-    /// request). If that fails, falls back to the title or the standard English description.
+    /// request, which also asks for 96 px pictures when <paramref name="pictures"/> is on). If that fails, falls
+    /// back to the title or the standard English description, and the pictures from the search itself.
     /// </summary>
-    private static async Task<HashSet<string>> DisambiguationTitlesAsync(string lang, List<WikiResult> results, CancellationToken ct)
+    private static async Task<(HashSet<string> Disambiguation, Dictionary<string, string> Thumbnails)> DisambiguationTitlesAsync(
+        string lang, List<WikiResult> results, bool pictures, CancellationToken ct)
     {
         var found = new HashSet<string>(StringComparer.Ordinal);
-        if (results.Count == 0) return found;
+        var thumbnails = new Dictionary<string, string>(StringComparer.Ordinal);
+        if (results.Count == 0) return (found, thumbnails);
         try
         {
             var titles = string.Join("|", results.Select(r => r.Title));
-            var url = $"https://{lang}.wikipedia.org/w/api.php?action=query&prop=pageprops&ppprop=disambiguation" +
+            var url = $"https://{lang}.wikipedia.org/w/api.php?action=query&prop=pageprops{(pictures ? "|pageimages" : "")}&ppprop=disambiguation" +
+                      (pictures ? "&piprop=thumbnail&pithumbsize=96" : "") +
                       $"&redirects=1&format=json&formatversion=2&titles={Uri.EscapeDataString(titles)}";
             using var doc = JsonDocument.Parse(await Http.GetStringAsync(url, ct).ConfigureAwait(false));
             if (doc.RootElement.TryGetProperty("query", out var query) && query.TryGetProperty("pages", out var pages))
@@ -115,9 +125,13 @@ public static class WikipediaSearch
                     if (page.TryGetProperty("pageprops", out var props) && props.TryGetProperty("disambiguation", out _) &&
                         page.TryGetProperty("title", out var title) && title.GetString() is { } t)
                         found.Add(t);
+                    if (pictures && page.TryGetProperty("title", out var pt) && pt.GetString() is { } pageTitle &&
+                        page.TryGetProperty("thumbnail", out var thumb) && thumb.TryGetProperty("source", out var source) &&
+                        source.GetString() is { } picture)
+                        thumbnails[pageTitle] = picture;
                 }
             }
-            return found;
+            return (found, thumbnails);
         }
         catch (OperationCanceledException) when (ct.IsCancellationRequested)
         {
@@ -131,9 +145,12 @@ public static class WikipediaSearch
                     r.Description == "Topics referred to by the same term")
                     found.Add(r.Title);
             }
-            return found;
+            return (found, thumbnails);
         }
     }
+
+    /// <summary>Only https://upload.wikimedia.org pictures are ever passed on.</summary>
+    private static string? PictureOrNull(string? url) => WikiPictureCache.Normalize(url);
 
     /// <summary>Thumbnails come as protocol-relative links ("//thumb.wikimedia.org/…").</summary>
     private static string? Absolute(string? url) =>

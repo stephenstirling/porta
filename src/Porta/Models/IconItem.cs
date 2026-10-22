@@ -17,11 +17,14 @@ public abstract class IconItem : INotifyPropertyChanged
             _icon = value;
             OnChanged(nameof(Icon));
             OnChanged(nameof(InitialVisibility));
+            OnChanged(nameof(IconVisibility));
         }
     }
 
     /// <summary>The letter placeholder shows until the real icon arrives.</summary>
     public Visibility InitialVisibility => _icon is null ? Visibility.Visible : Visibility.Collapsed;
+
+    public Visibility IconVisibility => _icon is null ? Visibility.Collapsed : Visibility.Visible;
 
     public event PropertyChangedEventHandler? PropertyChanged;
     protected void OnChanged(string name) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));

@@ -54,6 +54,12 @@ Porta has no telemetry. Two search features go online, and only while they're sw
 
 - **Wikipedia** (`SearchWikipedia`, on by default): what you type in search (3 or more characters) is sent to
   Wikipedia (`<language>.wikipedia.org`) to find articles.
+- **Wikipedia pictures** (`WikipediaPictures`, on by default, "Wikipedia pictures" switch under "Search Wikipedia", saved and
+  included in settings backups; does nothing while Search Wikipedia is off): the same request also asks Wikipedia for
+  each article's small picture, and Porta downloads the ones for the articles on screen from
+  `upload.wikimedia.org` (nothing else is ever fetched), with the same `Porta/<version>` User-Agent. They are kept
+  in memory and in `%LOCALAPPDATA%\Porta\WikiPictures` (about 20 MB at most). Switching the pictures off stops
+  all picture requests, deletes that folder, and the rows go back to letter tiles.
 - **Steam store results** (`SearchSteamStore`, on by default, only when Steam is installed): what you type
   (3 or more characters) is sent to the Steam store to find games you don't own.
 
