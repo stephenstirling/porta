@@ -38,6 +38,7 @@ public sealed partial class MenuWindow : Window
     private CancellationTokenSource? _storeSearch;
     private readonly ObservableCollection<WikiEntry> _wiki = []; // Wikipedia articles, below the store results
     private CancellationTokenSource? _wikiSearch;
+    private readonly ObservableCollection<PersonEntry> _people = []; // people from Ocula, below apps, games and tools
     private DateTime _pictureStamp;
     private bool _isOpen;
 
@@ -84,7 +85,9 @@ public sealed partial class MenuWindow : Window
         StoreList.ItemsSource = _store;
         SystemList.ItemsSource = _system;
         WikiList.ItemsSource = _wiki;
+        PeopleList.ItemsSource = _people;
         WikipediaToggle.IsOn = App.Settings.Current.SearchWikipedia;
+        OculaPeopleToggle.IsOn = App.Settings.Current.SearchOculaPeople;
 
         var name = Native.GetDisplayName();
         UserNameText.Text = name;
@@ -98,6 +101,8 @@ public sealed partial class MenuWindow : Window
             if (App.Catalog.IsLoaded) RebuildAllApps();
             GlassSlider.Value = App.Settings.Current.GlassStrength; // also updates the glass
             WikipediaToggle.IsOn = App.Settings.Current.SearchWikipedia;
+            OculaPeopleToggle.IsOn = App.Settings.Current.SearchOculaPeople;
+            if (!OculaPeopleToggle.IsOn) ClearPeople();
         });
         GlassSlider.Value = App.Settings.Current.GlassStrength;
     }
@@ -263,6 +268,8 @@ public sealed partial class MenuWindow : Window
         _wikiSearch?.Cancel();
         _wiki.Clear();
         WikiSection.Visibility = Visibility.Collapsed;
+        _people.Clear();
+        PeopleSection.Visibility = Visibility.Collapsed;
         if (query.Length == 0)
         {
             ShowPanel(ViewSelector.SelectedItem == AllAppsTab ? AllAppsList : PinnedPanel);
@@ -314,6 +321,18 @@ public sealed partial class MenuWindow : Window
             _system.Add(entry);
         }
 
+        // People named in Ocula: only when switched on; read from Ocula's own file on this PC, never online.
+        if (query.Length >= 2 && App.Settings.Current.SearchOculaPeople)
+        {
+            var oculaInstalled = OculaPeople.IsInstalled();
+            foreach (var person in OculaPeople.Search(query))
+            {
+                person.CanOpen = oculaInstalled;
+                if (person.Icon is null && person.ThumbnailPath is not null) LoadPersonPicture(person);
+                _people.Add(person);
+            }
+        }
+
         UpdateSearchSections(query);
         if (_results.Count > 0) ResultsList.SelectedIndex = 0;
 
@@ -328,12 +347,13 @@ public sealed partial class MenuWindow : Window
         GamesSection.Visibility = _games.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
 
         SystemSection.Visibility = _system.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+        PeopleSection.Visibility = _people.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
         StoreSection.Visibility = _store.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
 
         WikiSection.Visibility = _wiki.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
 
         // "Nothing matches" only when every section is empty.
-        bool none = _results.Count == 0 && _games.Count == 0 && _system.Count == 0 && _store.Count == 0 && _wiki.Count == 0;
+        bool none = _results.Count == 0 && _games.Count == 0 && _system.Count == 0 && _store.Count == 0 && _wiki.Count == 0 && _people.Count == 0;
         NoResultsText.Text = $"Nothing matches “{query}”";
         NoResultsText.Visibility = none ? Visibility.Visible : Visibility.Collapsed;
 
@@ -408,6 +428,51 @@ public sealed partial class MenuWindow : Window
         if (e.ClickedItem is not WikiEntry article) return;
         HideMenu();
         Launcher.Open(article.Url);
+    }
+
+    /// <summary>Face thumbnail from the local file; if it can't be decoded the letter tile comes back.</summary>
+    private static void LoadPersonPicture(PersonEntry person)
+    {
+        try
+        {
+            var bitmap = new Microsoft.UI.Xaml.Media.Imaging.BitmapImage { DecodePixelWidth = 80 };
+            bitmap.ImageFailed += (_, _) => person.Icon = null;
+            bitmap.UriSource = new Uri(person.ThumbnailPath!);
+            person.Icon = bitmap;
+        }
+        catch (Exception ex) when (ex is UriFormatException or ArgumentException)
+        {
+            // Odd path: keep the letter tile.
+        }
+    }
+
+    private void Person_ItemClick(object sender, ItemClickEventArgs e)
+    {
+        if (e.ClickedItem is not PersonEntry { CanOpen: true } person) return; // no Ocula, no action
+        HideMenu();
+        try
+        {
+            Launcher.Open(OculaPeople.OpenLink(person));
+        }
+        catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or InvalidOperationException)
+        {
+            System.Diagnostics.Debug.WriteLine("Porta: couldn't open Ocula: " + ex.Message);
+        }
+    }
+
+    private void ClearPeople()
+    {
+        OculaPeople.Clear();
+        _people.Clear();
+        PeopleSection.Visibility = Visibility.Collapsed;
+    }
+
+    private void OculaPeopleToggle_Toggled(object sender, RoutedEventArgs e)
+    {
+        if (App.Settings.Current.SearchOculaPeople == OculaPeopleToggle.IsOn) return;
+        App.Settings.Current.SearchOculaPeople = OculaPeopleToggle.IsOn;
+        App.Settings.Save();
+        if (!OculaPeopleToggle.IsOn) ClearPeople(); // the file is not read again and nothing is kept
     }
 
     private void WikipediaToggle_Toggled(object sender, RoutedEventArgs e)

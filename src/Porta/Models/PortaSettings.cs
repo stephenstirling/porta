@@ -20,6 +20,9 @@ public sealed class PortaSettings
     /// <summary>Show Wikipedia articles for what's typed (asks Wikipedia online). When off, nothing is sent.</summary>
     public bool SearchWikipedia { get; set; } = true;
 
+    /// <summary>Show people named in Ocula (read from Ocula's local people index, never online). Off until switched on.</summary>
+    public bool SearchOculaPeople { get; set; } = false;
+
     // Appearance (used from milestone 2)
     public string Theme { get; set; } = "System";
     public string? AccentColor { get; set; }

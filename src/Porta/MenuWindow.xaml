@@ -83,6 +83,31 @@
                 </Grid>
             </DataTemplate>
 
+            <!-- One person from Ocula in search -->
+            <DataTemplate x:Key="PersonRowTemplate" x:DataType="m:PersonEntry">
+                <Grid ColumnSpacing="12" Height="52">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Border Width="40" Height="40" CornerRadius="20" Background="{ThemeResource SubtleFillColorSecondaryBrush}">
+                        <Grid>
+                            <TextBlock Text="{x:Bind Initial}" FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                       Visibility="{x:Bind InitialVisibility, Mode=OneWay}" />
+                            <Image Source="{x:Bind Icon, Mode=OneWay}" Stretch="UniformToFill" />
+                        </Grid>
+                    </Border>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                        <TextBlock Text="{x:Bind Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                        <TextBlock Text="{x:Bind Subtitle}" FontSize="12" TextTrimming="CharacterEllipsis"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    </StackPanel>
+                    <TextBlock Grid.Column="2" Text="{x:Bind ActionText}" Visibility="{x:Bind ActionVisibility}" VerticalAlignment="Center"
+                               FontWeight="SemiBold" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+                </Grid>
+            </DataTemplate>
+
             <!-- One Windows tool, Settings page or power action in search -->
             <DataTemplate x:Key="SystemRowTemplate" x:DataType="m:SystemEntry">
                 <Grid ColumnSpacing="12" Height="44" Background="Transparent">
@@ -296,6 +321,15 @@
                                           ScrollViewer.VerticalScrollMode="Disabled" ScrollViewer.VerticalScrollBarVisibility="Disabled" />
                             </StackPanel>
 
+                            <!-- People named in Ocula (off until "Search people in Ocula" is on): below apps, games and tools -->
+                            <StackPanel x:Name="PeopleSection" Visibility="Collapsed" Spacing="4">
+                                <TextBlock Text="People in Ocula" FontSize="12" FontWeight="SemiBold" Margin="4,0,0,0"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                <ListView x:Name="PeopleList" SelectionMode="None" IsItemClickEnabled="True" ItemClick="Person_ItemClick"
+                                          ItemTemplate="{StaticResource PersonRowTemplate}"
+                                          ScrollViewer.VerticalScrollMode="Disabled" ScrollViewer.VerticalScrollBarVisibility="Disabled" />
+                            </StackPanel>
+
                             <!-- Games from the Steam store that aren't installed: always below installed apps and games -->
                             <StackPanel x:Name="StoreSection" Visibility="Collapsed" Spacing="4">
                                 <TextBlock Text="From the Steam store" FontSize="12" FontWeight="SemiBold" Margin="4,0,0,0"
@@ -394,6 +428,8 @@
                                 <!-- Until the Settings window exists (milestone 2) -->
                                 <ToggleSwitch x:Name="WikipediaToggle" Header="Search Wikipedia" Margin="0,8,0,0"
                                               Toggled="WikipediaToggle_Toggled" />
+                                <ToggleSwitch x:Name="OculaPeopleToggle" Header="Search people in Ocula"
+                                              Toggled="OculaPeopleToggle_Toggled" />
                             </StackPanel>
                         </Flyout>
                     </Button.Flyout>
