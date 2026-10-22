@@ -89,7 +89,7 @@ public static partial class BattleNetLibrary
                 Launcher = GameLauncher.BattleNet,
                 Installed = true,
                 Target = launcher,
-                Arguments = $"--exec=\\"launch {code}\\"",
+                Arguments = $"--exec=\"launch {code}\"",
                 IconSource = FindIcon(product.InstallPath, name),
                 LauncherId = code,
             });
@@ -108,7 +108,7 @@ public static partial class BattleNetLibrary
                 Launcher = GameLauncher.BattleNet,
                 Installed = true,
                 Target = launcher,
-                Arguments = $"--exec=\\"launch {code}\\"",
+                Arguments = $"--exec=\"launch {code}\"",
                 IconSource = entry.Icon,
                 LauncherId = code,
             });
