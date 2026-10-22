@@ -87,6 +87,8 @@ public sealed partial class MenuWindow : Window
         WikiList.ItemsSource = _wiki;
         PeopleList.ItemsSource = _people;
         WikipediaToggle.IsOn = App.Settings.Current.SearchWikipedia;
+        WikipediaPicturesToggle.IsOn = App.Settings.Current.WikipediaPictures;
+        WikipediaPicturesToggle.IsEnabled = WikipediaToggle.IsOn; // pictures only matter while Wikipedia search is on
         OculaPeopleToggle.IsOn = App.Settings.Current.SearchOculaPeople;
 
         var name = Native.GetDisplayName();
@@ -101,6 +103,9 @@ public sealed partial class MenuWindow : Window
             if (App.Catalog.IsLoaded) RebuildAllApps();
             GlassSlider.Value = App.Settings.Current.GlassStrength; // also updates the glass
             WikipediaToggle.IsOn = App.Settings.Current.SearchWikipedia;
+            WikipediaPicturesToggle.IsOn = App.Settings.Current.WikipediaPictures;
+            WikipediaPicturesToggle.IsEnabled = WikipediaToggle.IsOn;
+            if (!App.Settings.Current.WikipediaPictures) DropWikiPictures();
             OculaPeopleToggle.IsOn = App.Settings.Current.SearchOculaPeople;
             if (!OculaPeopleToggle.IsOn) ClearPeople();
         });
@@ -407,20 +412,52 @@ public sealed partial class MenuWindow : Window
         try
         {
             await Task.Delay(300, cts.Token); // wait for typing to pause
-            var articles = await WikipediaSearch.SearchAsync(query, cts.Token);
+            var pictures = App.Settings.Current.WikipediaPictures;
+            var articles = await WikipediaSearch.SearchAsync(query, cts.Token, pictures);
             if (cts.IsCancellationRequested || SearchBox.Text.Trim() != query || !App.Settings.Current.SearchWikipedia) return;
 
+            // Text first; the pictures follow one by one in the background.
             _wiki.Clear();
             foreach (var a in articles)
-            {
-                var entry = new WikiEntry { Title = a.Title, Description = a.Description, Url = a.Url, ThumbnailUrl = a.ThumbnailUrl };
-                if (a.ThumbnailUrl is not null && Uri.TryCreate(a.ThumbnailUrl, UriKind.Absolute, out var thumb))
-                    entry.Icon = new Microsoft.UI.Xaml.Media.Imaging.BitmapImage(thumb) { DecodePixelWidth = 80 };
-                _wiki.Add(entry);
-            }
+                _wiki.Add(new WikiEntry { Title = a.Title, Description = a.Description, Url = a.Url, ThumbnailUrl = pictures ? a.ThumbnailUrl : null });
             UpdateSearchSections(query);
+
+            if (pictures)
+                foreach (var entry in _wiki.ToList())
+                    if (entry.ThumbnailUrl is not null) _ = LoadWikiPictureAsync(entry, cts.Token);
         }
         catch (OperationCanceledException) { }
+    }
+
+    private async Task LoadWikiPictureAsync(WikiEntry entry, CancellationToken ct)
+    {
+        try
+        {
+            var path = await WikiPictureCache.GetFileAsync(entry.ThumbnailUrl!, ct); // continues on the UI thread
+            if (path is null || ct.IsCancellationRequested || !_wiki.Contains(entry) ||
+                !App.Settings.Current.SearchWikipedia || !App.Settings.Current.WikipediaPictures) return;
+
+            var bitmap = new Microsoft.UI.Xaml.Media.Imaging.BitmapImage { DecodePixelWidth = 96 };
+            bitmap.ImageFailed += (_, _) => entry.Icon = null; // a bad picture brings the letter tile back
+            bitmap.UriSource = new Uri(path);
+            entry.Icon = bitmap;
+        }
+        catch (Exception ex) when (ex is OperationCanceledException or UriFormatException or ArgumentException) { }
+    }
+
+    /// <summary>Back to letter tiles, for when pictures or Wikipedia search are switched off.</summary>
+    private void DropWikiPictures()
+    {
+        foreach (var entry in _wiki) entry.Icon = null;
+        WikiPictureCache.Clear();
+    }
+
+    private void WikipediaPicturesToggle_Toggled(object sender, RoutedEventArgs e)
+    {
+        if (App.Settings.Current.WikipediaPictures == WikipediaPicturesToggle.IsOn) return;
+        App.Settings.Current.WikipediaPictures = WikipediaPicturesToggle.IsOn;
+        App.Settings.Save();
+        if (!WikipediaPicturesToggle.IsOn) DropWikiPictures(); // no more picture requests; saved pictures deleted
     }
 
     private void Wiki_ItemClick(object sender, ItemClickEventArgs e)
@@ -480,6 +517,7 @@ public sealed partial class MenuWindow : Window
         if (App.Settings.Current.SearchWikipedia == WikipediaToggle.IsOn) return;
         App.Settings.Current.SearchWikipedia = WikipediaToggle.IsOn;
         App.Settings.Save();
+        WikipediaPicturesToggle.IsEnabled = WikipediaToggle.IsOn;
         if (!WikipediaToggle.IsOn)
         {
             _wikiSearch?.Cancel(); // stop anything in flight; nothing more is sent
