@@ -129,6 +129,34 @@ internal static class Native
         DwmSetWindowAttribute(hwnd, DWMWA_NCRENDERING_POLICY, ref ncDisabled, sizeof(int));
     }
 
+    // ---- Window styles ----
+    private const int GWL_STYLE = -16, GWL_EXSTYLE = -20;
+    private const long WS_CAPTION = 0x00C00000, WS_SYSMENU = 0x00080000, WS_THICKFRAME = 0x00040000,
+                       WS_MINIMIZEBOX = 0x00020000, WS_MAXIMIZEBOX = 0x00010000;
+    private const long WS_EX_TOOLWINDOW = 0x00000080, WS_EX_APPWINDOW = 0x00040000, WS_EX_WINDOWEDGE = 0x00000100;
+    private const uint SWP_NOSIZE = 0x1, SWP_NOMOVE = 0x2, SWP_NOZORDER = 0x4, SWP_NOACTIVATE = 0x10, SWP_FRAMECHANGED = 0x20;
+
+    [DllImport("user32.dll")] private static extern IntPtr GetWindowLongPtr(IntPtr hwnd, int index);
+    [DllImport("user32.dll")] private static extern IntPtr SetWindowLongPtr(IntPtr hwnd, int index, IntPtr value);
+    [DllImport("user32.dll")] private static extern bool SetWindowPos(IntPtr hwnd, IntPtr after, int x, int y, int cx, int cy, uint flags);
+
+    /// <summary>
+    /// Makes the menu a plain tool window: no caption, system menu or resizable frame. Title-bar add-ons
+    /// (DisplayFusion's title bar buttons and similar) attach to captioned app windows, so they leave it
+    /// alone. Not WS_EX_NOACTIVATE: the menu must activate to take typing and to hide when it loses focus.
+    /// </summary>
+    public static void MakeToolWindow(IntPtr hwnd)
+    {
+        long style = (long)GetWindowLongPtr(hwnd, GWL_STYLE);
+        long newStyle = style & ~(WS_CAPTION | WS_SYSMENU | WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX);
+        long ex = (long)GetWindowLongPtr(hwnd, GWL_EXSTYLE);
+        long newEx = (ex | WS_EX_TOOLWINDOW) & ~(WS_EX_APPWINDOW | WS_EX_WINDOWEDGE);
+        if (newStyle == style && newEx == ex) return;
+        SetWindowLongPtr(hwnd, GWL_STYLE, (IntPtr)newStyle);
+        SetWindowLongPtr(hwnd, GWL_EXSTYLE, (IntPtr)newEx);
+        SetWindowPos(hwnd, IntPtr.Zero, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED);
+    }
+
     // ---- Window shape ----
     [StructLayout(LayoutKind.Sequential)] public struct RECT { public int Left, Top, Right, Bottom; }
     [DllImport("user32.dll")] public static extern bool GetWindowRect(IntPtr hwnd, out RECT rect);

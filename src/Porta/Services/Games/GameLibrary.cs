@@ -17,8 +17,6 @@ public sealed class GameLibrary
     private Task? _scan;
 
     public IReadOnlyList<GameEntry> Games => _games;
-
-    /// <summary>Launchers found on this PC, for the "search the store" rows.</summary>
     public HashSet<GameLauncher> Launchers { get; } = [];
 
     public void RefreshIfStale(IReadOnlyList<AppEntry> apps)
@@ -54,13 +52,20 @@ public sealed class GameLibrary
         _games = found;
         lock (Launchers) { Launchers.Clear(); Launchers.UnionWith(launchers); }
         _scannedAt = DateTime.UtcNow;
-        foreach (var g in found) RequestIcon(g);
+
+        foreach (var game in found)
+        {
+            RequestIcon(game);
+            if (game.Launcher == GameLauncher.Epic &&
+                game.CatalogNamespace is not null && game.CatalogItemId is not null)
+                EpicArtworkService.Request(game, game.CatalogNamespace, game.CatalogItemId);
+        }
     }
 
-    private static void RequestIcon(GameEntry g)
+    private static void RequestIcon(GameEntry game)
     {
-        if (g.CoverPath is not null || g.IconSource is null) return;
-        App.Icons.Request(g, g.IconSource, 64);
+        if (game.CoverPath is not null || game.IconSource is null) return;
+        App.Icons.Request(game, game.IconSource, 64);
     }
 
     public List<GameEntry> Search(string query, int max = 3) => Rank(_games, query, max);
