@@ -6,7 +6,7 @@ using System.Text.Json.Serialization;
 
 namespace Porta.Services;
 
-public sealed record WikiResult(string Title, string? Description, string Url, string? ThumbnailUrl);
+public sealed record WikiResult(string Title, string? Description, string Url, string? ThumbnailUrl, bool IsDisambiguation = false);
 
 /// <summary>
 /// Wikipedia articles for search, from Wikimedia's REST title search on the Wikipedia that matches the
@@ -78,8 +78,12 @@ public static class WikipediaSearch
             // The same request also asks for each article's picture (96 px) when pictures are on.
             var (disambiguation, thumbnails) = await DisambiguationTitlesAsync(lang, results, pictures, ct).ConfigureAwait(false);
             results = results
-                .Select(r => r with { ThumbnailUrl = PictureOrNull(thumbnails.GetValueOrDefault(r.Title) ?? r.ThumbnailUrl) })
-                .OrderBy(r => disambiguation.Contains(r.Title)).ToList(); // stable: keeps the rest in order
+                .Select(r => r with
+                {
+                    ThumbnailUrl = PictureOrNull(thumbnails.GetValueOrDefault(r.Title) ?? r.ThumbnailUrl),
+                    IsDisambiguation = disambiguation.Contains(r.Title),
+                })
+                .OrderBy(r => r.IsDisambiguation).ToList(); // stable: keeps the rest in order
             lock (Cache)
             {
                 if (Cache.Count > 200) Cache.Clear();
@@ -115,7 +119,7 @@ public static class WikipediaSearch
         {
             var titles = string.Join("|", results.Select(r => r.Title));
             var url = $"https://{lang}.wikipedia.org/w/api.php?action=query&prop=pageprops{(pictures ? "|pageimages" : "")}&ppprop=disambiguation" +
-                      (pictures ? "&piprop=thumbnail&pithumbsize=96" : "") +
+                      (pictures ? "&piprop=thumbnail&pithumbsize=96&pilicense=any" : "") +
                       $"&redirects=1&format=json&formatversion=2&titles={Uri.EscapeDataString(titles)}";
             using var doc = JsonDocument.Parse(await Http.GetStringAsync(url, ct).ConfigureAwait(false));
             if (doc.RootElement.TryGetProperty("query", out var query) && query.TryGetProperty("pages", out var pages))
@@ -147,6 +151,80 @@ public static class WikipediaSearch
             }
             return (found, thumbnails);
         }
+    }
+
+    private static readonly Dictionary<string, string?> FallbackCache = [];
+
+    /// <summary>
+    /// A picture for one article the main request found none for. One small request to the article's REST
+    /// summary. Disambiguation pages and articles that really have no picture give null. The link goes through
+    /// the same rule as every other picture: rewritten to https://upload.wikimedia.org, anything else dropped.
+    /// Silent on any failure, including offline.
+    /// </summary>
+    public static async Task<string?> FallbackPictureAsync(string articleUrl, CancellationToken ct)
+    {
+        lock (FallbackCache)
+        {
+            if (FallbackCache.TryGetValue(articleUrl, out var known)) return known;
+        }
+        try
+        {
+            if (!Uri.TryCreate(articleUrl, UriKind.Absolute, out var article) || article.Scheme != Uri.UriSchemeHttps ||
+                !article.Host.EndsWith(".wikipedia.org", StringComparison.OrdinalIgnoreCase) ||
+                !article.AbsolutePath.StartsWith("/wiki/", StringComparison.Ordinal))
+                return null;
+
+            var summaryUrl = $"https://{article.Host}/api/rest_v1/page/summary/{article.AbsolutePath["/wiki/".Length..]}";
+            using var doc = JsonDocument.Parse(await Http.GetStringAsync(summaryUrl, ct).ConfigureAwait(false));
+            var root = doc.RootElement;
+
+            string? picture = null;
+            if (!(root.TryGetProperty("type", out var type) && type.GetString() == "disambiguation") &&
+                root.TryGetProperty("thumbnail", out var thumb) && thumb.TryGetProperty("source", out var source))
+                picture = SmallPicture(source.GetString(), thumb.TryGetProperty("width", out var w) && w.TryGetInt32(out var width) ? width : 0);
+
+            lock (FallbackCache)
+            {
+                if (FallbackCache.Count > 200) FallbackCache.Clear();
+                FallbackCache[articleUrl] = picture;
+            }
+            return picture;
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or JsonException or InvalidOperationException or UriFormatException)
+        {
+            Debug.WriteLine("Porta: no fallback Wikipedia picture: " + ex.Message);
+            return null; // not remembered, so a later search can try again
+        }
+    }
+
+    /// <summary>
+    /// The summary's picture can be the full-size original. A 120 px thumbnail of the same file is asked for
+    /// instead (unless the file is smaller than that), so rows never download a big image.
+    /// </summary>
+    private static string? SmallPicture(string? url, int width)
+    {
+        var picture = PictureOrNull(url);
+        if (picture is null) return null;
+        var path = new Uri(picture).AbsolutePath; // /wikipedia/<project>/<h>/<hh>/<File.ext> for an original
+        if (path.Contains("/thumb/", StringComparison.Ordinal) || width is > 0 and < 120) return picture;
+
+        var parts = path.Split('/', StringSplitOptions.RemoveEmptyEntries); // wikipedia, project, h, hh, File.ext
+        if (parts.Length != 5) return null;
+        var file = parts[4];
+        var ext = Path.GetExtension(file).ToLowerInvariant();
+        var thumbName = ext switch
+        {
+            ".jpg" or ".jpeg" or ".png" or ".gif" or ".webp" => $"120px-{file}",
+            ".svg" => $"120px-{file}.png", // vector files come back as PNG
+            _ => null,                     // PDF, TIFF, video... no simple thumbnail: keep the letter tile
+        };
+        return thumbName is null
+            ? null
+            : PictureOrNull($"https://upload.wikimedia.org/wikipedia/{parts[1]}/thumb/{parts[2]}/{parts[3]}/{file}/{thumbName}");
     }
 
     /// <summary>Only https://upload.wikimedia.org pictures are ever passed on.</summary>

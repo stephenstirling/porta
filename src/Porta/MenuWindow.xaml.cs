@@ -419,12 +419,30 @@ public sealed partial class MenuWindow : Window
             // Text first; the pictures follow one by one in the background.
             _wiki.Clear();
             foreach (var a in articles)
-                _wiki.Add(new WikiEntry { Title = a.Title, Description = a.Description, Url = a.Url, ThumbnailUrl = pictures ? a.ThumbnailUrl : null });
+                _wiki.Add(new WikiEntry { Title = a.Title, Description = a.Description, Url = a.Url, ThumbnailUrl = pictures ? a.ThumbnailUrl : null, IsDisambiguation = a.IsDisambiguation });
             UpdateSearchSections(query);
 
             if (pictures)
                 foreach (var entry in _wiki.ToList())
-                    if (entry.ThumbnailUrl is not null) _ = LoadWikiPictureAsync(entry, cts.Token);
+                    _ = entry.ThumbnailUrl is not null ? LoadWikiPictureAsync(entry, cts.Token) : LoadWikiFallbackPictureAsync(entry, cts.Token);
+        }
+        catch (OperationCanceledException) { }
+    }
+
+    /// <summary>
+    /// One more try for a row with no picture: the article's own summary, in the background after the text is up.
+    /// Disambiguation pages are skipped, and an article that really has no picture keeps its letter tile.
+    /// </summary>
+    private async Task LoadWikiFallbackPictureAsync(WikiEntry entry, CancellationToken ct)
+    {
+        try
+        {
+            if (entry.IsDisambiguation) return;
+            var url = await WikipediaSearch.FallbackPictureAsync(entry.Url, ct); // continues on the UI thread
+            if (url is null || ct.IsCancellationRequested || !_wiki.Contains(entry) ||
+                !App.Settings.Current.SearchWikipedia || !App.Settings.Current.WikipediaPictures) return;
+            entry.ThumbnailUrl = url;
+            await LoadWikiPictureAsync(entry, ct);
         }
         catch (OperationCanceledException) { }
     }
