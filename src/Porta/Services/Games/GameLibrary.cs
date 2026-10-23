@@ -53,13 +53,7 @@ public sealed class GameLibrary
         lock (Launchers) { Launchers.Clear(); Launchers.UnionWith(launchers); }
         _scannedAt = DateTime.UtcNow;
 
-        foreach (var game in found)
-        {
-            RequestIcon(game);
-            if (game.Launcher == GameLauncher.Epic &&
-                game.CatalogNamespace is not null && game.CatalogItemId is not null)
-                EpicArtworkService.Request(game, game.CatalogNamespace, game.CatalogItemId);
-        }
+        foreach (var game in found) RequestIcon(game); // Epic covers are fetched later, only when shown
     }
 
     private static void RequestIcon(GameEntry game)
@@ -68,8 +62,11 @@ public sealed class GameLibrary
         App.Icons.Request(game, game.IconSource, 64);
     }
 
-    public List<GameEntry> Search(string query, int max = 3) =>
-        _games
+    public List<GameEntry> Search(string query, int max = 3) => Rank(_games, query, max);
+
+    /// <summary>Best matches by name or initials ("rdr2"); also used for Epic's catalog cache.</summary>
+    public static List<GameEntry> Rank(IEnumerable<GameEntry> games, string query, int max = 3) =>
+        games
             .Select(g => (Game: g, Score: Math.Max(SearchService.Score(g.Name, query), SearchService.Score(Acronym(g.Name), query))))
             .Where(x => x.Score > 0)
             .OrderByDescending(x => x.Score)

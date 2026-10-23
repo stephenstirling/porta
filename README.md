@@ -78,6 +78,21 @@ Porta has no telemetry. These search features go online, and only while they're 
 
 Everything else, including your apps, games and files, stays on your PC. `>` commands are never sent anywhere.
 
+**Epic library** (`SearchEpicLibrary`, on by default, "Epic library" switch in the glass-strength pop-up):
+Porta reads only the Epic Games Launcher's local catalog cache
+(`C:\ProgramData\Epic\EpicGamesLauncher\Data\Catalog\catcache.bin`), read-only, to show Epic games in search
+labelled "Epic". It never goes online for this, never writes to the file, and never reads Epic login, token or
+account files. The cache can include games you don't own; Open hands the game to the Epic launcher.
+
+**Epic cover images** (`EpicCoverImages`, on by default, "Epic cover images" switch next to the Epic library one,
+saved and included in settings backups): the Epic cache lists a web link to each game's cover picture. When an Epic
+result is on screen, Porta downloads that one picture (a small 368 px wide copy) from Epic's image server (`cdn1.epicgames.com`), which sees
+your IP address and a `Porta/<version>` User-Agent, nothing else. Only results being shown are fetched, never the
+whole library. Pictures are kept in `%LOCALAPPDATA%\Porta\EpicCovers` (at most 40 MB, deleted after 30 days) and a
+failed download is ignored. With the switch off nothing is downloaded and the tile shows the game's icon or a
+letter. The small Epic badge is the icon of your installed Epic Games Launcher, read from your PC when Porta runs;
+Porta contains no Epic logo, and without the launcher only the text label shows.
+
 **Quick answers** (`ShowQuickAnswers`, on by default, "Quick answers" switch in the glass-strength pop-up, saved and
 included in settings backups): maths (`+ - * / ^`, brackets, percentages) and unit conversions (length, weight,
 temperature, volume, speed, data size) are worked out on your PC and never sent anywhere. Only text that is clearly a

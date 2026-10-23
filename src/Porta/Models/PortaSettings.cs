@@ -20,6 +20,11 @@ public sealed class PortaSettings
     /// <summary>Show Wikipedia articles for what's typed (asks Wikipedia online). When off, nothing is sent.</summary>
     public bool SearchWikipedia { get; set; } = true;
 
+    /// <summary>Show games from the Epic launcher's local catalog cache (read on this PC only, never online).</summary>
+    public bool SearchEpicLibrary { get; set; } = true;
+
+    /// <summary>Download Epic cover pictures for the Epic results being shown. When off, nothing is downloaded.</summary>
+    public bool EpicCoverImages { get; set; } = true;
     /// <summary>Show people named in Ocula (read from Ocula's local people index, never online). Off until switched on.</summary>
     public bool SearchOculaPeople { get; set; } = false;
 

@@ -32,10 +32,12 @@ public sealed class GameEntry : IconItem
     /// <summary>Where to load a square icon from when there's no cover (exe, shell path).</summary>
     public string? IconSource { get; init; }
     public string? LauncherId { get; init; }
-    /// <summary>Epic catalog namespace, used to retrieve optional cover artwork.</summary>
+    /// <summary>Epic catalog namespace.</summary>
     public string? CatalogNamespace { get; init; }
-    /// <summary>Epic catalog item identifier, used to retrieve optional cover artwork.</summary>
+    /// <summary>Epic catalog item identifier, used to find the game's cover link in the catalog cache.</summary>
     public string? CatalogItemId { get; init; }
+    /// <summary>Web link to the wide cover picture, from Epic's local catalog cache. Not downloaded unless shown.</summary>
+    public string? CoverUrl { get; set; }
 
     public string LauncherName => Launcher switch
     {
@@ -46,7 +48,16 @@ public sealed class GameEntry : IconItem
         _ => "",
     };
 
-    public string Subtitle => Installed ? $"{LauncherName} · Installed" : $"{LauncherName} store · Not installed";
-    public string ActionText => Installed ? "Play" : "View";
+    /// <summary>From Epic's local catalog cache: may not be owned, so labelled just "Epic" and opened in the launcher.</summary>
+    public bool FromCatalogCache { get; init; }
+
+    public string Subtitle => FromCatalogCache ? "Epic"
+        : Installed ? $"{LauncherName} · Installed" : $"{LauncherName} store · Not installed";
+
+    public string ActionText => FromCatalogCache ? "Open" : Installed ? "Play" : "View";
+
+    /// <summary>The small launcher badge shown beside the label (Epic only, taken from the installed launcher).</summary>
+    public IconItem? Badge => Launcher == GameLauncher.Epic ? Services.Games.EpicBadge.Instance : null;
+
     public string Initial => Name.Length > 0 ? char.ToUpperInvariant(Name[0]).ToString() : "?";
 }

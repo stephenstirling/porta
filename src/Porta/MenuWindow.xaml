@@ -176,7 +176,11 @@
                     </Border>
                     <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
                         <TextBlock Text="{x:Bind Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
-                        <TextBlock Text="{x:Bind Subtitle}" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <StackPanel Orientation="Horizontal" Spacing="5">
+                            <Image Source="{x:Bind Badge.Icon, Mode=OneWay, FallbackValue={x:Null}}" Width="13" Height="13" VerticalAlignment="Center"
+                                   Visibility="{x:Bind Badge.IconVisibility, Mode=OneWay, FallbackValue=Collapsed}" />
+                            <TextBlock Text="{x:Bind Subtitle}" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        </StackPanel>
                     </StackPanel>
                     <TextBlock Grid.Column="2" Text="{x:Bind ActionText}" VerticalAlignment="Center" FontWeight="SemiBold"
                                Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
@@ -475,6 +479,10 @@
                                               Toggled="WikipediaToggle_Toggled" />
                                 <ToggleSwitch x:Name="WikipediaPicturesToggle" Header="Wikipedia pictures"
                                               Toggled="WikipediaPicturesToggle_Toggled" />
+                                <ToggleSwitch x:Name="EpicLibraryToggle" Header="Epic library"
+                                              Toggled="EpicLibraryToggle_Toggled" />
+                                <ToggleSwitch x:Name="EpicCoversToggle" Header="Epic cover images"
+                                              Toggled="EpicCoversToggle_Toggled" />
                                 <ToggleSwitch x:Name="OculaPeopleToggle" Header="Search people in Ocula"
                                               Toggled="OculaPeopleToggle_Toggled" />
                                 <ToggleSwitch x:Name="QuickAnswersToggle" Header="Quick answers"
