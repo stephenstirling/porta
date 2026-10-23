@@ -42,6 +42,7 @@ public sealed partial class MenuWindow : Window
     private readonly ObservableCollection<QuickRow> _quick = []; // the calculation/conversion answer, on top
     private readonly ObservableCollection<QuickRow> _web = []; // "Search the web", at the bottom
     private CancellationTokenSource? _currencySearch;
+    private CancellationTokenSource? _battleNetPictures;
     private bool _loadingQuickSettings; // filling the pop-up from saved settings must not count as the user picking
     private readonly ObservableCollection<PathEntry> _paths = []; // recent files and folders, below apps, games and tools
     private ContentDialog? _excludeDialog;
@@ -134,6 +135,7 @@ public sealed partial class MenuWindow : Window
             WikipediaPicturesToggle.IsOn = App.Settings.Current.WikipediaPictures;
             WikipediaPicturesToggle.IsEnabled = WikipediaToggle.IsOn;
             if (!App.Settings.Current.WikipediaPictures) DropWikiPictures();
+            else if (!App.Settings.Current.SearchWikipedia) { _battleNetPictures?.Cancel(); BattleNetCatalog.ForgetPictures(); }
             OculaPeopleToggle.IsOn = App.Settings.Current.SearchOculaPeople;
             if (!OculaPeopleToggle.IsOn) ClearPeople();
             LoadQuickSettings();
@@ -311,6 +313,7 @@ public sealed partial class MenuWindow : Window
         _people.Clear();
         PeopleSection.Visibility = Visibility.Collapsed;
         _currencySearch?.Cancel();
+        _battleNetPictures?.Cancel();
         _quick.Clear();
         _web.Clear();
         QuickList.Visibility = Visibility.Collapsed;
@@ -403,6 +406,7 @@ public sealed partial class MenuWindow : Window
 
         UpdateSearchSections(query);
         if (_results.Count > 0) ResultsList.SelectedIndex = 0;
+        _ = LoadBattleNetPicturesAsync(); // after the text is up
 
         if (query.Length >= 3 && App.Settings.Current.SearchSteamStore && App.Games.Launchers.Contains(GameLauncher.Steam))
             _ = AddSteamStoreResultsAsync(query);
@@ -537,6 +541,8 @@ public sealed partial class MenuWindow : Window
     /// <summary>Back to letter tiles, for when pictures or Wikipedia search are switched off.</summary>
     private void DropWikiPictures()
     {
+        _battleNetPictures?.Cancel();
+        BattleNetCatalog.ForgetPictures();
         foreach (var entry in _wiki) entry.Icon = null;
         WikiPictureCache.Clear();
     }
@@ -547,6 +553,7 @@ public sealed partial class MenuWindow : Window
         App.Settings.Current.WikipediaPictures = WikipediaPicturesToggle.IsOn;
         App.Settings.Save();
         if (!WikipediaPicturesToggle.IsOn) DropWikiPictures(); // no more picture requests; saved pictures deleted
+        else _ = LoadBattleNetPicturesAsync();
     }
 
     private void Wiki_ItemClick(object sender, ItemClickEventArgs e)
@@ -713,6 +720,45 @@ public sealed partial class MenuWindow : Window
         };
         try { await _excludeDialog.ShowAsync(); }
         finally { _excludeDialog = null; }
+    }
+
+    /// <summary>
+    /// Pictures for Battle.net rows that have no program icon: the lead picture of the game's Wikipedia article, in the
+    /// background after the text shows, one request for all rows on screen. Only while "Search Battle.net games",
+    /// "Wikipedia pictures" and "Search Wikipedia" are all on; nothing is requested otherwise, and nothing is ever
+    /// downloaded from blizzard.com or battle.net. A missing or failed picture leaves the letter tile.
+    /// </summary>
+    private async Task LoadBattleNetPicturesAsync()
+    {
+        static bool Allowed() => App.Settings.Current is { SearchBattleNetGames: true, WikipediaPictures: true, SearchWikipedia: true };
+        if (!Allowed()) return;
+        var rows = _battleNet.Where(r => r.WikipediaTitle is not null && r.Icon is null && r.IconSource is null && !r.WikipediaPictureTried).ToList();
+        if (rows.Count == 0) return;
+
+        var cts = _battleNetPictures = new CancellationTokenSource();
+        try
+        {
+            await Task.Delay(300, cts.Token); // wait for typing to pause
+            if (!Allowed()) return;
+            var links = await WikipediaSearch.PicturesForTitlesAsync(rows.Select(r => r.WikipediaTitle!), cts.Token); // continues on the UI thread
+            if (links is null) return; // offline: letter tiles stay, and the next search tries again
+
+            foreach (var row in rows)
+            {
+                if (cts.IsCancellationRequested || !Allowed()) return;
+                row.WikipediaPictureTried = true;
+                if (!links.TryGetValue(row.WikipediaTitle!, out var link) || link is null) continue; // the article has no picture
+                var path = await WikiPictureCache.GetFileAsync(link, cts.Token);
+                if (path is null || cts.IsCancellationRequested || !Allowed() || row.Icon is not null) continue;
+
+                var bitmap = new Microsoft.UI.Xaml.Media.Imaging.BitmapImage { DecodePixelWidth = 96 };
+                bitmap.ImageFailed += (_, _) => { row.Icon = null; row.IconFromWikipedia = false; }; // a bad picture brings the letter tile back
+                bitmap.UriSource = new Uri(path);
+                row.Icon = bitmap;
+                row.IconFromWikipedia = true;
+            }
+        }
+        catch (Exception ex) when (ex is OperationCanceledException or UriFormatException or ArgumentException) { }
     }
 
     private void BattleNetGamesToggle_Toggled(object sender, RoutedEventArgs e)
@@ -979,7 +1025,10 @@ public sealed partial class MenuWindow : Window
             _wikiSearch?.Cancel(); // stop anything in flight; nothing more is sent
             _wiki.Clear();
             WikiSection.Visibility = Visibility.Collapsed;
+            _battleNetPictures?.Cancel(); // Battle.net rows take their pictures from Wikipedia too
+            BattleNetCatalog.ForgetPictures();
         }
+        else _ = LoadBattleNetPicturesAsync();
     }
 
     private void System_ItemClick(object sender, ItemClickEventArgs e)
