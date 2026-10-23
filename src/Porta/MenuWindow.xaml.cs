@@ -36,6 +36,7 @@ public sealed partial class MenuWindow : Window
     private readonly ObservableCollection<SystemEntry> _system = []; // Windows tools, Settings pages, power actions
     private ContentDialog? _confirmDialog;
     private CancellationTokenSource? _storeSearch;
+    private readonly ObservableCollection<GameEntry> _battleNet = []; // Battle.net games from Porta's list, between the Steam store rows and Wikipedia
     private readonly ObservableCollection<WikiEntry> _wiki = []; // Wikipedia articles, below the store results
     private CancellationTokenSource? _wikiSearch;
     private readonly ObservableCollection<QuickRow> _quick = []; // the calculation/conversion answer, on top
@@ -89,6 +90,8 @@ public sealed partial class MenuWindow : Window
         StoreList.ItemsSource = _store;
         SystemList.ItemsSource = _system;
         WikiList.ItemsSource = _wiki;
+        BattleNetList.ItemsSource = _battleNet;
+        BattleNetGamesToggle.IsOn = App.Settings.Current.SearchBattleNetGames;
         PeopleList.ItemsSource = _people;
         QuickList.ItemsSource = _quick;
         WebList.ItemsSource = _web;
@@ -114,6 +117,8 @@ public sealed partial class MenuWindow : Window
             WikipediaToggle.IsOn = App.Settings.Current.SearchWikipedia;
             EpicLibraryToggle.IsOn = App.Settings.Current.SearchEpicLibrary;
             EpicCoversToggle.IsOn = App.Settings.Current.EpicCoverImages;
+            BattleNetGamesToggle.IsOn = App.Settings.Current.SearchBattleNetGames;
+            if (!BattleNetGamesToggle.IsOn) { _battleNet.Clear(); BattleNetSection.Visibility = Visibility.Collapsed; }
             if (!EpicCoversToggle.IsOn) EpicCoverCache.ForgetCovers(App.Games.Games.Concat(EpicCatalogCache.Games));
             WikipediaPicturesToggle.IsOn = App.Settings.Current.WikipediaPictures;
             WikipediaPicturesToggle.IsEnabled = WikipediaToggle.IsOn;
@@ -284,6 +289,8 @@ public sealed partial class MenuWindow : Window
         _storeSearch?.Cancel();
         _store.Clear();
         StoreSection.Visibility = Visibility.Collapsed;
+        _battleNet.Clear();
+        BattleNetSection.Visibility = Visibility.Collapsed;
         _wikiSearch?.Cancel();
         _wiki.Clear();
         WikiSection.Visibility = Visibility.Collapsed;
@@ -359,6 +366,10 @@ public sealed partial class MenuWindow : Window
             _system.Add(entry);
         }
 
+        // Battle.net games from Porta's own list (offline): installed ones play, the others open their page.
+        if (query.Length >= 2 && App.Settings.Current.SearchBattleNetGames)
+            foreach (var g in BattleNetCatalog.Search(query, App.Games.Games, _games)) _battleNet.Add(g);
+
         // People named in Ocula: only when switched on; read from Ocula's own file on this PC, never online.
         if (query.Length >= 2 && App.Settings.Current.SearchOculaPeople)
         {
@@ -392,11 +403,12 @@ public sealed partial class MenuWindow : Window
         SystemSection.Visibility = _system.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
         PeopleSection.Visibility = _people.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
         StoreSection.Visibility = _store.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+        BattleNetSection.Visibility = _battleNet.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
 
         WikiSection.Visibility = _wiki.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
 
         // "Nothing matches" only when every section is empty.
-        bool none = _results.Count == 0 && _games.Count == 0 && _system.Count == 0 && _store.Count == 0 && _wiki.Count == 0 && _people.Count == 0 && _quick.Count == 0;
+        bool none = _results.Count == 0 && _games.Count == 0 && _system.Count == 0 && _store.Count == 0 && _wiki.Count == 0 && _people.Count == 0 && _quick.Count == 0 && _battleNet.Count == 0;
         NoResultsText.Text = $"Nothing matches “{query}”";
         // The quick answer and web rows sit at the top when nothing else matched; keep the message below them.
         NoResultsText.Margin = new Thickness(0, 40 + 56 * (_quick.Count + _web.Count), 0, 0);
@@ -532,6 +544,14 @@ public sealed partial class MenuWindow : Window
         if (App.Settings.Current.SearchEpicLibrary == EpicLibraryToggle.IsOn) return;
         App.Settings.Current.SearchEpicLibrary = EpicLibraryToggle.IsOn;
         App.Settings.Save();
+    }
+
+    private void BattleNetGamesToggle_Toggled(object sender, RoutedEventArgs e)
+    {
+        if (App.Settings.Current.SearchBattleNetGames == BattleNetGamesToggle.IsOn) return;
+        App.Settings.Current.SearchBattleNetGames = BattleNetGamesToggle.IsOn;
+        App.Settings.Save();
+        if (!BattleNetGamesToggle.IsOn) { _battleNet.Clear(); BattleNetSection.Visibility = Visibility.Collapsed; }
     }
 
     private void EpicCoversToggle_Toggled(object sender, RoutedEventArgs e)

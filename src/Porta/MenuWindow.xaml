@@ -382,6 +382,15 @@
                                           ScrollViewer.VerticalScrollMode="Disabled" ScrollViewer.VerticalScrollBarVisibility="Disabled" />
                             </StackPanel>
 
+                            <!-- Battle.net games from Assets\battlenet-games.json: below Steam store rows, above Wikipedia -->
+                            <StackPanel x:Name="BattleNetSection" Visibility="Collapsed" Spacing="4">
+                                <TextBlock Text="Battle.net games" FontSize="12" FontWeight="SemiBold" Margin="4,0,0,0"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                <ListView x:Name="BattleNetList" SelectionMode="None" IsItemClickEnabled="True" ItemClick="Game_ItemClick"
+                                          ItemTemplate="{StaticResource GameRowTemplate}"
+                                          ScrollViewer.VerticalScrollMode="Disabled" ScrollViewer.VerticalScrollBarVisibility="Disabled" />
+                            </StackPanel>
+
                             <!-- Wikipedia articles (online; "Search Wikipedia" turns it off) -->
                             <StackPanel x:Name="WikiSection" Visibility="Collapsed" Spacing="4">
                                 <TextBlock Text="From Wikipedia" FontSize="12" FontWeight="SemiBold" Margin="4,0,0,0"
@@ -483,6 +492,8 @@
                                               Toggled="EpicLibraryToggle_Toggled" />
                                 <ToggleSwitch x:Name="EpicCoversToggle" Header="Epic cover images"
                                               Toggled="EpicCoversToggle_Toggled" />
+                                <ToggleSwitch x:Name="BattleNetGamesToggle" Header="Search Battle.net games"
+                                              Toggled="BattleNetGamesToggle_Toggled" />
                                 <ToggleSwitch x:Name="OculaPeopleToggle" Header="Search people in Ocula"
                                               Toggled="OculaPeopleToggle_Toggled" />
                                 <ToggleSwitch x:Name="QuickAnswersToggle" Header="Quick answers"
