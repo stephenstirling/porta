@@ -43,6 +43,8 @@ public sealed partial class MenuWindow : Window
     private readonly ObservableCollection<QuickRow> _web = []; // "Search the web", at the bottom
     private CancellationTokenSource? _currencySearch;
     private bool _loadingQuickSettings; // filling the pop-up from saved settings must not count as the user picking
+    private readonly ObservableCollection<PathEntry> _paths = []; // recent files and folders, below apps, games and tools
+    private ContentDialog? _excludeDialog;
     private readonly ObservableCollection<PersonEntry> _people = []; // people from Ocula, below apps, games and tools
     private DateTime _pictureStamp;
     private bool _isOpen;
@@ -93,6 +95,11 @@ public sealed partial class MenuWindow : Window
         BattleNetList.ItemsSource = _battleNet;
         BattleNetGamesToggle.IsOn = App.Settings.Current.SearchBattleNetGames;
         PeopleList.ItemsSource = _people;
+        PathsList.ItemsSource = _paths;
+        RecentFilesToggle.IsOn = App.Settings.Current.SearchRecentFiles;
+        ExcludeFoldersButton.IsEnabled = RecentFilesToggle.IsOn;
+        if (App.Settings.Current.SearchRecentFiles) RecentItems.Enable();
+        RecentItems.Loaded += () => DispatcherQueue.TryEnqueue(RefreshPathRows); // the list was rebuilt: show new matches
         QuickList.ItemsSource = _quick;
         WebList.ItemsSource = _web;
         LoadQuickSettings();
@@ -117,6 +124,10 @@ public sealed partial class MenuWindow : Window
             WikipediaToggle.IsOn = App.Settings.Current.SearchWikipedia;
             EpicLibraryToggle.IsOn = App.Settings.Current.SearchEpicLibrary;
             EpicCoversToggle.IsOn = App.Settings.Current.EpicCoverImages;
+            RecentFilesToggle.IsOn = App.Settings.Current.SearchRecentFiles;
+            ExcludeFoldersButton.IsEnabled = RecentFilesToggle.IsOn;
+            if (RecentFilesToggle.IsOn) RecentItems.Enable(); else StopRecentFiles();
+            RefreshPathRows(); // exclusions may have changed
             BattleNetGamesToggle.IsOn = App.Settings.Current.SearchBattleNetGames;
             if (!BattleNetGamesToggle.IsOn) { _battleNet.Clear(); BattleNetSection.Visibility = Visibility.Collapsed; }
             if (!EpicCoversToggle.IsOn) EpicCoverCache.ForgetCovers(App.Games.Games.Concat(EpicCatalogCache.Games));
@@ -161,6 +172,7 @@ public sealed partial class MenuWindow : Window
     public void HideMenu()
     {
         _confirmDialog?.Hide(); // don't leave a Restart/Shut down question waiting in the hidden menu
+        _excludeDialog?.Hide();
         _isOpen = false;
         AppWindow.Hide();
     }
@@ -291,6 +303,8 @@ public sealed partial class MenuWindow : Window
         StoreSection.Visibility = Visibility.Collapsed;
         _battleNet.Clear();
         BattleNetSection.Visibility = Visibility.Collapsed;
+        _paths.Clear();
+        PathsSection.Visibility = Visibility.Collapsed;
         _wikiSearch?.Cancel();
         _wiki.Clear();
         WikiSection.Visibility = Visibility.Collapsed;
@@ -366,6 +380,8 @@ public sealed partial class MenuWindow : Window
             _system.Add(entry);
         }
 
+        AddPathRows(query);
+
         // Battle.net games from Porta's own list (offline): installed ones play, the others open their page.
         if (query.Length >= 2 && App.Settings.Current.SearchBattleNetGames)
             foreach (var g in BattleNetCatalog.Search(query, App.Games.Games, _games)) _battleNet.Add(g);
@@ -402,13 +418,14 @@ public sealed partial class MenuWindow : Window
 
         SystemSection.Visibility = _system.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
         PeopleSection.Visibility = _people.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+        PathsSection.Visibility = _paths.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
         StoreSection.Visibility = _store.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
         BattleNetSection.Visibility = _battleNet.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
 
         WikiSection.Visibility = _wiki.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
 
         // "Nothing matches" only when every section is empty.
-        bool none = _results.Count == 0 && _games.Count == 0 && _system.Count == 0 && _store.Count == 0 && _wiki.Count == 0 && _people.Count == 0 && _quick.Count == 0 && _battleNet.Count == 0;
+        bool none = _results.Count == 0 && _games.Count == 0 && _system.Count == 0 && _store.Count == 0 && _wiki.Count == 0 && _people.Count == 0 && _quick.Count == 0 && _battleNet.Count == 0 && _paths.Count == 0;
         NoResultsText.Text = $"Nothing matches “{query}”";
         // The quick answer and web rows sit at the top when nothing else matched; keep the message below them.
         NoResultsText.Margin = new Thickness(0, 40 + 56 * (_quick.Count + _web.Count), 0, 0);
@@ -544,6 +561,158 @@ public sealed partial class MenuWindow : Window
         if (App.Settings.Current.SearchEpicLibrary == EpicLibraryToggle.IsOn) return;
         App.Settings.Current.SearchEpicLibrary = EpicLibraryToggle.IsOn;
         App.Settings.Save();
+    }
+
+    // ---------- Recent files and folders ----------
+
+    private void AddPathRows(string query)
+    {
+        if (query.Length < 2 || !App.Settings.Current.SearchRecentFiles) return;
+        foreach (var entry in RecentItems.Search(query, App.Settings.Current.ExcludedFolders)) _paths.Add(entry);
+    }
+
+    /// <summary>Redoes the recent files rows for what is typed (the list was rebuilt, or the exclusions changed).</summary>
+    private void RefreshPathRows()
+    {
+        var query = SearchBox.Text.Trim();
+        if (SearchPanel.Visibility != Visibility.Visible || query.Length == 0 || CommandRunner.IsCommand(query)) return;
+        var before = _paths.Select(p => p.FullPath).ToList();
+        _paths.Clear();
+        AddPathRows(query);
+        if (!before.SequenceEqual(_paths.Select(p => p.FullPath))) UpdateSearchSections(query);
+    }
+
+    private void StopRecentFiles()
+    {
+        RecentItems.Disable(); // stops watching the Recent folder and forgets the list
+        _paths.Clear();
+        PathsSection.Visibility = Visibility.Collapsed;
+    }
+
+    private void RecentFilesToggle_Toggled(object sender, RoutedEventArgs e)
+    {
+        if (App.Settings.Current.SearchRecentFiles == RecentFilesToggle.IsOn) return;
+        App.Settings.Current.SearchRecentFiles = RecentFilesToggle.IsOn;
+        App.Settings.Save();
+        ExcludeFoldersButton.IsEnabled = RecentFilesToggle.IsOn;
+        if (RecentFilesToggle.IsOn) RecentItems.Enable(); else StopRecentFiles();
+        RefreshQuickRows(); // also re-lays out the "nothing matches" message
+    }
+
+    private void Path_ItemClick(object sender, ItemClickEventArgs e)
+    {
+        if (e.ClickedItem is PathEntry entry) OpenPath(entry);
+    }
+
+    private void OpenPath(PathEntry entry)
+    {
+        HideMenu();
+        try
+        {
+            Launcher.Open(entry.FullPath);
+        }
+        catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or InvalidOperationException)
+        {
+            System.Diagnostics.Debug.WriteLine("Porta: couldn't open " + entry.FullPath + ": " + ex.Message);
+        }
+    }
+
+    private void ShowInFolder_Click(object sender, RoutedEventArgs e)
+    {
+        if ((sender as FrameworkElement)?.DataContext is not PathEntry entry) return;
+        HideMenu();
+        try
+        {
+            // Explorer opens the folder with the file selected.
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("explorer.exe", $"/select,\"{entry.FullPath}\"") { UseShellExecute = true });
+        }
+        catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or InvalidOperationException)
+        {
+            System.Diagnostics.Debug.WriteLine("Porta: couldn't show " + entry.FullPath + ": " + ex.Message);
+        }
+    }
+
+    /// <summary>A small window to list the folders to hide: type or paste a path, Add; or remove one.</summary>
+    private async void ExcludeFolders_Click(object sender, RoutedEventArgs e)
+    {
+        PaletteFlyout.Hide();
+        var list = new ListView { SelectionMode = ListViewSelectionMode.None, MaxHeight = 220 };
+        var empty = new TextBlock { Text = "No folders excluded.", Opacity = 0.7, Margin = new Thickness(0, 4, 0, 4) };
+        var input = new TextBox { PlaceholderText = @"Folder path, for example D:\Private", Width = 330 };
+        var add = new Button { Content = "Add" };
+        var message = new TextBlock { FontSize = 12, Foreground = new SolidColorBrush(Colors.OrangeRed) };
+
+        void Refresh()
+        {
+            list.Items.Clear();
+            foreach (var path in App.Settings.Current.ExcludedFolders.ToList())
+            {
+                var remove = new Button { Content = "Remove", Padding = new Thickness(8, 2, 8, 2) };
+                remove.Click += (_, _) =>
+                {
+                    App.Settings.Current.ExcludedFolders.Remove(path);
+                    App.Settings.Save();
+                    Refresh();
+                    RefreshPathRows();
+                };
+                var row = new Grid { ColumnSpacing = 8, Margin = new Thickness(0, 2, 0, 2) };
+                row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+                row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+                row.Children.Add(new TextBlock { Text = path, TextTrimming = TextTrimming.CharacterEllipsis, VerticalAlignment = VerticalAlignment.Center });
+                Grid.SetColumn(remove, 1);
+                row.Children.Add(remove);
+                list.Items.Add(row);
+            }
+            empty.Visibility = list.Items.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        void TryAdd()
+        {
+            var path = RecentItems.NormalizeFolder(input.Text);
+            if (path is null || !Path.IsPathRooted(path) || path.StartsWith(@"\\"))
+            {
+                message.Text = @"Enter a full folder path, such as D:\Private (network shares aren't searched anyway).";
+                return;
+            }
+            message.Text = "";
+            if (!App.Settings.Current.ExcludedFolders.Any(p => string.Equals(RecentItems.NormalizeFolder(p), path, StringComparison.OrdinalIgnoreCase)))
+            {
+                App.Settings.Current.ExcludedFolders.Add(path);
+                App.Settings.Save();
+                RefreshPathRows();
+            }
+            input.Text = "";
+            Refresh();
+        }
+
+        add.Click += (_, _) => TryAdd();
+        input.KeyDown += (_, k) => { if (k.Key == VirtualKey.Enter) { TryAdd(); k.Handled = true; } };
+        Refresh();
+
+        var inputRow = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
+        inputRow.Children.Add(input);
+        inputRow.Children.Add(add);
+        var content = new StackPanel { Spacing = 8 };
+        content.Children.Add(new TextBlock
+        {
+            Text = "Files and folders inside these folders never show up in recent files and folders search.",
+            TextWrapping = TextWrapping.Wrap,
+        });
+        content.Children.Add(list);
+        content.Children.Add(empty);
+        content.Children.Add(inputRow);
+        content.Children.Add(message);
+
+        _excludeDialog = new ContentDialog
+        {
+            XamlRoot = Root.XamlRoot,
+            Title = "Exclude folders",
+            Content = content,
+            CloseButtonText = "Done",
+            DefaultButton = ContentDialogButton.Close,
+        };
+        try { await _excludeDialog.ShowAsync(); }
+        finally { _excludeDialog = null; }
     }
 
     private void BattleNetGamesToggle_Toggled(object sender, RoutedEventArgs e)
@@ -925,6 +1094,7 @@ public sealed partial class MenuWindow : Window
                 if ((ResultsList.SelectedItem ?? _results.FirstOrDefault()) is AppEntry best) Launch(best);
                 else if (_games.FirstOrDefault() is { } game) { HideMenu(); GameLibrary.Launch(game); }
                 else if (_system.FirstOrDefault() is { } entry) _ = OpenSystemAsync(entry);
+                else if (_paths.FirstOrDefault() is { } path) OpenPath(path);
                 else if (_web.FirstOrDefault() is { } web) OpenWeb(web); // nothing else matched: search the web
                 e.Handled = true;
                 break;
