@@ -51,6 +51,13 @@ public sealed class GameEntry : IconItem
     /// <summary>From Epic's local catalog cache: may not be owned, so labelled just "Epic" and opened in the launcher.</summary>
     public bool FromCatalogCache { get; init; }
 
+    /// <summary>English Wikipedia article whose lead picture a Battle.net row may show when the game has no icon of its own.</summary>
+    public string? WikipediaTitle { get; init; }
+    /// <summary>The picture has been looked up (found or not), so it isn't asked for again while the row lives.</summary>
+    public bool WikipediaPictureTried { get; set; }
+    /// <summary>The row's picture came from Wikipedia, so it can be removed again when the switch is turned off.</summary>
+    public bool IconFromWikipedia { get; set; }
+
     /// <summary>From Porta's Battle.net list (Assets\battlenet-games.json), installed or not.</summary>
     public bool FromBattleNetCatalog { get; init; }
 

@@ -7,7 +7,8 @@ namespace Porta.Services.Games;
 /// <summary>One Battle.net game from Assets\battlenet-games.json.</summary>
 /// <param name="Code">The code battlenet://&lt;code&gt; launches through the Battle.net client.</param>
 /// <param name="AlsoCodes">Other spellings of the same product that the client's own files may use (matching only).</param>
-public sealed record BattleNetTitle(string Name, string[] Aliases, string Code, string[] AlsoCodes, string StoreUrl);
+/// <param name="WikipediaTitle">English Wikipedia article whose lead picture the row may show (optional).</param>
+public sealed record BattleNetTitle(string Name, string[] Aliases, string Code, string[] AlsoCodes, string StoreUrl, string? WikipediaTitle = null);
 
 /// <summary>
 /// Battle.net games in search, from the editable list Assets\battlenet-games.json (no rebuild needed to change
@@ -83,10 +84,22 @@ public static class BattleNetCatalog
             Target = installed is not null ? $"battlenet://{Uri.EscapeDataString(title.Code)}" : title.StoreUrl,
             LauncherId = title.Code,
             IconSource = installed?.IconSource,
+            WikipediaTitle = title.WikipediaTitle,
         };
         if (row.IconSource is not null) App.Icons.Request(row, row.IconSource, 64);
         Rows[title.Code] = row;
         return row;
+    }
+
+    /// <summary>Takes the Wikipedia pictures off the rows again (the switch was turned off); the letter tile or program icon comes back.</summary>
+    public static void ForgetPictures()
+    {
+        foreach (var row in Rows.Values.Where(r => r.IconFromWikipedia))
+        {
+            row.Icon = null;
+            row.IconFromWikipedia = false;
+        }
+        foreach (var row in Rows.Values) row.WikipediaPictureTried = false;
     }
 
     private static List<BattleNetTitle> Load()
@@ -104,7 +117,7 @@ public static class BattleNetCatalog
                 // The store page must be on blizzard.com or battle.net (https only).
                 if (name is null || code is null || store is null || !IsAllowedStore(store) ||
                     code.Any(c => !(char.IsAsciiLetterOrDigit(c) || c is '_' or '-'))) continue;
-                titles.Add(new BattleNetTitle(name, Strings(g, "aliases"), code, Strings(g, "alsoCodes"), store));
+                titles.Add(new BattleNetTitle(name, Strings(g, "aliases"), code, Strings(g, "alsoCodes"), store, Str(g, "wikipediaTitle")));
             }
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException or KeyNotFoundException or InvalidOperationException)
