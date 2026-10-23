@@ -31,6 +31,9 @@ public sealed class PortaSettings
     /// <summary>Show article pictures on Wikipedia rows (downloaded from upload.wikimedia.org). Only matters while Search Wikipedia is on.</summary>
     public bool WikipediaPictures { get; set; } = true;
 
+    /// <summary>Show Battle.net games from Porta's own list in search (installed ones play, the rest open their page). Nothing goes online.</summary>
+    public bool SearchBattleNetGames { get; set; } = true;
+
     /// <summary>A calculation or conversion typed in search gets one answer row at the top (maths and units are fully local).</summary>
     public bool ShowQuickAnswers { get; set; } = true;
 
