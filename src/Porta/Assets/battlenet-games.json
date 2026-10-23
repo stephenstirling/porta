@@ -1,15 +1,15 @@
 {
-  "_about": "Battle.net games Porta can show in search. Edit this file and restart Porta; no rebuild is needed. Each game needs a name, a code and a store page. code is what battlenet://<code> launches through the Battle.net client (installed games start with it). store is the game's page on blizzard.com or battle.net (https only; anything else is ignored) that opens for games that aren't installed. aliases are other words people type (initials like wow or d4). alsoCodes (optional) are other spellings of the same code that Battle.net's own files might use, used only to recognise an installed game. Every code below appears in a published Lutris installer script as --exec=\"launch <code>\" for that game, and every store page was opened and its page title matched the game. Games with a code or page that could not be verified were left out on purpose.",
+  "_about": "Battle.net games Porta can show in search. Edit this file and restart Porta; no rebuild is needed. Each game needs a name, a code and a store page. code is what battlenet://<code> launches through the Battle.net client (installed games start with it). store is the game's page on blizzard.com or battle.net (https only; anything else is ignored) that opens for games that aren't installed. aliases are other words people type (initials like wow or d4). alsoCodes (optional) are other spellings of the same code that Battle.net's own files might use, used only to recognise an installed game. Every code below appears in a published Lutris installer script as --exec=\"launch <code>\" for that game, and every store page was opened and its page title matched the game. Games with a code or page that could not be verified were left out on purpose. wikipediaTitle (optional) is the English Wikipedia article whose lead picture is shown on the row of a game that is not installed, only while the 'Wikipedia pictures' switch is on; each title was checked to reach the right article. Nothing is ever downloaded from blizzard.com or battle.net.",
   "games": [
-    { "name": "World of Warcraft", "code": "WoW", "aliases": ["wow", "warcraft"], "store": "https://worldofwarcraft.blizzard.com/" },
-    { "name": "Diablo IV", "code": "Fen", "aliases": ["d4", "diablo 4"], "store": "https://diablo4.blizzard.com/" },
-    { "name": "Diablo III", "code": "D3", "aliases": ["d3", "diablo 3"], "store": "https://diablo3.blizzard.com/" },
-    { "name": "Diablo II: Resurrected", "code": "OSI", "aliases": ["d2r", "d2", "diablo 2", "diablo ii", "resurrected"], "store": "https://diablo2.blizzard.com/" },
-    { "name": "Overwatch 2", "code": "Pro", "aliases": ["ow2", "ow", "overwatch"], "store": "https://overwatch.blizzard.com/" },
-    { "name": "Hearthstone", "code": "WTCG", "aliases": ["hs", "hearth"], "store": "https://hearthstone.blizzard.com/" },
-    { "name": "Heroes of the Storm", "code": "Hero", "aliases": ["hots", "heroes"], "store": "https://heroesofthestorm.blizzard.com/" },
-    { "name": "StarCraft Remastered", "code": "S1", "aliases": ["sc", "sc1", "starcraft", "brood war"], "store": "https://starcraft.blizzard.com/" },
-    { "name": "StarCraft II", "code": "S2", "aliases": ["sc2", "starcraft 2"], "store": "https://starcraft2.blizzard.com/" },
-    { "name": "Warcraft III: Reforged", "code": "W3", "aliases": ["wc3", "war3", "warcraft 3", "reforged"], "store": "https://warcraft3.blizzard.com/" }
+    { "name": "World of Warcraft", "code": "WoW", "aliases": ["wow", "warcraft"], "store": "https://worldofwarcraft.blizzard.com/", "wikipediaTitle": "World of Warcraft" },
+    { "name": "Diablo IV", "code": "Fen", "aliases": ["d4", "diablo 4"], "store": "https://diablo4.blizzard.com/", "wikipediaTitle": "Diablo IV" },
+    { "name": "Diablo III", "code": "D3", "aliases": ["d3", "diablo 3"], "store": "https://diablo3.blizzard.com/", "wikipediaTitle": "Diablo III" },
+    { "name": "Diablo II: Resurrected", "code": "OSI", "aliases": ["d2r", "d2", "diablo 2", "diablo ii", "resurrected"], "store": "https://diablo2.blizzard.com/", "wikipediaTitle": "Diablo II: Resurrected" },
+    { "name": "Overwatch 2", "code": "Pro", "aliases": ["ow2", "ow", "overwatch"], "store": "https://overwatch.blizzard.com/", "wikipediaTitle": "Overwatch 2" },
+    { "name": "Hearthstone", "code": "WTCG", "aliases": ["hs", "hearth"], "store": "https://hearthstone.blizzard.com/", "wikipediaTitle": "Hearthstone" },
+    { "name": "Heroes of the Storm", "code": "Hero", "aliases": ["hots", "heroes"], "store": "https://heroesofthestorm.blizzard.com/", "wikipediaTitle": "Heroes of the Storm" },
+    { "name": "StarCraft Remastered", "code": "S1", "aliases": ["sc", "sc1", "starcraft", "brood war"], "store": "https://starcraft.blizzard.com/", "wikipediaTitle": "StarCraft: Remastered" },
+    { "name": "StarCraft II", "code": "S2", "aliases": ["sc2", "starcraft 2"], "store": "https://starcraft2.blizzard.com/", "wikipediaTitle": "StarCraft II: Wings of Liberty" },
+    { "name": "Warcraft III: Reforged", "code": "W3", "aliases": ["wc3", "war3", "warcraft 3", "reforged"], "store": "https://warcraft3.blizzard.com/", "wikipediaTitle": "Warcraft III: Reforged" }
   ]
 }
