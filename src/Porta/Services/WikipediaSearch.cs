@@ -227,6 +227,82 @@ public static class WikipediaSearch
             : PictureOrNull($"https://upload.wikimedia.org/wikipedia/{parts[1]}/thumb/{parts[2]}/{parts[3]}/{file}/{thumbName}");
     }
 
+    private static readonly Dictionary<string, string?> TitlePictures = [];
+
+    /// <summary>
+    /// The lead picture link for each of these English Wikipedia article titles (null when an article has none), in
+    /// one request: the same pageimages lookup as the search rows (pilicense=any, so non-free covers and logos count),
+    /// following redirects such as "Overwatch 2", and the article summary for any title it found nothing for. Every link
+    /// goes through <see cref="WikiPictureCache.Normalize"/>: https://upload.wikimedia.org only. Answers are kept for the
+    /// session. Returns null when the request failed (offline), so the caller can try again later.
+    /// </summary>
+    public static async Task<Dictionary<string, string?>?> PicturesForTitlesAsync(IEnumerable<string> titles, CancellationToken ct)
+    {
+        var result = new Dictionary<string, string?>(StringComparer.Ordinal);
+        var missing = new List<string>();
+        lock (TitlePictures)
+        {
+            foreach (var title in titles.Distinct(StringComparer.Ordinal))
+            {
+                if (TitlePictures.TryGetValue(title, out var known)) result[title] = known;
+                else missing.Add(title);
+            }
+        }
+        if (missing.Count == 0) return result;
+
+        try
+        {
+            var url = "https://en.wikipedia.org/w/api.php?action=query&prop=pageimages&piprop=thumbnail&pithumbsize=96&pilicense=any" +
+                      "&redirects=1&format=json&formatversion=2&titles=" + Uri.EscapeDataString(string.Join("|", missing));
+            using var doc = JsonDocument.Parse(await Http.GetStringAsync(url, ct).ConfigureAwait(false));
+            var query = doc.RootElement.GetProperty("query");
+
+            // A requested title may be tidied ("normalized") and then redirected before it reaches its page.
+            var moved = new Dictionary<string, string>(StringComparer.Ordinal);
+            foreach (var key in new[] { "normalized", "redirects" })
+                if (query.TryGetProperty(key, out var list) && list.ValueKind == JsonValueKind.Array)
+                    foreach (var m in list.EnumerateArray())
+                        if (m.TryGetProperty("from", out var from) && m.TryGetProperty("to", out var to) && from.GetString() is { } f && to.GetString() is { } t)
+                            moved[f] = t;
+
+            var pictures = new Dictionary<string, string?>(StringComparer.Ordinal);
+            foreach (var page in query.GetProperty("pages").EnumerateArray())
+                if (page.TryGetProperty("title", out var pt) && pt.GetString() is { } pageTitle)
+                    pictures[pageTitle] = page.TryGetProperty("thumbnail", out var thumb) && thumb.TryGetProperty("source", out var source)
+                        ? PictureOrNull(source.GetString())
+                        : null;
+
+            foreach (var title in missing)
+            {
+                var final = title;
+                for (int hops = 0; hops < 3 && moved.TryGetValue(final, out var next); hops++) final = next;
+                result[title] = pictures.GetValueOrDefault(final);
+            }
+
+            // Nothing from pageimages: ask the article's own summary, as search rows do.
+            foreach (var title in missing.Where(t => result[t] is null))
+                result[title] = await FallbackPictureAsync("https://en.wikipedia.org/wiki/" + Uri.EscapeDataString(title.Replace(' ', '_')), ct).ConfigureAwait(false);
+
+            lock (TitlePictures)
+            {
+                if (TitlePictures.Count > 200) TitlePictures.Clear();
+                foreach (var title in missing) TitlePictures[title] = result[title];
+            }
+            LastError = null;
+            return result;
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or JsonException or KeyNotFoundException or InvalidOperationException or NotSupportedException)
+        {
+            LastError = $"en.wikipedia.org: {ex.GetType().Name}: {ex.Message}";
+            Debug.WriteLine("Porta: Wikipedia pictures for Battle.net failed: " + LastError);
+            return null;
+        }
+    }
+
     /// <summary>Only https://upload.wikimedia.org pictures are ever passed on.</summary>
     private static string? PictureOrNull(string? url) => WikiPictureCache.Normalize(url);
 
