@@ -159,7 +159,13 @@ public static class EpicCatalogCache
                 if (image.TryGetProperty("width", out var w) && image.TryGetProperty("height", out var h) &&
                     w.TryGetInt32(out var width) && h.TryGetInt32(out var height) && width <= height) continue;
                 if (Uri.TryCreate(Str(image, "url"), UriKind.Absolute, out var uri) && uri.Scheme == Uri.UriSchemeHttps)
-                    return uri.ToString();
+                {
+                    // Epic's image server resizes on request: the originals can be several MB, a 368 px wide copy
+                    // (4x the tile, sharp on a high-DPI screen) is about 25 KB.
+                    return uri.Host.EndsWith(".epicgames.com", StringComparison.OrdinalIgnoreCase)
+                        ? uri.GetLeftPart(UriPartial.Path) + "?w=368&resize=1"
+                        : uri.ToString();
+                }
             }
         }
         return null;
