@@ -92,8 +92,9 @@ public sealed class GameLibrary
         }
         catch (Exception) when (game.Launcher == GameLauncher.BattleNet)
         {
-            // Unknown product code: at least open Battle.net.
-            Launcher.Open(game.Target);
+            // Unknown product code: at least open Battle.net. (A battlenet: link with no client registered does nothing.)
+            try { if (BattleNetLibrary.LauncherPath() is { } client) Launcher.Open(client); }
+            catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or InvalidOperationException) { }
         }
     }
 }

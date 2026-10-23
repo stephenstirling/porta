@@ -51,13 +51,22 @@ public sealed class GameEntry : IconItem
     /// <summary>From Epic's local catalog cache: may not be owned, so labelled just "Epic" and opened in the launcher.</summary>
     public bool FromCatalogCache { get; init; }
 
+    /// <summary>From Porta's Battle.net list (Assets\battlenet-games.json), installed or not.</summary>
+    public bool FromBattleNetCatalog { get; init; }
+
     public string Subtitle => FromCatalogCache ? "Epic"
+        : FromBattleNetCatalog ? (Installed ? "Battle.net · Installed" : "Battle.net · Not installed")
         : Installed ? $"{LauncherName} · Installed" : $"{LauncherName} store · Not installed";
 
     public string ActionText => FromCatalogCache ? "Open" : Installed ? "Play" : "View";
 
     /// <summary>The small launcher badge shown beside the label (Epic only, taken from the installed launcher).</summary>
-    public IconItem? Badge => Launcher == GameLauncher.Epic ? Services.Games.EpicBadge.Instance : null;
+    public IconItem? Badge => Launcher switch
+    {
+        GameLauncher.Epic => Services.Games.EpicBadge.Instance,
+        GameLauncher.BattleNet => Services.Games.BattleNetBadge.Instance,
+        _ => null,
+    };
 
     public string Initial => Name.Length > 0 ? char.ToUpperInvariant(Name[0]).ToString() : "?";
 }

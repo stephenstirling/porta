@@ -30,11 +30,12 @@ public static partial class BattleNetLibrary
         ["d3"] = "Diablo III",
         ["pro"] = "Overwatch",
         ["prometheus"] = "Overwatch 2",
-        ["s1"] = "StarCraft II",
-        ["s2"] = "StarCraft",
+        ["s1"] = "StarCraft Remastered",
+        ["s2"] = "StarCraft II",
         ["hero"] = "Heroes of the Storm",
-        ["osi"] = "Hearthstone",
-        ["wlby"] = "Warcraft III: Reforged",
+        ["osi"] = "Diablo II: Resurrected",
+        ["wtcg"] = "Hearthstone",
+        ["w3"] = "Warcraft III: Reforged",
         ["odin"] = "Call of Duty",
         ["d4"] = "Diablo IV",
     };
@@ -46,7 +47,14 @@ public static partial class BattleNetLibrary
             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "Battle.net", "Battle.net.exe"),
             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Battle.net", "Battle.net.exe"),
         ];
-        return candidates.FirstOrDefault(File.Exists);
+        return candidates.FirstOrDefault(File.Exists) ?? RegisteredClient();
+    }
+
+    /// <summary>The Battle.net client found through the battlenet: link Windows registers (covers other install folders).</summary>
+    private static string? RegisteredClient()
+    {
+        var path = ProtocolHandler.ExePath("battlenet");
+        return path is not null && Path.GetFileName(path).Equals("Battle.net.exe", StringComparison.OrdinalIgnoreCase) ? path : null;
     }
 
     public static List<GameEntry> Scan()
