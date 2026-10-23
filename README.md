@@ -73,8 +73,14 @@ Porta has no telemetry. These search features go online, and only while they're 
   in memory and in `%LOCALAPPDATA%\Porta\WikiPictures` (about 20 MB at most). The pictures can include non-free covers
   (album, film and game covers, logos); they are shown only as small thumbnails next to the article link. For an
   article that comes back without a picture, Porta makes one more small request to that article's summary to look for
-  its lead picture (at most the 3 rows on screen, never for disambiguation pages). Switching the pictures off stops
-  all picture requests, deletes that folder, and the rows go back to letter tiles.
+  its lead picture (at most the 3 rows on screen, never for disambiguation pages). **Battle.net rows can fetch their
+  picture from Wikipedia too:** a Battle.net game that has no program icon of its own (it isn't installed) shows the lead
+  picture of its Wikipedia article (the English article title is `wikipediaTitle` in `Assets\battlenet-games.json`), asked for
+  in one small request to `en.wikipedia.org` for the Battle.net rows on screen (the titles of those games are all that is
+  sent), with the same `upload.wikimedia.org`-only rules and the same cache. This happens only while "Search Battle.net games",
+  "Wikipedia pictures" and "Search Wikipedia" are all on. These lead pictures are often logos or box art, shown only as small
+  thumbnails. Nothing is downloaded from blizzard.com or battle.net, and Porta contains no Blizzard logo. Switching the
+  pictures off stops all picture requests, deletes that folder, and the rows go back to letter tiles.
 - **Steam store results** (`SearchSteamStore`, on by default, only when Steam is installed): what you type
   (3 or more characters) is sent to the Steam store to find games you don't own.
 
@@ -116,8 +122,9 @@ saved in `ExcludedFolders` and included in backups) lists folders to hide, toget
 **Battle.net games** (`SearchBattleNetGames`, on by default, "Search Battle.net games" switch in the glass-strength
 pop-up, saved and included in settings backups): the games come from the list in `Assets\battlenet-games.json` and which
 ones are installed comes from the Battle.net client's own files on this PC (the same local detection as before). Nothing
-goes online to show them and no pictures are downloaded: an installed game shows its own program icon, the others a letter
-tile, plus a small badge that is the icon of your installed Battle.net client (read from your PC when Porta runs; Porta
+goes online to show the games themselves. An installed game shows its own program icon; the others show a letter tile, or the
+lead picture of the game's Wikipedia article when "Wikipedia pictures" is on (see the Wikipedia pictures entry above;
+nothing is ever downloaded from blizzard.com or battle.net). Each row also has a small badge that is the icon of your installed Battle.net client (read from your PC when Porta runs; Porta
 contains no Blizzard logo, and without the client only the text shows). Only when you click a **View** row does your
 browser open that game's page on blizzard.com; **Play** starts the game with a `battlenet://<code>` link handled by the
 Battle.net client. The list only accepts store pages on blizzard.com or battle.net.
