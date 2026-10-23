@@ -1,3 +1,5 @@
+using Microsoft.UI.Xaml;
+
 namespace Porta.Models;
 
 public enum GameLauncher { Steam, Epic, BattleNet, Xbox }
@@ -11,7 +13,22 @@ public sealed class GameEntry : IconItem
     public required string Target { get; init; }
     public string? Arguments { get; init; }
     /// <summary>Wide cover art on disk or on the web, if the launcher has one.</summary>
-    public string? CoverPath { get; set; }
+    public string? CoverPath
+    {
+        get => _coverPath;
+        set
+        {
+            _coverPath = value;
+            OnChanged(nameof(CoverPath));
+            OnChanged(nameof(WideArtVisibility));
+            OnChanged(nameof(IconTileVisibility));
+        }
+    }
+    private string? _coverPath;
+
+    /// <summary>Rows with a wide cover show it filling the whole box; rows with only a small icon keep the icon tile.</summary>
+    public Visibility WideArtVisibility => _coverPath is not null ? Visibility.Visible : Visibility.Collapsed;
+    public Visibility IconTileVisibility => _coverPath is not null ? Visibility.Collapsed : Visibility.Visible;
     /// <summary>Where to load a square icon from when there's no cover (exe, shell path).</summary>
     public string? IconSource { get; init; }
     public string? LauncherId { get; init; }

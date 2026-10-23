@@ -25,6 +25,26 @@ public sealed class PortaSettings
 
     /// <summary>Download Epic cover pictures for the Epic results being shown. When off, nothing is downloaded.</summary>
     public bool EpicCoverImages { get; set; } = true;
+    /// <summary>Show people named in Ocula (read from Ocula's local people index, never online). Off until switched on.</summary>
+    public bool SearchOculaPeople { get; set; } = false;
+
+    /// <summary>Show article pictures on Wikipedia rows (downloaded from upload.wikimedia.org). Only matters while Search Wikipedia is on.</summary>
+    public bool WikipediaPictures { get; set; } = true;
+
+    /// <summary>A calculation or conversion typed in search gets one answer row at the top (maths and units are fully local).</summary>
+    public bool ShowQuickAnswers { get; set; } = true;
+
+    /// <summary>Let currency conversions fetch exchange rates (Frankfurter, European Central Bank). Off until switched on.</summary>
+    public bool OnlineCurrencyRates { get; set; } = false;
+
+    /// <summary>A "Search the web" row at the bottom of search results. Nothing is sent until it is clicked.</summary>
+    public bool SearchTheWeb { get; set; } = true;
+
+    /// <summary>
+    /// Which search engine that row opens in the browser: Google, DuckDuckGo or Bing. Null until the user picks one,
+    /// which means Google; a saved pick is always kept.
+    /// </summary>
+    public string? WebSearchEngine { get; set; }
 
     // Appearance (used from milestone 2)
     public string Theme { get; set; } = "System";

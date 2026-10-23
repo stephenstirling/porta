@@ -66,13 +66,18 @@
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
-                    <Border Width="40" Height="40" CornerRadius="6" Background="{ThemeResource SubtleFillColorSecondaryBrush}">
-                        <Grid>
-                            <TextBlock Text="{x:Bind Initial}" FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center"
-                                       Visibility="{x:Bind InitialVisibility, Mode=OneWay}" />
-                            <Image Source="{x:Bind Icon, Mode=OneWay}" Stretch="UniformToFill" />
-                        </Grid>
-                    </Border>
+                    <!-- Letter tile until (and unless) the article's picture arrives; the picture fills the box, centre-cropped -->
+                    <Grid Width="40" Height="40">
+                        <Border CornerRadius="6" Background="{ThemeResource SubtleFillColorSecondaryBrush}"
+                                Visibility="{x:Bind InitialVisibility, Mode=OneWay}">
+                            <TextBlock Text="{x:Bind Initial}" FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <Border CornerRadius="6" Visibility="{x:Bind IconVisibility, Mode=OneWay}">
+                            <Border.Background>
+                                <ImageBrush ImageSource="{x:Bind Icon, Mode=OneWay}" Stretch="UniformToFill" AlignmentX="Center" AlignmentY="Center" />
+                            </Border.Background>
+                        </Border>
+                    </Grid>
                     <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
                         <TextBlock Text="{x:Bind Title}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
                         <TextBlock Text="{x:Bind Subtitle}" FontSize="12" TextTrimming="CharacterEllipsis"
@@ -80,6 +85,52 @@
                     </StackPanel>
                     <TextBlock Grid.Column="2" Text="Open" VerticalAlignment="Center" FontWeight="SemiBold"
                                Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+                </Grid>
+            </DataTemplate>
+
+            <!-- The quick answer (top of search) and the "Search the web" row (bottom) -->
+            <DataTemplate x:Key="QuickRowTemplate" x:DataType="m:QuickRow">
+                <Grid ColumnSpacing="12" Height="52">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Border Width="40" Height="40" CornerRadius="8" Background="{ThemeResource SubtleFillColorSecondaryBrush}">
+                        <FontIcon Glyph="{x:Bind Glyph}" FontSize="18" />
+                    </Border>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                        <TextBlock Text="{x:Bind Title}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                        <TextBlock Text="{x:Bind Subtitle}" FontSize="12" TextTrimming="CharacterEllipsis"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    </StackPanel>
+                    <TextBlock Grid.Column="2" Text="{x:Bind ActionText}" Visibility="{x:Bind ActionVisibility}" VerticalAlignment="Center"
+                               FontWeight="SemiBold" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+                </Grid>
+            </DataTemplate>
+
+            <!-- One person from Ocula in search -->
+            <DataTemplate x:Key="PersonRowTemplate" x:DataType="m:PersonEntry">
+                <Grid ColumnSpacing="12" Height="52">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Border Width="40" Height="40" CornerRadius="20" Background="{ThemeResource SubtleFillColorSecondaryBrush}">
+                        <Grid>
+                            <TextBlock Text="{x:Bind Initial}" FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                       Visibility="{x:Bind InitialVisibility, Mode=OneWay}" />
+                            <Image Source="{x:Bind Icon, Mode=OneWay}" Stretch="UniformToFill" />
+                        </Grid>
+                    </Border>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                        <TextBlock Text="{x:Bind Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                        <TextBlock Text="{x:Bind Subtitle}" FontSize="12" TextTrimming="CharacterEllipsis"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    </StackPanel>
+                    <TextBlock Grid.Column="2" Text="{x:Bind ActionText}" Visibility="{x:Bind ActionVisibility}" VerticalAlignment="Center"
+                               FontWeight="SemiBold" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
                 </Grid>
             </DataTemplate>
 
@@ -108,7 +159,15 @@
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
-                    <Border Width="92" Height="43" CornerRadius="6" Background="{ThemeResource SubtleFillColorSecondaryBrush}">
+                    <!-- Wide cover: fills the box (centre-cropped, rounded corners), nothing behind it while it loads -->
+                    <Border Width="92" Height="43" CornerRadius="6" Visibility="{x:Bind WideArtVisibility, Mode=OneWay}">
+                        <Border.Background>
+                            <ImageBrush ImageSource="{x:Bind Icon, Mode=OneWay}" Stretch="UniformToFill" AlignmentX="Center" AlignmentY="Center" />
+                        </Border.Background>
+                    </Border>
+                    <!-- No cover: the game's small icon, or the letter, on the usual tile -->
+                    <Border Width="92" Height="43" CornerRadius="6" Background="{ThemeResource SubtleFillColorSecondaryBrush}"
+                            Visibility="{x:Bind IconTileVisibility, Mode=OneWay}">
                         <Grid>
                             <TextBlock Text="{x:Bind Initial}" FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center"
                                        Visibility="{x:Bind InitialVisibility, Mode=OneWay}" />
@@ -278,6 +337,11 @@
                     <!-- Installed games, then apps, then store results, each directly below the last; scrolls as one -->
                     <ScrollViewer x:Name="ResultsScroller" VerticalScrollBarVisibility="Auto">
                         <StackPanel Spacing="6">
+                            <!-- A calculation or conversion: one row, always on top ("Quick answers" turns it off) -->
+                            <ListView x:Name="QuickList" Visibility="Collapsed" SelectionMode="None" IsItemClickEnabled="True" ItemClick="Quick_ItemClick"
+                                      ItemTemplate="{StaticResource QuickRowTemplate}"
+                                      ScrollViewer.VerticalScrollMode="Disabled" ScrollViewer.VerticalScrollBarVisibility="Disabled" />
+
                             <!-- Games from Steam, Epic, Battle.net and Xbox -->
                             <StackPanel x:Name="GamesSection" Visibility="Collapsed" Spacing="4">
                                 <TextBlock Text="Games" FontSize="12" FontWeight="SemiBold" Margin="4,0,0,0"
@@ -300,6 +364,15 @@
                                           ScrollViewer.VerticalScrollMode="Disabled" ScrollViewer.VerticalScrollBarVisibility="Disabled" />
                             </StackPanel>
 
+                            <!-- People named in Ocula (off until "Search people in Ocula" is on): below apps, games and tools -->
+                            <StackPanel x:Name="PeopleSection" Visibility="Collapsed" Spacing="4">
+                                <TextBlock Text="People in Ocula" FontSize="12" FontWeight="SemiBold" Margin="4,0,0,0"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                <ListView x:Name="PeopleList" SelectionMode="None" IsItemClickEnabled="True" ItemClick="Person_ItemClick"
+                                          ItemTemplate="{StaticResource PersonRowTemplate}"
+                                          ScrollViewer.VerticalScrollMode="Disabled" ScrollViewer.VerticalScrollBarVisibility="Disabled" />
+                            </StackPanel>
+
                             <!-- Games from the Steam store that aren't installed: always below installed apps and games -->
                             <StackPanel x:Name="StoreSection" Visibility="Collapsed" Spacing="4">
                                 <TextBlock Text="From the Steam store" FontSize="12" FontWeight="SemiBold" Margin="4,0,0,0"
@@ -317,6 +390,11 @@
                                           ItemTemplate="{StaticResource WikiRowTemplate}"
                                           ScrollViewer.VerticalScrollMode="Disabled" ScrollViewer.VerticalScrollBarVisibility="Disabled" />
                             </StackPanel>
+
+                            <!-- Always the last row: opens the browser on your search engine. Nothing is sent until it is used. -->
+                            <ListView x:Name="WebList" Visibility="Collapsed" SelectionMode="None" IsItemClickEnabled="True" ItemClick="Web_ItemClick"
+                                      ItemTemplate="{StaticResource QuickRowTemplate}"
+                                      ScrollViewer.VerticalScrollMode="Disabled" ScrollViewer.VerticalScrollBarVisibility="Disabled" />
                         </StackPanel>
                     </ScrollViewer>
                     <TextBlock x:Name="NoResultsText" Visibility="Collapsed" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,40,0,0"
@@ -387,6 +465,7 @@
                     <FontIcon Glyph="&#xE790;" FontSize="16" />
                     <Button.Flyout>
                         <Flyout Placement="TopEdgeAlignedRight" Closed="GlassFlyout_Closed">
+                            <ScrollViewer MaxHeight="480" VerticalScrollBarVisibility="Auto">
                             <StackPanel Width="220" Spacing="4">
                                 <TextBlock Text="Glass strength" FontSize="13" FontWeight="SemiBold" />
                                 <Slider x:Name="GlassSlider" Minimum="0" Maximum="100" StepFrequency="5"
@@ -398,11 +477,30 @@
                                 <!-- Until the Settings window exists (milestone 2) -->
                                 <ToggleSwitch x:Name="WikipediaToggle" Header="Search Wikipedia" Margin="0,8,0,0"
                                               Toggled="WikipediaToggle_Toggled" />
+                                <ToggleSwitch x:Name="WikipediaPicturesToggle" Header="Wikipedia pictures"
+                                              Toggled="WikipediaPicturesToggle_Toggled" />
                                 <ToggleSwitch x:Name="EpicLibraryToggle" Header="Epic library"
                                               Toggled="EpicLibraryToggle_Toggled" />
                                 <ToggleSwitch x:Name="EpicCoversToggle" Header="Epic cover images"
                                               Toggled="EpicCoversToggle_Toggled" />
+                                <ToggleSwitch x:Name="OculaPeopleToggle" Header="Search people in Ocula"
+                                              Toggled="OculaPeopleToggle_Toggled" />
+                                <ToggleSwitch x:Name="QuickAnswersToggle" Header="Quick answers"
+                                              Toggled="QuickAnswersToggle_Toggled" />
+                                <ToggleSwitch x:Name="CurrencyRatesToggle" Header="Online currency rates"
+                                              Toggled="CurrencyRatesToggle_Toggled" />
+                                <ToggleSwitch x:Name="WebSearchToggle" Header="Search the web"
+                                              Toggled="WebSearchToggle_Toggled" />
+                                <ComboBox x:Name="WebEngineBox" Header="Web search engine" HorizontalAlignment="Stretch" Margin="0,0,0,4"
+                                          SelectionChanged="WebEngineBox_SelectionChanged">
+                                    <ComboBoxItem Content="Google" />
+                                    <ComboBoxItem Content="DuckDuckGo" />
+                                    <ComboBoxItem Content="Bing" />
+                                </ComboBox>
+                                <TextBlock Text="Nothing is sent until you click the Search the web row (or press Enter with nothing else to open). Then Google, or the engine you pick here, receives your search words."
+                                           FontSize="12" TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                             </StackPanel>
+                            </ScrollViewer>
                         </Flyout>
                     </Button.Flyout>
                 </Button>

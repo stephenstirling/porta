@@ -33,6 +33,9 @@ The app icon is the Keyhole (`Assets/Porta.ico`, with the source in `Assets/Port
   on this PC. Typing "red dead" or "rdr2" finds Red Dead Redemption 2 with a Play button that starts it through
   its launcher. Steam store results for games you don't have appear too (online; `SearchSteamStore` in settings
   turns them off), plus quick links to search the Steam, Epic Games, Battle.net and Microsoft stores.
+- **Quick answers:** type a sum, a percentage or a conversion and the answer is the top row; Enter copies it.
+  `2+2*3`, `15% of 240`, `72 f in c`, `5 km to mi`, `1 gb in mb`, and (with its own switch) `5 usd in eur`.
+  A **Search the web** row is always last and opens your browser on Google (or DuckDuckGo or Bing, your choice).
 - **Wikipedia in search:** up to 3 articles with a thumbnail and short description, from the Wikipedia in your
   Windows language (English if that has no match). Open goes to the article in your browser. Turn it off with
   the "Search Wikipedia" switch (in the glass-strength pop-up for now).
@@ -50,12 +53,28 @@ The app icon is the Keyhole (`Assets/Porta.ico`, with the source in `Assets/Port
 
 ## Privacy
 
-Porta has no telemetry. Two search features go online, and only while they're switched on:
+Porta has no telemetry. These search features go online, and only while they're switched on:
 
 - **Wikipedia** (`SearchWikipedia`, on by default): what you type in search (3 or more characters) is sent to
   Wikipedia (`<language>.wikipedia.org`) to find articles.
+- **Wikipedia pictures** (`WikipediaPictures`, on by default, "Wikipedia pictures" switch under "Search Wikipedia", saved and
+  included in settings backups; does nothing while Search Wikipedia is off): the same request also asks Wikipedia for
+  each article's small picture, and Porta downloads the ones for the articles on screen from
+  `upload.wikimedia.org` (nothing else is ever fetched), with the same `Porta/<version>` User-Agent. They are kept
+  in memory and in `%LOCALAPPDATA%\Porta\WikiPictures` (about 20 MB at most). The pictures can include non-free covers
+  (album, film and game covers, logos); they are shown only as small thumbnails next to the article link. For an
+  article that comes back without a picture, Porta makes one more small request to that article's summary to look for
+  its lead picture (at most the 3 rows on screen, never for disambiguation pages). Switching the pictures off stops
+  all picture requests, deletes that folder, and the rows go back to letter tiles.
 - **Steam store results** (`SearchSteamStore`, on by default, only when Steam is installed): what you type
   (3 or more characters) is sent to the Steam store to find games you don't own.
+
+- **Online currency rates** (`OnlineCurrencyRates`, **off** by default, "Online currency rates" switch in the glass-strength
+  pop-up, saved and included in settings backups; does nothing while "Quick answers" is off): only when you type a
+  currency conversion such as `5 usd in eur`, Porta asks the free Frankfurter service (`api.frankfurter.dev`, European
+  Central Bank reference rates, no account or key) for the day's rates, with the `Porta/<version>` User-Agent. The request
+  contains no part of what you typed. The rates are kept in memory for 12 hours, forgotten when the switch is turned
+  off, and a failed request is not retried for a minute. With the switch off, a currency query just shows a hint row.
 
 Everything else, including your apps, games and files, stays on your PC. `>` commands are never sent anywhere.
 
@@ -73,6 +92,29 @@ whole library. Pictures are kept in `%LOCALAPPDATA%\Porta\EpicCovers` (at most 4
 failed download is ignored. With the switch off nothing is downloaded and the tile shows the game's icon or a
 letter. The small Epic badge is the icon of your installed Epic Games Launcher, read from your PC when Porta runs;
 Porta contains no Epic logo, and without the launcher only the text label shows.
+
+**Quick answers** (`ShowQuickAnswers`, on by default, "Quick answers" switch in the glass-strength pop-up, saved and
+included in settings backups): maths (`+ - * / ^`, brackets, percentages) and unit conversions (length, weight,
+temperature, volume, speed, data size) are worked out on your PC and never sent anywhere. Only text that is clearly a
+calculation gets an answer, so "portal 2", "3d", "1-800" or a date show nothing. KB, MB, GB and TB are decimal
+(1 GB = 1000 MB); KiB, MiB and GiB are binary; volumes are US measures.
+
+**Search the web** (`SearchTheWeb`, on by default, "Search the web" switch, and `WebSearchEngine`: Google by default,
+or DuckDuckGo or Bing, chosen in the same pop-up; a saved choice is always kept): the last row of search results, for
+2 or more characters. Porta sends nothing itself. Only when you click the row (or press Enter with nothing else to
+open) does your default browser open the search page of the engine, and **that engine (Google unless you picked
+another) then receives the words you typed**, under that company's own privacy policy. Until you click, nothing is sent.
+
+**People in Ocula** (`SearchOculaPeople`, **off** by default, "Search people in Ocula" switch in the glass-strength
+pop-up, saved and included in settings backups): when switched on, Porta reads the names Ocula keeps in
+`%LocalAppData%\Stirling\Ocula\people-index.json` (format version 1) so you can find a person from search. A packaged
+Ocula (Store or sideloaded) has its writes there redirected by Windows into its own package folder, so Porta also looks in
+`%LocalAppData%\Packages\StephenStirling.Ocula_*\LocalCache\Local\Stirling\Ocula\` and reads whichever of the places has
+the most recently written file. Only the fields `id`, `name`, `aliases`, `description`, `photoCount` and `thumbnail` are read. The file is only read, never
+written, and is read again only when its timestamp changes. Face thumbnails are loaded from the local picture
+files the index points to (network paths are ignored). Nothing about people is ever sent online. "Open" starts
+Ocula with an `ocula:person?id=...` link; if Ocula isn't installed the row shows without it. Turning the switch
+off forgets the list and the file isn't read again.
 
 ## Roadmap
 

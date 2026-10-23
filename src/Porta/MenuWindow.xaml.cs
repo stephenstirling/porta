@@ -38,6 +38,11 @@ public sealed partial class MenuWindow : Window
     private CancellationTokenSource? _storeSearch;
     private readonly ObservableCollection<WikiEntry> _wiki = []; // Wikipedia articles, below the store results
     private CancellationTokenSource? _wikiSearch;
+    private readonly ObservableCollection<QuickRow> _quick = []; // the calculation/conversion answer, on top
+    private readonly ObservableCollection<QuickRow> _web = []; // "Search the web", at the bottom
+    private CancellationTokenSource? _currencySearch;
+    private bool _loadingQuickSettings; // filling the pop-up from saved settings must not count as the user picking
+    private readonly ObservableCollection<PersonEntry> _people = []; // people from Ocula, below apps, games and tools
     private DateTime _pictureStamp;
     private bool _isOpen;
 
@@ -84,9 +89,16 @@ public sealed partial class MenuWindow : Window
         StoreList.ItemsSource = _store;
         SystemList.ItemsSource = _system;
         WikiList.ItemsSource = _wiki;
+        PeopleList.ItemsSource = _people;
+        QuickList.ItemsSource = _quick;
+        WebList.ItemsSource = _web;
+        LoadQuickSettings();
         WikipediaToggle.IsOn = App.Settings.Current.SearchWikipedia;
         EpicLibraryToggle.IsOn = App.Settings.Current.SearchEpicLibrary;
         EpicCoversToggle.IsOn = App.Settings.Current.EpicCoverImages;
+        WikipediaPicturesToggle.IsOn = App.Settings.Current.WikipediaPictures;
+        WikipediaPicturesToggle.IsEnabled = WikipediaToggle.IsOn; // pictures only matter while Wikipedia search is on
+        OculaPeopleToggle.IsOn = App.Settings.Current.SearchOculaPeople;
 
         var name = Native.GetDisplayName();
         UserNameText.Text = name;
@@ -103,6 +115,12 @@ public sealed partial class MenuWindow : Window
             EpicLibraryToggle.IsOn = App.Settings.Current.SearchEpicLibrary;
             EpicCoversToggle.IsOn = App.Settings.Current.EpicCoverImages;
             if (!EpicCoversToggle.IsOn) EpicCoverCache.ForgetCovers(App.Games.Games.Concat(EpicCatalogCache.Games));
+            WikipediaPicturesToggle.IsOn = App.Settings.Current.WikipediaPictures;
+            WikipediaPicturesToggle.IsEnabled = WikipediaToggle.IsOn;
+            if (!App.Settings.Current.WikipediaPictures) DropWikiPictures();
+            OculaPeopleToggle.IsOn = App.Settings.Current.SearchOculaPeople;
+            if (!OculaPeopleToggle.IsOn) ClearPeople();
+            LoadQuickSettings();
         });
         GlassSlider.Value = App.Settings.Current.GlassStrength;
     }
@@ -269,6 +287,13 @@ public sealed partial class MenuWindow : Window
         _wikiSearch?.Cancel();
         _wiki.Clear();
         WikiSection.Visibility = Visibility.Collapsed;
+        _people.Clear();
+        PeopleSection.Visibility = Visibility.Collapsed;
+        _currencySearch?.Cancel();
+        _quick.Clear();
+        _web.Clear();
+        QuickList.Visibility = Visibility.Collapsed;
+        WebList.Visibility = Visibility.Collapsed;
         if (query.Length == 0)
         {
             ShowPanel(ViewSelector.SelectedItem == AllAppsTab ? AllAppsList : PinnedPanel);
@@ -334,6 +359,21 @@ public sealed partial class MenuWindow : Window
             _system.Add(entry);
         }
 
+        // People named in Ocula: only when switched on; read from Ocula's own file on this PC, never online.
+        if (query.Length >= 2 && App.Settings.Current.SearchOculaPeople)
+        {
+            var oculaInstalled = OculaPeople.IsInstalled();
+            foreach (var person in OculaPeople.Search(query))
+            {
+                person.CanOpen = oculaInstalled;
+                if (person.Icon is null && person.ThumbnailPath is not null) LoadPersonPicture(person);
+                _people.Add(person);
+            }
+        }
+
+        AddQuickAnswer(query);
+        AddWebRow(query);
+
         UpdateSearchSections(query);
         if (_results.Count > 0) ResultsList.SelectedIndex = 0;
 
@@ -345,16 +385,21 @@ public sealed partial class MenuWindow : Window
 
     private void UpdateSearchSections(string query)
     {
+        QuickList.Visibility = _quick.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+        WebList.Visibility = _web.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
         GamesSection.Visibility = _games.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
 
         SystemSection.Visibility = _system.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+        PeopleSection.Visibility = _people.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
         StoreSection.Visibility = _store.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
 
         WikiSection.Visibility = _wiki.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
 
         // "Nothing matches" only when every section is empty.
-        bool none = _results.Count == 0 && _games.Count == 0 && _system.Count == 0 && _store.Count == 0 && _wiki.Count == 0;
+        bool none = _results.Count == 0 && _games.Count == 0 && _system.Count == 0 && _store.Count == 0 && _wiki.Count == 0 && _people.Count == 0 && _quick.Count == 0;
         NoResultsText.Text = $"Nothing matches “{query}”";
+        // The quick answer and web rows sit at the top when nothing else matched; keep the message below them.
+        NoResultsText.Margin = new Thickness(0, 40 + 56 * (_quick.Count + _web.Count), 0, 0);
         NoResultsText.Visibility = none ? Visibility.Visible : Visibility.Collapsed;
 
         var launchers = App.Games.Launchers;
@@ -409,20 +454,70 @@ public sealed partial class MenuWindow : Window
         try
         {
             await Task.Delay(300, cts.Token); // wait for typing to pause
-            var articles = await WikipediaSearch.SearchAsync(query, cts.Token);
+            var pictures = App.Settings.Current.WikipediaPictures;
+            var articles = await WikipediaSearch.SearchAsync(query, cts.Token, pictures);
             if (cts.IsCancellationRequested || SearchBox.Text.Trim() != query || !App.Settings.Current.SearchWikipedia) return;
 
+            // Text first; the pictures follow one by one in the background.
             _wiki.Clear();
             foreach (var a in articles)
-            {
-                var entry = new WikiEntry { Title = a.Title, Description = a.Description, Url = a.Url, ThumbnailUrl = a.ThumbnailUrl };
-                if (a.ThumbnailUrl is not null && Uri.TryCreate(a.ThumbnailUrl, UriKind.Absolute, out var thumb))
-                    entry.Icon = new Microsoft.UI.Xaml.Media.Imaging.BitmapImage(thumb) { DecodePixelWidth = 80 };
-                _wiki.Add(entry);
-            }
+                _wiki.Add(new WikiEntry { Title = a.Title, Description = a.Description, Url = a.Url, ThumbnailUrl = pictures ? a.ThumbnailUrl : null, IsDisambiguation = a.IsDisambiguation });
             UpdateSearchSections(query);
+
+            if (pictures)
+                foreach (var entry in _wiki.ToList())
+                    _ = entry.ThumbnailUrl is not null ? LoadWikiPictureAsync(entry, cts.Token) : LoadWikiFallbackPictureAsync(entry, cts.Token);
         }
         catch (OperationCanceledException) { }
+    }
+
+    /// <summary>
+    /// One more try for a row with no picture: the article's own summary, in the background after the text is up.
+    /// Disambiguation pages are skipped, and an article that really has no picture keeps its letter tile.
+    /// </summary>
+    private async Task LoadWikiFallbackPictureAsync(WikiEntry entry, CancellationToken ct)
+    {
+        try
+        {
+            if (entry.IsDisambiguation) return;
+            var url = await WikipediaSearch.FallbackPictureAsync(entry.Url, ct); // continues on the UI thread
+            if (url is null || ct.IsCancellationRequested || !_wiki.Contains(entry) ||
+                !App.Settings.Current.SearchWikipedia || !App.Settings.Current.WikipediaPictures) return;
+            entry.ThumbnailUrl = url;
+            await LoadWikiPictureAsync(entry, ct);
+        }
+        catch (OperationCanceledException) { }
+    }
+
+    private async Task LoadWikiPictureAsync(WikiEntry entry, CancellationToken ct)
+    {
+        try
+        {
+            var path = await WikiPictureCache.GetFileAsync(entry.ThumbnailUrl!, ct); // continues on the UI thread
+            if (path is null || ct.IsCancellationRequested || !_wiki.Contains(entry) ||
+                !App.Settings.Current.SearchWikipedia || !App.Settings.Current.WikipediaPictures) return;
+
+            var bitmap = new Microsoft.UI.Xaml.Media.Imaging.BitmapImage { DecodePixelWidth = 96 };
+            bitmap.ImageFailed += (_, _) => entry.Icon = null; // a bad picture brings the letter tile back
+            bitmap.UriSource = new Uri(path);
+            entry.Icon = bitmap;
+        }
+        catch (Exception ex) when (ex is OperationCanceledException or UriFormatException or ArgumentException) { }
+    }
+
+    /// <summary>Back to letter tiles, for when pictures or Wikipedia search are switched off.</summary>
+    private void DropWikiPictures()
+    {
+        foreach (var entry in _wiki) entry.Icon = null;
+        WikiPictureCache.Clear();
+    }
+
+    private void WikipediaPicturesToggle_Toggled(object sender, RoutedEventArgs e)
+    {
+        if (App.Settings.Current.WikipediaPictures == WikipediaPicturesToggle.IsOn) return;
+        App.Settings.Current.WikipediaPictures = WikipediaPicturesToggle.IsOn;
+        App.Settings.Save();
+        if (!WikipediaPicturesToggle.IsOn) DropWikiPictures(); // no more picture requests; saved pictures deleted
     }
 
     private void Wiki_ItemClick(object sender, ItemClickEventArgs e)
@@ -447,11 +542,249 @@ public sealed partial class MenuWindow : Window
         if (!EpicCoversToggle.IsOn) EpicCoverCache.ForgetCovers(App.Games.Games.Concat(EpicCatalogCache.Games));
     }
 
+    // ---------- Quick answers and "Search the web" ----------
+
+    private const string CalculatorGlyph = "\uE8EF";
+    private const string GlobeGlyph = "\uE774";
+
+    private static QuickRow RowFor(QuickAnswer a) => new()
+    {
+        Glyph = CalculatorGlyph,
+        Title = a.Title,
+        Subtitle = a.Subtitle,
+        ActionText = a.CopyText is null ? "" : "Copy",
+        CopyText = a.CopyText,
+    };
+
+    /// <summary>The one answer row for a calculation or conversion. Maths and units are local; currency needs the online switch.</summary>
+    private void AddQuickAnswer(string query)
+    {
+        if (!App.Settings.Current.ShowQuickAnswers) return;
+        switch (QuickAnswers.Evaluate(query, System.Globalization.CultureInfo.CurrentCulture))
+        {
+            case QuickAnswer answer:
+                _quick.Add(RowFor(answer));
+                break;
+            case PendingCurrency pending when !App.Settings.Current.OnlineCurrencyRates:
+                _quick.Add(new QuickRow
+                {
+                    Glyph = CalculatorGlyph,
+                    Title = pending.Request.Expression,
+                    Subtitle = "Turn on “Online currency rates” (glass-strength pop-up) to convert currencies. Nothing is sent until then.",
+                });
+                break;
+            case PendingCurrency pending when CurrencyRates.TryGetFresh(out var table):
+                _quick.Add(CurrencyRow(pending.Request, table));
+                break;
+            case PendingCurrency pending:
+                _ = AddCurrencyAnswerAsync(query, pending.Request); // fetches the rates only now that one was typed
+                break;
+        }
+    }
+
+    private static QuickRow CurrencyRow(CurrencyRequest request, RateTable? table)
+    {
+        var answer = table is null ? null : CurrencyRates.Convert(request, table, System.Globalization.CultureInfo.CurrentCulture);
+        if (answer is not null) return RowFor(answer);
+        return new QuickRow
+        {
+            Glyph = CalculatorGlyph,
+            Title = request.Expression,
+            Subtitle = table is null ? "Couldn't get exchange rates. Check your connection." : "No exchange rate for that currency.",
+        };
+    }
+
+    private async Task AddCurrencyAnswerAsync(string query, CurrencyRequest request)
+    {
+        var cts = _currencySearch = new CancellationTokenSource();
+        try
+        {
+            await Task.Delay(300, cts.Token); // wait for typing to pause
+            var table = await CurrencyRates.GetAsync(cts.Token);
+            if (cts.IsCancellationRequested || SearchBox.Text.Trim() != query ||
+                !App.Settings.Current.ShowQuickAnswers || !App.Settings.Current.OnlineCurrencyRates) return;
+
+            _quick.Clear();
+            _quick.Add(CurrencyRow(request, table));
+            UpdateSearchSections(query);
+        }
+        catch (OperationCanceledException) { }
+    }
+
+    private void AddWebRow(string query)
+    {
+        if (!App.Settings.Current.SearchTheWeb || query.Length < 2) return;
+        var engine = WebSearch.Normalize(App.Settings.Current.WebSearchEngine);
+        _web.Add(new QuickRow
+        {
+            Glyph = GlobeGlyph,
+            Title = $"Search the web for “{query}”",
+            Subtitle = $"Opens {engine} in your browser",
+            ActionText = "Search",
+            WebQuery = query,
+        });
+    }
+
+    /// <summary>Redoes the quick and web rows for what is typed (after a switch or the engine changed).</summary>
+    private void RefreshQuickRows()
+    {
+        var query = SearchBox.Text.Trim();
+        if (SearchPanel.Visibility != Visibility.Visible || query.Length == 0 || CommandRunner.IsCommand(query)) return;
+        _currencySearch?.Cancel();
+        _quick.Clear();
+        _web.Clear();
+        AddQuickAnswer(query);
+        AddWebRow(query);
+        UpdateSearchSections(query);
+    }
+
+    private void CopyAnswer(QuickRow row)
+    {
+        if (row.CopyText is null) return;
+        try
+        {
+            var package = new Windows.ApplicationModel.DataTransfer.DataPackage();
+            package.SetText(row.CopyText);
+            Windows.ApplicationModel.DataTransfer.Clipboard.SetContent(package);
+            Windows.ApplicationModel.DataTransfer.Clipboard.Flush(); // still there after Porta closes
+        }
+        catch (Exception ex) when (ex is System.Runtime.InteropServices.COMException or InvalidOperationException)
+        {
+            System.Diagnostics.Debug.WriteLine("Porta: couldn't copy: " + ex.Message); // clipboard busy
+            return;
+        }
+        HideMenu();
+    }
+
+    private void OpenWeb(QuickRow row)
+    {
+        if (row.WebQuery is null) return;
+        var url = WebSearch.UrlFor(App.Settings.Current.WebSearchEngine, row.WebQuery);
+        HideMenu();
+        try
+        {
+            Launcher.Open(url);
+        }
+        catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or InvalidOperationException)
+        {
+            System.Diagnostics.Debug.WriteLine("Porta: couldn't open the browser: " + ex.Message);
+        }
+    }
+
+    private void Quick_ItemClick(object sender, ItemClickEventArgs e)
+    {
+        if (e.ClickedItem is QuickRow row) CopyAnswer(row);
+    }
+
+    private void Web_ItemClick(object sender, ItemClickEventArgs e)
+    {
+        if (e.ClickedItem is QuickRow row) OpenWeb(row);
+    }
+
+    /// <summary>Puts the saved choices into the pop-up's controls (at start and after a restore).</summary>
+    private void LoadQuickSettings()
+    {
+        var s = App.Settings.Current;
+        _loadingQuickSettings = true;
+        QuickAnswersToggle.IsOn = s.ShowQuickAnswers;
+        CurrencyRatesToggle.IsOn = s.OnlineCurrencyRates;
+        CurrencyRatesToggle.IsEnabled = QuickAnswersToggle.IsOn; // rates only matter while quick answers are on
+        WebSearchToggle.IsOn = s.SearchTheWeb;
+        WebEngineBox.SelectedIndex = Array.IndexOf(WebSearch.Engines, WebSearch.Normalize(s.WebSearchEngine));
+        WebEngineBox.IsEnabled = WebSearchToggle.IsOn;
+        _loadingQuickSettings = false;
+        if (!s.OnlineCurrencyRates || !s.ShowQuickAnswers) CurrencyRates.Clear();
+    }
+
+    private void QuickAnswersToggle_Toggled(object sender, RoutedEventArgs e)
+    {
+        if (App.Settings.Current.ShowQuickAnswers == QuickAnswersToggle.IsOn) return;
+        App.Settings.Current.ShowQuickAnswers = QuickAnswersToggle.IsOn;
+        App.Settings.Save();
+        CurrencyRatesToggle.IsEnabled = QuickAnswersToggle.IsOn;
+        if (!QuickAnswersToggle.IsOn) { _currencySearch?.Cancel(); CurrencyRates.Clear(); }
+        RefreshQuickRows();
+    }
+
+    private void CurrencyRatesToggle_Toggled(object sender, RoutedEventArgs e)
+    {
+        if (App.Settings.Current.OnlineCurrencyRates == CurrencyRatesToggle.IsOn) return;
+        App.Settings.Current.OnlineCurrencyRates = CurrencyRatesToggle.IsOn;
+        App.Settings.Save();
+        if (!CurrencyRatesToggle.IsOn) { _currencySearch?.Cancel(); CurrencyRates.Clear(); } // no more requests; rates forgotten
+        RefreshQuickRows();
+    }
+
+    private void WebSearchToggle_Toggled(object sender, RoutedEventArgs e)
+    {
+        if (App.Settings.Current.SearchTheWeb == WebSearchToggle.IsOn) return;
+        App.Settings.Current.SearchTheWeb = WebSearchToggle.IsOn;
+        App.Settings.Save();
+        WebEngineBox.IsEnabled = WebSearchToggle.IsOn;
+        RefreshQuickRows();
+    }
+
+    private void WebEngineBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_loadingQuickSettings || (WebEngineBox.SelectedItem as ComboBoxItem)?.Content is not string engine) return;
+        engine = WebSearch.Normalize(engine);
+        if (App.Settings.Current.WebSearchEngine == engine) return;
+        App.Settings.Current.WebSearchEngine = engine;
+        App.Settings.Save();
+        RefreshQuickRows();
+    }
+
+    /// <summary>Face thumbnail from the local file; if it can't be decoded the letter tile comes back.</summary>
+    private static void LoadPersonPicture(PersonEntry person)
+    {
+        try
+        {
+            var bitmap = new Microsoft.UI.Xaml.Media.Imaging.BitmapImage { DecodePixelWidth = 80 };
+            bitmap.ImageFailed += (_, _) => person.Icon = null;
+            bitmap.UriSource = new Uri(person.ThumbnailPath!);
+            person.Icon = bitmap;
+        }
+        catch (Exception ex) when (ex is UriFormatException or ArgumentException)
+        {
+            // Odd path: keep the letter tile.
+        }
+    }
+
+    private void Person_ItemClick(object sender, ItemClickEventArgs e)
+    {
+        if (e.ClickedItem is not PersonEntry { CanOpen: true } person) return; // no Ocula, no action
+        HideMenu();
+        try
+        {
+            Launcher.Open(OculaPeople.OpenLink(person));
+        }
+        catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or InvalidOperationException)
+        {
+            System.Diagnostics.Debug.WriteLine("Porta: couldn't open Ocula: " + ex.Message);
+        }
+    }
+
+    private void ClearPeople()
+    {
+        OculaPeople.Clear();
+        _people.Clear();
+        PeopleSection.Visibility = Visibility.Collapsed;
+    }
+
+    private void OculaPeopleToggle_Toggled(object sender, RoutedEventArgs e)
+    {
+        if (App.Settings.Current.SearchOculaPeople == OculaPeopleToggle.IsOn) return;
+        App.Settings.Current.SearchOculaPeople = OculaPeopleToggle.IsOn;
+        App.Settings.Save();
+        if (!OculaPeopleToggle.IsOn) ClearPeople(); // the file is not read again and nothing is kept
+    }
+
     private void WikipediaToggle_Toggled(object sender, RoutedEventArgs e)
     {
         if (App.Settings.Current.SearchWikipedia == WikipediaToggle.IsOn) return;
         App.Settings.Current.SearchWikipedia = WikipediaToggle.IsOn;
         App.Settings.Save();
+        WikipediaPicturesToggle.IsEnabled = WikipediaToggle.IsOn;
         if (!WikipediaToggle.IsOn)
         {
             _wikiSearch?.Cancel(); // stop anything in flight; nothing more is sent
@@ -563,10 +896,16 @@ public sealed partial class MenuWindow : Window
                 break;
             }
 
+            case VirtualKey.Enter when searching && _quick.FirstOrDefault() is { CopyText: not null } answer:
+                CopyAnswer(answer); // a calculation was typed: Enter copies the result
+                e.Handled = true;
+                break;
+
             case VirtualKey.Enter when searching:
                 if ((ResultsList.SelectedItem ?? _results.FirstOrDefault()) is AppEntry best) Launch(best);
                 else if (_games.FirstOrDefault() is { } game) { HideMenu(); GameLibrary.Launch(game); }
                 else if (_system.FirstOrDefault() is { } entry) _ = OpenSystemAsync(entry);
+                else if (_web.FirstOrDefault() is { } web) OpenWeb(web); // nothing else matched: search the web
                 e.Handled = true;
                 break;
 
