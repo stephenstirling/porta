@@ -88,6 +88,27 @@
                 </Grid>
             </DataTemplate>
 
+            <!-- The quick answer (top of search) and the "Search the web" row (bottom) -->
+            <DataTemplate x:Key="QuickRowTemplate" x:DataType="m:QuickRow">
+                <Grid ColumnSpacing="12" Height="52">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Border Width="40" Height="40" CornerRadius="8" Background="{ThemeResource SubtleFillColorSecondaryBrush}">
+                        <FontIcon Glyph="{x:Bind Glyph}" FontSize="18" />
+                    </Border>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                        <TextBlock Text="{x:Bind Title}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                        <TextBlock Text="{x:Bind Subtitle}" FontSize="12" TextTrimming="CharacterEllipsis"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    </StackPanel>
+                    <TextBlock Grid.Column="2" Text="{x:Bind ActionText}" Visibility="{x:Bind ActionVisibility}" VerticalAlignment="Center"
+                               FontWeight="SemiBold" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+                </Grid>
+            </DataTemplate>
+
             <!-- One person from Ocula in search -->
             <DataTemplate x:Key="PersonRowTemplate" x:DataType="m:PersonEntry">
                 <Grid ColumnSpacing="12" Height="52">
@@ -312,6 +333,11 @@
                     <!-- Installed games, then apps, then store results, each directly below the last; scrolls as one -->
                     <ScrollViewer x:Name="ResultsScroller" VerticalScrollBarVisibility="Auto">
                         <StackPanel Spacing="6">
+                            <!-- A calculation or conversion: one row, always on top ("Quick answers" turns it off) -->
+                            <ListView x:Name="QuickList" Visibility="Collapsed" SelectionMode="None" IsItemClickEnabled="True" ItemClick="Quick_ItemClick"
+                                      ItemTemplate="{StaticResource QuickRowTemplate}"
+                                      ScrollViewer.VerticalScrollMode="Disabled" ScrollViewer.VerticalScrollBarVisibility="Disabled" />
+
                             <!-- Games from Steam, Epic, Battle.net and Xbox -->
                             <StackPanel x:Name="GamesSection" Visibility="Collapsed" Spacing="4">
                                 <TextBlock Text="Games" FontSize="12" FontWeight="SemiBold" Margin="4,0,0,0"
@@ -360,6 +386,11 @@
                                           ItemTemplate="{StaticResource WikiRowTemplate}"
                                           ScrollViewer.VerticalScrollMode="Disabled" ScrollViewer.VerticalScrollBarVisibility="Disabled" />
                             </StackPanel>
+
+                            <!-- Always the last row: opens the browser on your search engine. Nothing is sent until it is used. -->
+                            <ListView x:Name="WebList" Visibility="Collapsed" SelectionMode="None" IsItemClickEnabled="True" ItemClick="Web_ItemClick"
+                                      ItemTemplate="{StaticResource QuickRowTemplate}"
+                                      ScrollViewer.VerticalScrollMode="Disabled" ScrollViewer.VerticalScrollBarVisibility="Disabled" />
                         </StackPanel>
                     </ScrollViewer>
                     <TextBlock x:Name="NoResultsText" Visibility="Collapsed" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,40,0,0"
@@ -430,6 +461,7 @@
                     <FontIcon Glyph="&#xE790;" FontSize="16" />
                     <Button.Flyout>
                         <Flyout Placement="TopEdgeAlignedRight" Closed="GlassFlyout_Closed">
+                            <ScrollViewer MaxHeight="480" VerticalScrollBarVisibility="Auto">
                             <StackPanel Width="220" Spacing="4">
                                 <TextBlock Text="Glass strength" FontSize="13" FontWeight="SemiBold" />
                                 <Slider x:Name="GlassSlider" Minimum="0" Maximum="100" StepFrequency="5"
@@ -445,7 +477,20 @@
                                               Toggled="WikipediaPicturesToggle_Toggled" />
                                 <ToggleSwitch x:Name="OculaPeopleToggle" Header="Search people in Ocula"
                                               Toggled="OculaPeopleToggle_Toggled" />
+                                <ToggleSwitch x:Name="QuickAnswersToggle" Header="Quick answers"
+                                              Toggled="QuickAnswersToggle_Toggled" />
+                                <ToggleSwitch x:Name="CurrencyRatesToggle" Header="Online currency rates"
+                                              Toggled="CurrencyRatesToggle_Toggled" />
+                                <ToggleSwitch x:Name="WebSearchToggle" Header="Search the web"
+                                              Toggled="WebSearchToggle_Toggled" />
+                                <ComboBox x:Name="WebEngineBox" Header="Web search engine" HorizontalAlignment="Stretch" Margin="0,0,0,4"
+                                          SelectionChanged="WebEngineBox_SelectionChanged">
+                                    <ComboBoxItem Content="DuckDuckGo" />
+                                    <ComboBoxItem Content="Google" />
+                                    <ComboBoxItem Content="Bing" />
+                                </ComboBox>
                             </StackPanel>
+                            </ScrollViewer>
                         </Flyout>
                     </Button.Flyout>
                 </Button>
