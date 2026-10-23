@@ -33,6 +33,10 @@ The app icon is the Keyhole (`Assets/Porta.ico`, with the source in `Assets/Port
   on this PC. Typing "red dead" or "rdr2" finds Red Dead Redemption 2 with a Play button that starts it through
   its launcher. Steam store results for games you don't have appear too (online; `SearchSteamStore` in settings
   turns them off), plus quick links to search the Steam, Epic Games, Battle.net and Microsoft stores.
+- **Recent files and folders in search** (off until you switch on "Search recent files and folders"): type part of a file
+  or folder name and up to 4 matches show below apps and games, with the file's icon, its folder as the subtitle, **Open**
+  and **Show in folder**. It covers your recent files and folders, the folders pinned in Explorer's Quick access, and
+  Documents, Downloads, Pictures, Videos, Music and Desktop. "Exclude folders…" hides any folder you list, with everything in it.
 - **Battle.net games in search:** World of Warcraft, the Diablo games, Overwatch 2, Hearthstone, Heroes of the Storm,
   StarCraft and Warcraft III come from an editable list, `Assets\battlenet-games.json` (change it and restart Porta; no
   rebuild). Installed ones show "Battle.net · Installed" and **Play** (through the Battle.net client); the rest show
@@ -97,6 +101,17 @@ whole library. Pictures are kept in `%LOCALAPPDATA%\Porta\EpicCovers` (at most 4
 failed download is ignored. With the switch off nothing is downloaded and the tile shows the game's icon or a
 letter. The small Epic badge is the icon of your installed Epic Games Launcher, read from your PC when Porta runs;
 Porta contains no Epic logo, and without the launcher only the text label shows.
+
+**Recent files and folders** (`SearchRecentFiles`, **off** by default, "Search recent files and folders" switch in the
+glass-strength pop-up, saved and included in settings backups): when switched on, Porta looks at the shortcuts in your
+Windows Recent folder (`%AppData%\Microsoft\Windows\Recent`), the folders you pinned in Explorer's Quick access, and
+the standard folders, and matches what you type against **file and folder names only**. It never opens or reads a file's
+contents (only the small Recent shortcut files, to find where they point), never writes anything, and nothing is sent anywhere.
+The list is kept in memory and rebuilt in the background shortly after the Recent folder changes; turning the switch off
+stops watching and forgets it. Entries whose file or folder no longer exists are skipped, and so are network shares
+(`\\server\share`) and mapped drives that don't answer within a second, so search never waits on a sleeping NAS. Row icons
+are the file type's icon from Windows (programs show their own icon). **Exclude folders…** (under the switch,
+saved in `ExcludedFolders` and included in backups) lists folders to hide, together with everything inside them.
 
 **Battle.net games** (`SearchBattleNetGames`, on by default, "Search Battle.net games" switch in the glass-strength
 pop-up, saved and included in settings backups): the games come from the list in `Assets\battlenet-games.json` and which
