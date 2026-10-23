@@ -33,6 +33,11 @@ The app icon is the Keyhole (`Assets/Porta.ico`, with the source in `Assets/Port
   on this PC. Typing "red dead" or "rdr2" finds Red Dead Redemption 2 with a Play button that starts it through
   its launcher. Steam store results for games you don't have appear too (online; `SearchSteamStore` in settings
   turns them off), plus quick links to search the Steam, Epic Games, Battle.net and Microsoft stores.
+- **Battle.net games in search:** World of Warcraft, the Diablo games, Overwatch 2, Hearthstone, Heroes of the Storm,
+  StarCraft and Warcraft III come from an editable list, `Assets\battlenet-games.json` (change it and restart Porta; no
+  rebuild). Installed ones show "Battle.net · Installed" and **Play** (through the Battle.net client); the rest show
+  "Battle.net · Not installed" and **View**, which opens the game's page on blizzard.com. Without the client only View rows
+  show. Short names work: `wow`, `d4`, `ow2`, `hs`, `sc2`, `wc3`. Turn it off with the "Search Battle.net games" switch.
 - **Quick answers:** type a sum, a percentage or a conversion and the answer is the top row; Enter copies it.
   `2+2*3`, `15% of 240`, `72 f in c`, `5 km to mi`, `1 gb in mb`, and (with its own switch) `5 usd in eur`.
   A **Search the web** row is always last and opens your browser on Google (or DuckDuckGo or Bing, your choice).
@@ -92,6 +97,15 @@ whole library. Pictures are kept in `%LOCALAPPDATA%\Porta\EpicCovers` (at most 4
 failed download is ignored. With the switch off nothing is downloaded and the tile shows the game's icon or a
 letter. The small Epic badge is the icon of your installed Epic Games Launcher, read from your PC when Porta runs;
 Porta contains no Epic logo, and without the launcher only the text label shows.
+
+**Battle.net games** (`SearchBattleNetGames`, on by default, "Search Battle.net games" switch in the glass-strength
+pop-up, saved and included in settings backups): the games come from the list in `Assets\battlenet-games.json` and which
+ones are installed comes from the Battle.net client's own files on this PC (the same local detection as before). Nothing
+goes online to show them and no pictures are downloaded: an installed game shows its own program icon, the others a letter
+tile, plus a small badge that is the icon of your installed Battle.net client (read from your PC when Porta runs; Porta
+contains no Blizzard logo, and without the client only the text shows). Only when you click a **View** row does your
+browser open that game's page on blizzard.com; **Play** starts the game with a `battlenet://<code>` link handled by the
+Battle.net client. The list only accepts store pages on blizzard.com or battle.net.
 
 **Quick answers** (`ShowQuickAnswers`, on by default, "Quick answers" switch in the glass-strength pop-up, saved and
 included in settings backups): maths (`+ - * / ^`, brackets, percentages) and unit conversions (length, weight,
