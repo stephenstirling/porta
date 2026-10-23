@@ -6,11 +6,14 @@ namespace Porta.Services;
 /// </summary>
 public static class WebSearch
 {
-    public static readonly string[] Engines = ["DuckDuckGo", "Google", "Bing"];
+    /// <summary>The engine used until the user picks another; same order as the pop-up's dropdown.</summary>
+    public const string Default = "Google";
 
-    /// <summary>The engine's name if it is one we know, otherwise DuckDuckGo.</summary>
+    public static readonly string[] Engines = [Default, "DuckDuckGo", "Bing"];
+
+    /// <summary>The engine's name if it is one we know (or none was ever chosen), otherwise Google.</summary>
     public static string Normalize(string? engine) =>
-        Engines.FirstOrDefault(e => e.Equals(engine, StringComparison.OrdinalIgnoreCase)) ?? Engines[0];
+        Engines.FirstOrDefault(e => e.Equals(engine, StringComparison.OrdinalIgnoreCase)) ?? Default;
 
     public static string UrlFor(string? engine, string query)
     {

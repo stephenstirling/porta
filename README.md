@@ -35,7 +35,7 @@ The app icon is the Keyhole (`Assets/Porta.ico`, with the source in `Assets/Port
   turns them off), plus quick links to search the Steam, Epic Games, Battle.net and Microsoft stores.
 - **Quick answers:** type a sum, a percentage or a conversion and the answer is the top row; Enter copies it.
   `2+2*3`, `15% of 240`, `72 f in c`, `5 km to mi`, `1 gb in mb`, and (with its own switch) `5 usd in eur`.
-  A **Search the web** row is always last and opens your browser on DuckDuckGo, Google or Bing.
+  A **Search the web** row is always last and opens your browser on Google (or DuckDuckGo or Bing, your choice).
 - **Wikipedia in search:** up to 3 articles with a thumbnail and short description, from the Wikipedia in your
   Windows language (English if that has no match). Open goes to the article in your browser. Turn it off with
   the "Search Wikipedia" switch (in the glass-strength pop-up for now).
@@ -84,10 +84,11 @@ temperature, volume, speed, data size) are worked out on your PC and never sent 
 calculation gets an answer, so "portal 2", "3d", "1-800" or a date show nothing. KB, MB, GB and TB are decimal
 (1 GB = 1000 MB); KiB, MiB and GiB are binary; volumes are US measures.
 
-**Search the web** (`SearchTheWeb`, on by default, "Search the web" switch, and `WebSearchEngine`: DuckDuckGo,
-Google or Bing, chosen in the same pop-up): the last row of search results, for 2 or more characters. Porta sends
-nothing itself. Only when you click the row (or press Enter with nothing else to open) does your default browser open
-the search page of the engine you chose for what you typed.
+**Search the web** (`SearchTheWeb`, on by default, "Search the web" switch, and `WebSearchEngine`: Google by default,
+or DuckDuckGo or Bing, chosen in the same pop-up; a saved choice is always kept): the last row of search results, for
+2 or more characters. Porta sends nothing itself. Only when you click the row (or press Enter with nothing else to
+open) does your default browser open the search page of the engine, and **that engine (Google unless you picked
+another) then receives the words you typed**, under that company's own privacy policy. Until you click, nothing is sent.
 
 **People in Ocula** (`SearchOculaPeople`, **off** by default, "Search people in Ocula" switch in the glass-strength
 pop-up, saved and included in settings backups): when switched on, Porta reads the names Ocula keeps in

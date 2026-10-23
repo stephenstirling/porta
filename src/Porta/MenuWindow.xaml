@@ -485,11 +485,11 @@
                                               Toggled="WebSearchToggle_Toggled" />
                                 <ComboBox x:Name="WebEngineBox" Header="Web search engine" HorizontalAlignment="Stretch" Margin="0,0,0,4"
                                           SelectionChanged="WebEngineBox_SelectionChanged">
-                                    <ComboBoxItem Content="DuckDuckGo" />
                                     <ComboBoxItem Content="Google" />
+                                    <ComboBoxItem Content="DuckDuckGo" />
                                     <ComboBoxItem Content="Bing" />
                                 </ComboBox>
-                                <TextBlock Text="The Search the web row sends nothing until you click it (or press Enter with nothing else to open)."
+                                <TextBlock Text="Nothing is sent until you click the Search the web row (or press Enter with nothing else to open). Then Google, or the engine you pick here, receives your search words."
                                            FontSize="12" TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                             </StackPanel>
                             </ScrollViewer>

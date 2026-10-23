@@ -35,8 +35,11 @@ public sealed class PortaSettings
     /// <summary>A "Search the web" row at the bottom of search results. Nothing is sent until it is clicked.</summary>
     public bool SearchTheWeb { get; set; } = true;
 
-    /// <summary>Which search engine that row opens in the browser: DuckDuckGo, Google or Bing.</summary>
-    public string WebSearchEngine { get; set; } = "DuckDuckGo";
+    /// <summary>
+    /// Which search engine that row opens in the browser: Google, DuckDuckGo or Bing. Null until the user picks one,
+    /// which means Google; a saved pick is always kept.
+    /// </summary>
+    public string? WebSearchEngine { get; set; }
 
     // Appearance (used from milestone 2)
     public string Theme { get; set; } = "System";

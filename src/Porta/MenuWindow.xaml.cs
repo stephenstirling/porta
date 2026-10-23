@@ -41,6 +41,7 @@ public sealed partial class MenuWindow : Window
     private readonly ObservableCollection<QuickRow> _quick = []; // the calculation/conversion answer, on top
     private readonly ObservableCollection<QuickRow> _web = []; // "Search the web", at the bottom
     private CancellationTokenSource? _currencySearch;
+    private bool _loadingQuickSettings; // filling the pop-up from saved settings must not count as the user picking
     private readonly ObservableCollection<PersonEntry> _people = []; // people from Ocula, below apps, games and tools
     private DateTime _pictureStamp;
     private bool _isOpen;
@@ -647,12 +648,14 @@ public sealed partial class MenuWindow : Window
     private void LoadQuickSettings()
     {
         var s = App.Settings.Current;
+        _loadingQuickSettings = true;
         QuickAnswersToggle.IsOn = s.ShowQuickAnswers;
         CurrencyRatesToggle.IsOn = s.OnlineCurrencyRates;
         CurrencyRatesToggle.IsEnabled = QuickAnswersToggle.IsOn; // rates only matter while quick answers are on
         WebSearchToggle.IsOn = s.SearchTheWeb;
         WebEngineBox.SelectedIndex = Array.IndexOf(WebSearch.Engines, WebSearch.Normalize(s.WebSearchEngine));
         WebEngineBox.IsEnabled = WebSearchToggle.IsOn;
+        _loadingQuickSettings = false;
         if (!s.OnlineCurrencyRates || !s.ShowQuickAnswers) CurrencyRates.Clear();
     }
 
@@ -686,7 +689,7 @@ public sealed partial class MenuWindow : Window
 
     private void WebEngineBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if ((WebEngineBox.SelectedItem as ComboBoxItem)?.Content is not string engine) return;
+        if (_loadingQuickSettings || (WebEngineBox.SelectedItem as ComboBoxItem)?.Content is not string engine) return;
         engine = WebSearch.Normalize(engine);
         if (App.Settings.Current.WebSearchEngine == engine) return;
         App.Settings.Current.WebSearchEngine = engine;
