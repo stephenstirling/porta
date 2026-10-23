@@ -109,6 +109,33 @@
                 </Grid>
             </DataTemplate>
 
+            <!-- One recent file or folder in search: Open (click the row) and Show in folder -->
+            <DataTemplate x:Key="PathRowTemplate" x:DataType="m:PathEntry">
+                <Grid ColumnSpacing="12" Height="52">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Grid Width="32" Height="32" VerticalAlignment="Center">
+                        <Border CornerRadius="8" Background="{ThemeResource SubtleFillColorSecondaryBrush}" Visibility="{x:Bind InitialVisibility, Mode=OneWay}">
+                            <TextBlock Text="{x:Bind Initial}" FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <Image Source="{x:Bind Icon, Mode=OneWay}" Width="28" Height="28" />
+                    </Grid>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                        <TextBlock Text="{x:Bind Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                        <TextBlock Text="{x:Bind Subtitle}" FontSize="12" TextTrimming="CharacterEllipsis"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" ToolTipService.ToolTip="{x:Bind FullPath}" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="2" VerticalAlignment="Center">
+                        <TextBlock Text="Open" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,4,0"
+                                   Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+                        <HyperlinkButton Content="Show in folder" FontSize="12" Padding="6,2" Click="ShowInFolder_Click" />
+                    </StackPanel>
+                </Grid>
+            </DataTemplate>
+
             <!-- One person from Ocula in search -->
             <DataTemplate x:Key="PersonRowTemplate" x:DataType="m:PersonEntry">
                 <Grid ColumnSpacing="12" Height="52">
@@ -364,6 +391,15 @@
                                           ScrollViewer.VerticalScrollMode="Disabled" ScrollViewer.VerticalScrollBarVisibility="Disabled" />
                             </StackPanel>
 
+                            <!-- Recent files and folders (off until "Search recent files and folders" is on): below apps, games and tools -->
+                            <StackPanel x:Name="PathsSection" Visibility="Collapsed" Spacing="4">
+                                <TextBlock Text="Recent files and folders" FontSize="12" FontWeight="SemiBold" Margin="4,0,0,0"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                <ListView x:Name="PathsList" SelectionMode="None" IsItemClickEnabled="True" ItemClick="Path_ItemClick"
+                                          ItemTemplate="{StaticResource PathRowTemplate}"
+                                          ScrollViewer.VerticalScrollMode="Disabled" ScrollViewer.VerticalScrollBarVisibility="Disabled" />
+                            </StackPanel>
+
                             <!-- People named in Ocula (off until "Search people in Ocula" is on): below apps, games and tools -->
                             <StackPanel x:Name="PeopleSection" Visibility="Collapsed" Spacing="4">
                                 <TextBlock Text="People in Ocula" FontSize="12" FontWeight="SemiBold" Margin="4,0,0,0"
@@ -473,7 +509,7 @@
                         AutomationProperties.Name="Glass strength" ToolTipService.ToolTip="Glass strength">
                     <FontIcon Glyph="&#xE790;" FontSize="16" />
                     <Button.Flyout>
-                        <Flyout Placement="TopEdgeAlignedRight" Closed="GlassFlyout_Closed">
+                        <Flyout x:Name="PaletteFlyout" Placement="TopEdgeAlignedRight" Closed="GlassFlyout_Closed">
                             <ScrollViewer MaxHeight="480" VerticalScrollBarVisibility="Auto">
                             <StackPanel Width="220" Spacing="4">
                                 <TextBlock Text="Glass strength" FontSize="13" FontWeight="SemiBold" />
@@ -494,6 +530,9 @@
                                               Toggled="EpicCoversToggle_Toggled" />
                                 <ToggleSwitch x:Name="BattleNetGamesToggle" Header="Search Battle.net games"
                                               Toggled="BattleNetGamesToggle_Toggled" />
+                                <ToggleSwitch x:Name="RecentFilesToggle" Header="Search recent files and folders"
+                                              Toggled="RecentFilesToggle_Toggled" />
+                                <HyperlinkButton x:Name="ExcludeFoldersButton" Content="Exclude folders…" Margin="0,-4,0,4" Click="ExcludeFolders_Click" />
                                 <ToggleSwitch x:Name="OculaPeopleToggle" Header="Search people in Ocula"
                                               Toggled="OculaPeopleToggle_Toggled" />
                                 <ToggleSwitch x:Name="QuickAnswersToggle" Header="Quick answers"

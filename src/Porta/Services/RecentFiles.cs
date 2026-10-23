@@ -44,7 +44,7 @@ public static class RecentFiles
         return File.Exists(target) || Directory.Exists(target);
     }
 
-    private static string? TargetPath(string linkPath)
+    internal static string? TargetPath(string linkPath)
     {
         try
         {
