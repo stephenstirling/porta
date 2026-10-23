@@ -489,6 +489,8 @@
                                     <ComboBoxItem Content="Google" />
                                     <ComboBoxItem Content="Bing" />
                                 </ComboBox>
+                                <TextBlock Text="The Search the web row sends nothing until you click it (or press Enter with nothing else to open)."
+                                           FontSize="12" TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                             </StackPanel>
                             </ScrollViewer>
                         </Flyout>

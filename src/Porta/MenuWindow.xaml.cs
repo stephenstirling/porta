@@ -581,7 +581,7 @@ public sealed partial class MenuWindow : Window
         {
             Glyph = GlobeGlyph,
             Title = $"Search the web for “{query}”",
-            Subtitle = $"Opens {engine} in your browser. Nothing is sent until you click.",
+            Subtitle = $"Opens {engine} in your browser",
             ActionText = "Search",
             WebQuery = query,
         });
