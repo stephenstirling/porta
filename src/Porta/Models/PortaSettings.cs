@@ -34,6 +34,15 @@ public sealed class PortaSettings
     /// <summary>Show Battle.net games from Porta's own list in search (installed ones play, the rest open their page). Nothing goes online.</summary>
     public bool SearchBattleNetGames { get; set; } = true;
 
+    /// <summary>
+    /// Search recent files and folders by name (read from the Windows Recent folder and Quick access on this PC, never
+    /// online). Off until switched on.
+    /// </summary>
+    public bool SearchRecentFiles { get; set; } = false;
+
+    /// <summary>Folders hidden from recent files and folders search, together with everything inside them.</summary>
+    public List<string> ExcludedFolders { get; set; } = [];
+
     /// <summary>A calculation or conversion typed in search gets one answer row at the top (maths and units are fully local).</summary>
     public bool ShowQuickAnswers { get; set; } = true;
 
