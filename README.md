@@ -110,7 +110,7 @@ contents (only the small Recent shortcut files, to find where they point), never
 The list is kept in memory and rebuilt in the background shortly after the Recent folder changes; turning the switch off
 stops watching and forgets it. Entries whose file or folder no longer exists are skipped, and so are network shares
 (`\\server\share`) and mapped drives that don't answer within a second, so search never waits on a sleeping NAS. Row icons
-are the file type's icon from Windows (programs show their own icon). **Exclude folders…** (under the switch,
+are the file type's icon from Windows; for a program, Windows reads the icon stored in the program file, and no other part of any file is read. **Exclude folders…** (under the switch,
 saved in `ExcludedFolders` and included in backups) lists folders to hide, together with everything inside them.
 
 **Battle.net games** (`SearchBattleNetGames`, on by default, "Search Battle.net games" switch in the glass-strength
