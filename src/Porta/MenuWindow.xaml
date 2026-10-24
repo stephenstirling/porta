@@ -487,6 +487,9 @@
                 <Button Style="{StaticResource RailButton}" Tag="shell:My Music" Click="Folder_Click">
                     <StackPanel Orientation="Horizontal" Spacing="12"><FontIcon Glyph="&#xE8D6;" FontSize="16" /><TextBlock Text="Music" /></StackPanel>
                 </Button>
+                <Button Style="{StaticResource RailButton}" Tag="shell:MyComputerFolder" Click="Folder_Click">
+                    <StackPanel Orientation="Horizontal" Spacing="12"><FontIcon Glyph="&#xE977;" FontSize="16" /><TextBlock Text="PC" /></StackPanel>
+                </Button>
                 <Rectangle Height="1" Margin="12,8" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" />
                 <Button Style="{StaticResource RailButton}" Click="WindowsSettings_Click">
                     <StackPanel Orientation="Horizontal" Spacing="12"><FontIcon Glyph="&#xE713;" FontSize="16" /><TextBlock Text="Settings" /></StackPanel>
