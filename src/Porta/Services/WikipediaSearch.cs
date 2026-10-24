@@ -155,17 +155,21 @@ public static class WikipediaSearch
 
     private static readonly Dictionary<string, string?> FallbackCache = [];
 
+    /// <summary>The width of the thumbnails Battle.net rows ask for: a standard Wikimedia size, sharp when filling a 92 px box on a high-DPI screen.</summary>
+    private const int BattleNetThumbWidth = 250;
+
     /// <summary>
     /// A picture for one article the main request found none for. One small request to the article's REST
     /// summary. Disambiguation pages and articles that really have no picture give null. The link goes through
     /// the same rule as every other picture: rewritten to https://upload.wikimedia.org, anything else dropped.
     /// Silent on any failure, including offline.
     /// </summary>
-    public static async Task<string?> FallbackPictureAsync(string articleUrl, CancellationToken ct)
+    public static async Task<string?> FallbackPictureAsync(string articleUrl, CancellationToken ct, int thumbWidth = 120)
     {
+        var cacheKey = thumbWidth + "|" + articleUrl;
         lock (FallbackCache)
         {
-            if (FallbackCache.TryGetValue(articleUrl, out var known)) return known;
+            if (FallbackCache.TryGetValue(cacheKey, out var known)) return known;
         }
         try
         {
@@ -181,12 +185,12 @@ public static class WikipediaSearch
             string? picture = null;
             if (!(root.TryGetProperty("type", out var type) && type.GetString() == "disambiguation") &&
                 root.TryGetProperty("thumbnail", out var thumb) && thumb.TryGetProperty("source", out var source))
-                picture = SmallPicture(source.GetString(), thumb.TryGetProperty("width", out var w) && w.TryGetInt32(out var width) ? width : 0);
+                picture = SmallPicture(source.GetString(), thumb.TryGetProperty("width", out var w) && w.TryGetInt32(out var width) ? width : 0, thumbWidth);
 
             lock (FallbackCache)
             {
                 if (FallbackCache.Count > 200) FallbackCache.Clear();
-                FallbackCache[articleUrl] = picture;
+                FallbackCache[cacheKey] = picture;
             }
             return picture;
         }
@@ -205,12 +209,12 @@ public static class WikipediaSearch
     /// The summary's picture can be the full-size original. A 120 px thumbnail of the same file is asked for
     /// instead (unless the file is smaller than that), so rows never download a big image.
     /// </summary>
-    private static string? SmallPicture(string? url, int width)
+    private static string? SmallPicture(string? url, int width, int thumbWidth = 120)
     {
         var picture = PictureOrNull(url);
         if (picture is null) return null;
         var path = new Uri(picture).AbsolutePath; // /wikipedia/<project>/<h>/<hh>/<File.ext> for an original
-        if (path.Contains("/thumb/", StringComparison.Ordinal) || width is > 0 and < 120) return picture;
+        if (path.Contains("/thumb/", StringComparison.Ordinal) || width is > 0 && width < thumbWidth) return picture;
 
         var parts = path.Split('/', StringSplitOptions.RemoveEmptyEntries); // wikipedia, project, h, hh, File.ext
         if (parts.Length != 5) return null;
@@ -218,8 +222,8 @@ public static class WikipediaSearch
         var ext = Path.GetExtension(file).ToLowerInvariant();
         var thumbName = ext switch
         {
-            ".jpg" or ".jpeg" or ".png" or ".gif" or ".webp" => $"120px-{file}",
-            ".svg" => $"120px-{file}.png", // vector files come back as PNG
+            ".jpg" or ".jpeg" or ".png" or ".gif" or ".webp" => $"{thumbWidth}px-{file}",
+            ".svg" => $"{thumbWidth}px-{file}.png", // vector files come back as PNG
             _ => null,                     // PDF, TIFF, video... no simple thumbnail: keep the letter tile
         };
         return thumbName is null
@@ -252,7 +256,7 @@ public static class WikipediaSearch
 
         try
         {
-            var url = "https://en.wikipedia.org/w/api.php?action=query&prop=pageimages&piprop=thumbnail&pithumbsize=96&pilicense=any" +
+            var url = "https://en.wikipedia.org/w/api.php?action=query&prop=pageimages&piprop=thumbnail&pithumbsize=" + BattleNetThumbWidth + "&pilicense=any" +
                       "&redirects=1&format=json&formatversion=2&titles=" + Uri.EscapeDataString(string.Join("|", missing));
             using var doc = JsonDocument.Parse(await Http.GetStringAsync(url, ct).ConfigureAwait(false));
             var query = doc.RootElement.GetProperty("query");
@@ -281,7 +285,7 @@ public static class WikipediaSearch
 
             // Nothing from pageimages: ask the article's own summary, as search rows do.
             foreach (var title in missing.Where(t => result[t] is null))
-                result[title] = await FallbackPictureAsync("https://en.wikipedia.org/wiki/" + Uri.EscapeDataString(title.Replace(' ', '_')), ct).ConfigureAwait(false);
+                result[title] = await FallbackPictureAsync("https://en.wikipedia.org/wiki/" + Uri.EscapeDataString(title.Replace(' ', '_')), ct, BattleNetThumbWidth).ConfigureAwait(false);
 
             lock (TitlePictures)
             {

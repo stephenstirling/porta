@@ -43,6 +43,7 @@ public sealed partial class MenuWindow : Window
     private readonly ObservableCollection<QuickRow> _web = []; // "Search the web", at the bottom
     private CancellationTokenSource? _currencySearch;
     private CancellationTokenSource? _battleNetPictures;
+    private List<GameEntry> _battleNetLoading = []; // rows showing the transparent "picture loading" placeholder
     private bool _loadingQuickSettings; // filling the pop-up from saved settings must not count as the user picking
     private readonly ObservableCollection<PathEntry> _paths = []; // recent files and folders, below apps, games and tools
     private ContentDialog? _excludeDialog;
@@ -731,11 +732,15 @@ public sealed partial class MenuWindow : Window
     private async Task LoadBattleNetPicturesAsync()
     {
         static bool Allowed() => App.Settings.Current is { SearchBattleNetGames: true, WikipediaPictures: true, SearchWikipedia: true };
+        foreach (var old in _battleNetLoading) old.PictureLoading = false; // rows of an earlier search that was replaced
+        _battleNetLoading = [];
         if (!Allowed()) return;
         var rows = _battleNet.Where(r => r.WikipediaTitle is not null && r.Icon is null && r.IconSource is null && !r.WikipediaPictureTried).ToList();
         if (rows.Count == 0) return;
 
         var cts = _battleNetPictures = new CancellationTokenSource();
+        _battleNetLoading = rows;
+        foreach (var row in rows) row.PictureLoading = true; // nothing behind the picture while it loads, not the gray letter tile
         try
         {
             await Task.Delay(300, cts.Token); // wait for typing to pause
@@ -751,14 +756,25 @@ public sealed partial class MenuWindow : Window
                 var path = await WikiPictureCache.GetFileAsync(link, cts.Token);
                 if (path is null || cts.IsCancellationRequested || !Allowed() || row.Icon is not null) continue;
 
-                var bitmap = new Microsoft.UI.Xaml.Media.Imaging.BitmapImage { DecodePixelWidth = 96 };
+                var bitmap = new Microsoft.UI.Xaml.Media.Imaging.BitmapImage { DecodePixelWidth = 256 }; // the 250 px copy at full size
                 bitmap.ImageFailed += (_, _) => { row.Icon = null; row.IconFromWikipedia = false; }; // a bad picture brings the letter tile back
+                bitmap.ImageOpened += (_, _) => row.PictureShiftY = GameEntry.ShiftFor(bitmap.PixelWidth, bitmap.PixelHeight);
                 bitmap.UriSource = new Uri(path);
                 row.Icon = bitmap;
                 row.IconFromWikipedia = true;
+                row.PictureLoading = false;
             }
         }
         catch (Exception ex) when (ex is OperationCanceledException or UriFormatException or ArgumentException) { }
+        finally
+        {
+            // Done, failed or cancelled: rows without a picture get their letter tile back. A newer request clears the rest itself.
+            if (ReferenceEquals(_battleNetPictures, cts))
+            {
+                foreach (var row in rows) row.PictureLoading = false;
+                _battleNetLoading = [];
+            }
+        }
     }
 
     private void BattleNetGamesToggle_Toggled(object sender, RoutedEventArgs e)
