@@ -99,7 +99,12 @@ public static class BattleNetCatalog
             row.Icon = null;
             row.IconFromWikipedia = false;
         }
-        foreach (var row in Rows.Values) row.WikipediaPictureTried = false;
+        foreach (var row in Rows.Values)
+        {
+            row.WikipediaPictureTried = false;
+            row.PictureLoading = false;
+            row.PictureShiftY = 0;
+        }
     }
 
     private static List<BattleNetTitle> Load()
