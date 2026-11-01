@@ -67,7 +67,7 @@ jobs:
             throw 'The signing secrets are missing. Add PORTA_SIGNING_PFX_BASE64 and PORTA_SIGNING_PFX_PASSWORD (Settings > Secrets and variables > Actions).'
           }
           $pfx = Join-Path $env:RUNNER_TEMP 'porta-signing.pfx'
-          [IO.File]::WriteAllBytes($pfx, [Convert]::FromBase64String($env:PFX_BASE64))
+          [IO.File]::WriteAllBytes($pfx, [Convert]::FromBase64String($env:PFX_BASE64.Trim()))
           ./tools/Build-Release.ps1 -Version $env:VERSION -OutDir (Join-Path $env:RUNNER_TEMP 'release') -PfxPath $pfx
 
       - name: Remove the signing key from the runner
