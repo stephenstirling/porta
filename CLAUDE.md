@@ -28,6 +28,8 @@ build fails because the .exe is locked.
 - `src/Porta/Models/` - plain data types
 - `design/` - HTML mockups of the intended UI (reference only, not built)
 - `docs/` - checklists and notes
+- `tools/` - release scripts (`Build-Release.ps1`, `New-ReleaseNotes.ps1`, one-time `New-SigningCert.ps1`)
+- `.github/workflows/` - `build.yml` (build check on every PR), `release.yml` (tag `vX.Y.Z` = signed release)
 
 Settings live in `%LOCALAPPDATA%\Porta\settings.json`.
 
