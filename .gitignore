@@ -7,3 +7,5 @@ obj/
 *.pfx
 *.p12
 *.snk
+Porta-signing*
+*password*.txt

@@ -28,7 +28,7 @@ don't need to, and nothing in Porta asks you to.
 - **Signature.** Right-click `Porta.exe` > Properties > Digital Signatures > Details > View Certificate > Details > Thumbprint.
   The certificate is named **Porta** (Stephen Stirling) and its thumbprint is:
 
-  `D19AF0D718F516ACABE305D8B509216FBDE75254`
+  `D341E7E329C364E1F5C20FD39D1A6536FE31DD10`
 
   Windows will say the certificate isn't trusted. That's expected. The public certificate (**Porta-signing.cer**) is on
   each release, only so you can compare it.
