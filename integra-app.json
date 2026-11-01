@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "id": "porta",
+  "name": "Porta",
+  "publisher": "Stephen Stirling",
+  "repo": "stephenstirling/porta",
+  "assetPattern": "Porta-*-win-x64.zip",
+  "checksumAsset": "SHA256SUMS.txt",
+  "signerThumbprint": "D341E7E329C364E1F5C20FD39D1A6536FE31DD10",
+  "exe": "Porta.exe",
+  "minWindows": "10.0.22000",
+  "arch": "x64",
+  "installDir": "%LocalAppData%\\Programs\\Porta",
+  "dataDir": "%LocalAppData%\\Porta",
+  "stopCommand": "Porta.exe --quit",
+  "uninstall": {
+    "stop": true,
+    "removeDirs": ["installDir"],
+    "keepData": true,
+    "note": "Killing Porta.exe restores the normal Start menu"
+  }
+}
