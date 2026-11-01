@@ -5,7 +5,38 @@ A modern Start menu for Windows 11. WinUI 3, .NET 8.
 
 Porta is free. If it saves you time, you can support it at [buymeacoffee.com/stephenstirling](https://buymeacoffee.com/stephenstirling) ☕
 
-## Run it
+## Download
+
+Get the latest **Porta-&lt;version&gt;-win-x64.zip** from the [Releases page](https://github.com/stephenstirling/porta/releases/latest). Windows 10 (2004) or 11, 64-bit. Nothing else needs installing.
+
+1. Download the zip and unzip it (right-click > Extract All).
+2. Open the folder and run **Porta.exe**.
+3. If Windows shows "Windows protected your PC", click **More info**, then **Run anyway**.
+
+**About that warning.** Porta is free and signed with a certificate I made myself, not a paid one, so Microsoft SmartScreen
+doesn't know it yet and **will still warn** you, even though the file is signed. The signature proves the download wasn't
+changed after I built it; it does not make Windows trust it. **Don't install my certificate or mark it as trusted**; you
+don't need to, and nothing in Porta asks you to.
+
+**Check your download** (optional):
+
+- **Checksum.** In PowerShell, in the folder you downloaded to, run
+  `Get-FileHash .\Porta-<version>-win-x64.zip -Algorithm SHA256` and compare it with the matching line in
+  **SHA256SUMS.txt** from the same release page.
+- **Built by this repository.** With the [GitHub CLI](https://cli.github.com/), run
+  `gh attestation verify .\Porta-<version>-win-x64.zip -R stephenstirling/porta`.
+- **Signature.** Right-click `Porta.exe` > Properties > Digital Signatures > Details > View Certificate > Details > Thumbprint.
+  The certificate is named **Porta** (Stephen Stirling) and its thumbprint is:
+
+  `D341E7E329C364E1F5C20FD39D1A6536FE31DD10`
+
+  Windows will say the certificate isn't trusted. That's expected. The public certificate (**Porta-signing.cer**) is on
+  each release, only so you can compare it.
+
+**Uninstall.** Porta has no installer. To remove it: end **Porta.exe** in Task Manager (or right-click the tray icon > **Exit Porta**); the normal Start menu comes straight
+back. Then delete the folder (and `%LocalAppData%\Porta` if you also want your settings gone).
+
+## Build and run from source
 
 You need Visual Studio 2022 (17.10 or newer) with the **Windows application development** workload,
 or the .NET 8 SDK on its own.
