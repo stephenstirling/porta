@@ -48,6 +48,8 @@ public partial class App : Application
         });
         _hook.ShouldIntercept = () => Settings.Current.OpenWithWinKey;
         _hook.Install();
+        // Windows drops the hook when the process ends however it ends; this also releases it on a normal exit path.
+        AppDomain.CurrentDomain.ProcessExit += (_, _) => _hook?.Dispose();
 
         CreateTrayIcon();
 
@@ -159,6 +161,9 @@ public partial class App : Application
 
     private void Notify(string title, string message) =>
         _tray?.ShowNotification(title, message);
+
+    /// <summary>Closes Porta (UI thread). Used by `Porta.exe --quit`.</summary>
+    public static void Quit() => _current?.ExitPorta();
 
     private void ExitPorta()
     {
