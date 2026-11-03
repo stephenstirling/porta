@@ -17,6 +17,9 @@ public static class Program
     [STAThread]
     private static int Main(string[] args)
     {
+        // --version, --status and --quit answer and exit before any UI or WinRT start-up.
+        if (Cli.TryRun(args) is int exitCode) return exitCode;
+
         WinRT.ComWrappersSupport.InitializeComWrappers();
 
         var instance = AppInstance.FindOrRegisterForKey("Porta.Main");
@@ -30,10 +33,20 @@ public static class Program
 
         instance.Activated += (_, _) => App.ShowMenuFromAnotherLaunch();
 
+        // From here on `Porta.exe --status` sees Porta as running and `--quit` can reach it. The UI queue is
+        // created a moment later; a quit that arrives first waits for it.
+        DispatcherQueue? ui = null;
+        Cli.ListenForQuit(() =>
+        {
+            while (Volatile.Read(ref ui) is null) Thread.Sleep(50);
+            ui!.TryEnqueue(App.Quit);
+        });
+
         XamlCheckProcessRequirements();
         Application.Start(p =>
         {
-            var context = new DispatcherQueueSynchronizationContext(DispatcherQueue.GetForCurrentThread());
+            Volatile.Write(ref ui, DispatcherQueue.GetForCurrentThread());
+            var context = new DispatcherQueueSynchronizationContext(ui!);
             SynchronizationContext.SetSynchronizationContext(context);
             _ = new App();
         });

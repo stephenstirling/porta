@@ -112,7 +112,9 @@ public static class BattleNetCatalog
         var titles = new List<BattleNetTitle>();
         try
         {
-            var file = Path.Combine(AppContext.BaseDirectory, "Assets", "battlenet-games.json");
+            // A copy in the data folder wins, so edits survive an update (updates replace the install folder).
+            var file = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Porta", "battlenet-games.json");
+            if (!File.Exists(file)) file = Path.Combine(AppContext.BaseDirectory, "Assets", "battlenet-games.json");
             using var doc = JsonDocument.Parse(File.ReadAllText(file), new JsonDocumentOptions { AllowTrailingCommas = true, CommentHandling = JsonCommentHandling.Skip });
             foreach (var g in doc.RootElement.GetProperty("games").EnumerateArray())
             {

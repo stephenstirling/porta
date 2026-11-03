@@ -7,7 +7,7 @@ Porta is free. If it saves you time, you can support it at [buymeacoffee.com/ste
 
 ## Download
 
-Get the latest **Porta-&lt;version&gt;-win-x64.zip** from the [Releases page](https://github.com/stephenstirling/porta/releases/latest). Windows 10 (2004) or 11, 64-bit. Nothing else needs installing.
+Get the latest **Porta-&lt;version&gt;-win-x64.zip** from the [Releases page](https://github.com/stephenstirling/porta/releases/latest). Windows 11, 64-bit. Nothing else needs installing.
 
 1. Download the zip and unzip it (right-click > Extract All).
 2. Open the folder and run **Porta.exe**.
@@ -35,6 +35,36 @@ don't need to, and nothing in Porta asks you to.
 
 **Uninstall.** Porta has no installer. To remove it: end **Porta.exe** in Task Manager (or right-click the tray icon > **Exit Porta**); the normal Start menu comes straight
 back. Then delete the folder (and `%LocalAppData%\Porta` if you also want your settings gone).
+
+## For Integra
+
+[Integra](https://github.com/stephenstirling/integra) (my suite manager) can install, open, update and remove Porta from
+GitHub Releases. Porta supports that with three things:
+
+**`integra-app.json`** describes the app: its id and repo, which release file to download (`assetPattern`), the checksum
+file, the thumbprint of the certificate that signs it, the exe, the minimum Windows version (11), where it installs
+(`%LocalAppData%\Programs\Porta`), where its data lives (`%LocalAppData%\Porta`), how to stop it, and how to uninstall
+(stop it, remove the install folder, keep the data). The copy in the repository has no version, so it never goes stale. Every
+release attaches its own copy with `version`, `tag` and `asset` added, and its checksum is in `SHA256SUMS.txt`.
+The release workflow stops, and publishes nothing, unless that file matches the build: same repo, one zip matching
+`assetPattern`, `signerThumbprint` equal to the certificate that signed the release, `Porta.exe` inside the zip, and
+the exe's file-properties version equal to the tag.
+
+**Command-line switches** (everything else starts Porta as usual):
+
+| Command | What it does | Exit code |
+|---|---|---|
+| `Porta.exe --version` | Prints `Porta 0.1.0`, the version in the exe's file properties | 0 |
+| `Porta.exe --status` | Prints the version and `Status: running` or `Status: not running` | 0 running, 1 not running |
+| `Porta.exe --quit` | Closes a running Porta (the same as the tray's **Exit Porta**) and waits up to 10 seconds for it to go | 0 closed, or it wasn't running; 1 still running |
+
+The text goes to the caller's output pipe, or to the terminal that started Porta. Porta is a windowed program, so a terminal
+may print the prompt first; add `| more` to make it wait. `--quit` and `--status` need a Porta of this version or newer
+already running: the first release (0.1.0) can't be closed this way, so close that one from the tray.
+
+**Safe to update in place.** The install folder holds only program files. Settings, caches, the account picture and your
+own `battlenet-games.json` live in `%LocalAppData%\Porta`, which an update or uninstall leaves alone. The Win-key hook is
+removed when Porta exits (tray **Exit Porta**, `--quit`, or the process ending), so the normal Start menu always comes back.
 
 ## Build and run from source
 
@@ -69,7 +99,8 @@ The app icon is the Keyhole (`Assets/Porta.ico`, with the source in `Assets/Port
   and **Show in folder**. It covers your recent files and folders, the folders pinned in Explorer's Quick access, and
   Documents, Downloads, Pictures, Videos, Music and Desktop. "Exclude folders…" hides any folder you list, with everything in it.
 - **Battle.net games in search:** World of Warcraft, the Diablo games, Overwatch 2, Hearthstone, Heroes of the Storm,
-  StarCraft and Warcraft III come from an editable list, `Assets\battlenet-games.json` (change it and restart Porta; no
+  StarCraft and Warcraft III come from an editable list, `Assets\battlenet-games.json` (to change it, copy it to
+  `%LocalAppData%\Porta\battlenet-games.json`, edit that copy and restart Porta; the copy wins and survives updates; no
   rebuild). Installed ones show "Battle.net · Installed" and **Play** (through the Battle.net client); the rest show
   "Battle.net · Not installed" and **View**, which opens the game's page on blizzard.com. Without the client only View rows
   show. Short names work: `wow`, `d4`, `ow2`, `hs`, `sc2`, `wc3`. Turn it off with the "Search Battle.net games" switch.
