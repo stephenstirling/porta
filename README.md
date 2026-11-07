@@ -66,6 +66,22 @@ already running: the first release (0.1.0) can't be closed this way, so close th
 own `battlenet-games.json` live in `%LocalAppData%\Porta`, which an update or uninstall leaves alone. The Win-key hook is
 removed when Porta exits (tray **Exit Porta**, `--quit`, or the process ending), so the normal Start menu always comes back.
 
+## Opening Porta
+
+- **Win key.** Tap it to open Porta, tap again to close it.
+- **Start button.** A left click on the Start button on the taskbar (the main one, or one on another monitor's taskbar) opens
+  Porta instead of the Windows Start menu; click again to close it. Switch it off with **Open Porta from the Start button**
+  in the palette pop-up (the paint-palette button at the bottom of the menu). When it is off, Porta doesn't watch the mouse at
+  all and Windows opens its own Start menu on a click. It needs no admin rights.
+- **Tray icon.** Click it to open or close Porta.
+
+Both the Win key and the Start button work through a Windows "hook" that only exists while Porta runs. **If Porta exits or
+crashes (even if you end it in Task Manager), Windows removes the hook by itself and the normal Start menu is back.**
+Ctrl+Esc isn't taken over: it still opens the Windows Start menu.
+
+Not covered: a taskbar drawn by another program (for example DisplayFusion's own taskbar), and taps with a finger or pen,
+which Windows may handle before Porta sees them.
+
 ## Build and run from source
 
 You need Visual Studio 2022 (17.10 or newer) with the **Windows application development** workload,
