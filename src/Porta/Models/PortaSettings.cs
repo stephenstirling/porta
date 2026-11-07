@@ -10,6 +10,9 @@ public sealed class PortaSettings
     public bool OpenWithWinKey { get; set; } = true;
     public bool ShowRecent { get; set; } = true;
 
+    /// <summary>Hide the menu when focus moves to something else (another app, the desktop, the taskbar). When off, only Esc or the Win key closes it.</summary>
+    public bool CloseWhenClickedElsewhere { get; set; } = true;
+
     /// <summary>Apps hidden from All apps (by app id). They still appear in search.</summary>
     public List<string> HiddenApps { get; set; } = [];
 
