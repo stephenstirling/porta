@@ -95,6 +95,7 @@ public sealed partial class MenuWindow : Window
         SystemList.ItemsSource = _system;
         WikiList.ItemsSource = _wiki;
         BattleNetList.ItemsSource = _battleNet;
+        CloseElsewhereToggle.IsOn = App.Settings.Current.CloseWhenClickedElsewhere;
         BattleNetGamesToggle.IsOn = App.Settings.Current.SearchBattleNetGames;
         PeopleList.ItemsSource = _people;
         PathsList.ItemsSource = _paths;
@@ -123,6 +124,7 @@ public sealed partial class MenuWindow : Window
             RebuildPinned();
             if (App.Catalog.IsLoaded) RebuildAllApps();
             GlassSlider.Value = App.Settings.Current.GlassStrength; // also updates the glass
+            CloseElsewhereToggle.IsOn = App.Settings.Current.CloseWhenClickedElsewhere;
             WikipediaToggle.IsOn = App.Settings.Current.SearchWikipedia;
             EpicLibraryToggle.IsOn = App.Settings.Current.SearchEpicLibrary;
             EpicCoversToggle.IsOn = App.Settings.Current.EpicCoverImages;
@@ -964,6 +966,13 @@ public sealed partial class MenuWindow : Window
         App.Settings.Save();
         if (!CurrencyRatesToggle.IsOn) { _currencySearch?.Cancel(); CurrencyRates.Clear(); } // no more requests; rates forgotten
         RefreshQuickRows();
+    }
+
+    private void CloseElsewhereToggle_Toggled(object sender, RoutedEventArgs e)
+    {
+        if (App.Settings.Current.CloseWhenClickedElsewhere == CloseElsewhereToggle.IsOn) return;
+        App.Settings.Current.CloseWhenClickedElsewhere = CloseElsewhereToggle.IsOn;
+        App.Settings.Save();
     }
 
     private void WebSearchToggle_Toggled(object sender, RoutedEventArgs e)

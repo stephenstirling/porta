@@ -534,7 +534,9 @@
                                     <TextBlock Text="Frosted" FontSize="12" HorizontalAlignment="Right" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                                 </Grid>
                                 <!-- Until the Settings window exists (milestone 2) -->
-                                <ToggleSwitch x:Name="WikipediaToggle" Header="Search Wikipedia" Margin="0,8,0,0"
+                                <ToggleSwitch x:Name="CloseElsewhereToggle" Header="Close when I click elsewhere" Margin="0,8,0,0"
+                                              Toggled="CloseElsewhereToggle_Toggled" />
+                                <ToggleSwitch x:Name="WikipediaToggle" Header="Search Wikipedia"
                                               Toggled="WikipediaToggle_Toggled" />
                                 <ToggleSwitch x:Name="WikipediaPicturesToggle" Header="Wikipedia pictures"
                                               Toggled="WikipediaPicturesToggle_Toggled" />
