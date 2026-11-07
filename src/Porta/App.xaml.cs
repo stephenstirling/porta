@@ -22,6 +22,7 @@ public partial class App : Application
     private static App? _current;
     private MenuWindow? _menu;
     private KeyboardHook? _hook;
+    private readonly StartButtonHook _startButton = new();
     private TaskbarIcon? _tray;
     private Windows.UI.ViewManagement.UISettings? _uiSettings; // kept alive so theme-change events keep firing
 
@@ -51,10 +52,23 @@ public partial class App : Application
         // Windows drops the hook when the process ends however it ends; this also releases it on a normal exit path.
         AppDomain.CurrentDomain.ProcessExit += (_, _) => _hook?.Dispose();
 
+        _startButton.StartClicked += () => _menu.DispatcherQueue.TryEnqueue(() => _menu.Toggle());
+        Settings.Restored += () => _menu.DispatcherQueue.TryEnqueue(ApplyStartButtonSetting);
+        ApplyStartButtonSetting();
+        AppDomain.CurrentDomain.ProcessExit += (_, _) => _startButton.Dispose();
+
         CreateTrayIcon();
 
         await Catalog.LoadAsync();
         Games.RefreshIfStale(Catalog.Apps);
+    }
+
+    /// <summary>Installs the Start button hook, or removes it completely, to match "Open Porta from the Start button".</summary>
+    public static void ApplyStartButtonSetting()
+    {
+        var hook = _current?._startButton;
+        if (hook is null) return;
+        if (Settings.Current.OpenFromStartButton) hook.Start(); else hook.Stop();
     }
 
     /// <summary>Called when the user starts Porta again while it is already running.</summary>

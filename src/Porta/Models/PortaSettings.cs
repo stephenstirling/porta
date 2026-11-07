@@ -8,6 +8,9 @@ public sealed class PortaSettings
 
     // General
     public bool OpenWithWinKey { get; set; } = true;
+
+    /// <summary>A click on the taskbar's Start button opens Porta instead of Windows' Start menu. When off, Porta doesn't watch the mouse at all.</summary>
+    public bool OpenFromStartButton { get; set; } = true;
     public bool ShowRecent { get; set; } = true;
 
     /// <summary>Hide the menu when focus moves to something else (another app, the desktop, the taskbar). When off, only Esc or the Win key closes it.</summary>
