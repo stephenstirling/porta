@@ -52,7 +52,7 @@ public partial class App : Application
         // Windows drops the hook when the process ends however it ends; this also releases it on a normal exit path.
         AppDomain.CurrentDomain.ProcessExit += (_, _) => _hook?.Dispose();
 
-        _startButton.StartClicked += () => _menu.DispatcherQueue.TryEnqueue(() => _menu.Toggle());
+        _startButton.StartClicked += () => _menu.DispatcherQueue.TryEnqueue(() => _menu.Toggle(fromMouse: true)); // same guard as the tray icon: the click may already have closed it
         Settings.Restored += () => _menu.DispatcherQueue.TryEnqueue(ApplyStartButtonSetting);
         ApplyStartButtonSetting();
         AppDomain.CurrentDomain.ProcessExit += (_, _) => _startButton.Dispose();
