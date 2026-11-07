@@ -108,6 +108,7 @@ public sealed partial class MenuWindow : Window
         WikiList.ItemsSource = _wiki;
         BattleNetList.ItemsSource = _battleNet;
         CloseElsewhereToggle.IsOn = App.Settings.Current.CloseWhenClickedElsewhere;
+        StartButtonToggle.IsOn = App.Settings.Current.OpenFromStartButton;
         BattleNetGamesToggle.IsOn = App.Settings.Current.SearchBattleNetGames;
         PeopleList.ItemsSource = _people;
         PathsList.ItemsSource = _paths;
@@ -138,6 +139,7 @@ public sealed partial class MenuWindow : Window
             GlassSlider.Value = App.Settings.Current.GlassStrength; // also updates the glass
             CloseElsewhereToggle.IsOn = App.Settings.Current.CloseWhenClickedElsewhere;
             UpdateOutsideClickWatch();
+            StartButtonToggle.IsOn = App.Settings.Current.OpenFromStartButton;
             WikipediaToggle.IsOn = App.Settings.Current.SearchWikipedia;
             EpicLibraryToggle.IsOn = App.Settings.Current.SearchEpicLibrary;
             EpicCoversToggle.IsOn = App.Settings.Current.EpicCoverImages;
@@ -1062,6 +1064,14 @@ public sealed partial class MenuWindow : Window
         App.Settings.Current.CloseWhenClickedElsewhere = CloseElsewhereToggle.IsOn;
         App.Settings.Save();
         UpdateOutsideClickWatch();
+    }
+
+    private void StartButtonToggle_Toggled(object sender, RoutedEventArgs e)
+    {
+        if (App.Settings.Current.OpenFromStartButton == StartButtonToggle.IsOn) return;
+        App.Settings.Current.OpenFromStartButton = StartButtonToggle.IsOn;
+        App.Settings.Save();
+        App.ApplyStartButtonSetting();
     }
 
     private void WebSearchToggle_Toggled(object sender, RoutedEventArgs e)
