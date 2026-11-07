@@ -301,6 +301,8 @@ public sealed partial class MenuWindow : Window
     private void SearchBox_TextChanged(object sender, TextChangedEventArgs e)
     {
         var query = SearchBox.Text.Trim();
+        _navigated = false; // typing starts the highlight over at the top row
+        SetSelected(null, null);
         _storeSearch?.Cancel();
         _store.Clear();
         StoreSection.Visibility = Visibility.Collapsed;
@@ -405,8 +407,7 @@ public sealed partial class MenuWindow : Window
         AddQuickAnswer(query);
         AddWebRow(query);
 
-        UpdateSearchSections(query);
-        if (_results.Count > 0) ResultsList.SelectedIndex = 0;
+        UpdateSearchSections(query); // also puts the highlight on the top row
         _ = LoadBattleNetPicturesAsync(); // after the text is up
 
         if (query.Length >= 3 && App.Settings.Current.SearchSteamStore && App.Games.Launchers.Contains(GameLauncher.Steam))
@@ -444,6 +445,8 @@ public sealed partial class MenuWindow : Window
         // or games already matched.
         StoreLinks.Visibility = query.Length >= 3 && (_games.Count > 0 || (_results.Count == 0 && _system.Count == 0))
             ? Visibility.Visible : Visibility.Collapsed;
+
+        EnsureSelection();
     }
 
     /// <summary>Steam store results for games that aren't installed. Online; Settings › Search can turn it off.</summary>
@@ -559,7 +562,11 @@ public sealed partial class MenuWindow : Window
 
     private void Wiki_ItemClick(object sender, ItemClickEventArgs e)
     {
-        if (e.ClickedItem is not WikiEntry article) return;
+        if (e.ClickedItem is WikiEntry article) OpenWiki(article);
+    }
+
+    private void OpenWiki(WikiEntry article)
+    {
         HideMenu();
         Launcher.Open(article.Url);
     }
@@ -627,7 +634,11 @@ public sealed partial class MenuWindow : Window
 
     private void ShowInFolder_Click(object sender, RoutedEventArgs e)
     {
-        if ((sender as FrameworkElement)?.DataContext is not PathEntry entry) return;
+        if ((sender as FrameworkElement)?.DataContext is PathEntry entry) ShowInFolder(entry);
+    }
+
+    private void ShowInFolder(PathEntry entry)
+    {
         HideMenu();
         try
         {
@@ -1003,7 +1014,12 @@ public sealed partial class MenuWindow : Window
 
     private void Person_ItemClick(object sender, ItemClickEventArgs e)
     {
-        if (e.ClickedItem is not PersonEntry { CanOpen: true } person) return; // no Ocula, no action
+        if (e.ClickedItem is PersonEntry person) OpenPerson(person);
+    }
+
+    private void OpenPerson(PersonEntry person)
+    {
+        if (!person.CanOpen) return; // no Ocula, no action
         HideMenu();
         try
         {
@@ -1076,7 +1092,11 @@ public sealed partial class MenuWindow : Window
 
     private void Game_ItemClick(object sender, ItemClickEventArgs e)
     {
-        if (e.ClickedItem is not GameEntry game) return;
+        if (e.ClickedItem is GameEntry game) OpenGame(game);
+    }
+
+    private void OpenGame(GameEntry game)
+    {
         HideMenu();
         GameLibrary.Launch(game);
     }
@@ -1150,39 +1170,229 @@ public sealed partial class MenuWindow : Window
                 break;
             }
 
-            case VirtualKey.Enter when searching && _quick.FirstOrDefault() is { CopyText: not null } answer:
-                CopyAnswer(answer); // a calculation was typed: Enter copies the result
-                e.Handled = true;
-                break;
-
             case VirtualKey.Enter when searching:
-                if ((ResultsList.SelectedItem ?? _results.FirstOrDefault()) is AppEntry best) Launch(best);
-                else if (_games.FirstOrDefault() is { } game) { HideMenu(); GameLibrary.Launch(game); }
-                else if (_system.FirstOrDefault() is { } entry) _ = OpenSystemAsync(entry);
-                else if (_paths.FirstOrDefault() is { } path) OpenPath(path);
-                else if (_web.FirstOrDefault() is { } web) OpenWeb(web); // nothing else matched: search the web
+                ActivateSelected();
                 e.Handled = true;
                 break;
 
-            case VirtualKey.Down when searching && _results.Count > 0:
-                ResultsList.SelectedIndex = Math.Min(ResultsList.SelectedIndex + 1, _results.Count - 1);
-                BringSelectedResultIntoView();
+            case VirtualKey.Down when searching:
+                MoveSelection(1);
                 e.Handled = true;
                 break;
 
-            case VirtualKey.Up when searching && _results.Count > 0:
-                ResultsList.SelectedIndex = Math.Max(ResultsList.SelectedIndex - 1, 0);
-                BringSelectedResultIntoView();
+            case VirtualKey.Up when searching:
+                MoveSelection(-1);
+                e.Handled = true;
+                break;
+
+            case VirtualKey.PageDown when searching:
+                MoveSelection(PageSize());
+                e.Handled = true;
+                break;
+
+            case VirtualKey.PageUp when searching:
+                MoveSelection(-PageSize());
+                e.Handled = true;
+                break;
+
+            // Home and End jump through the results; Ctrl+Home and Ctrl+End still move the cursor in the text.
+            case VirtualKey.Home when searching && !IsKeyDown(VirtualKey.Control):
+                MoveSelection(int.MinValue);
+                e.Handled = true;
+                break;
+
+            case VirtualKey.End when searching && !IsKeyDown(VirtualKey.Control):
+                MoveSelection(int.MaxValue);
+                e.Handled = true;
+                break;
+
+            // Tab and Shift+Tab step between a row's own action and its second one ("Show in folder"). Focus stays
+            // in the search box, so they never wander off into the rest of the menu while results are showing.
+            case VirtualKey.Tab when searching && ReferenceEquals(FocusManager.GetFocusedElement(Root.XamlRoot), SearchBox):
+                StepAction(back: IsKeyDown(VirtualKey.Shift));
                 e.Handled = true;
                 break;
         }
     }
 
-    /// <summary>The results list doesn't scroll by itself (the whole results column does), so scroll that.</summary>
-    private void BringSelectedResultIntoView()
+    private static bool IsKeyDown(VirtualKey key) =>
+        Microsoft.UI.Input.InputKeyboardSource.GetKeyStateForCurrentThread(key).HasFlag(Windows.UI.Core.CoreVirtualKeyStates.Down);
+
+    // ---------- Keyboard and mouse selection in search results ----------
+
+    // The highlighted row is remembered as the result itself, so it stays put when rows are added around it or
+    // pictures load. Every search list is in SelectionMode.Single, but only one of them has a selection at a time.
+    private ListView? _selectedList;
+    private object? _selectedItem;
+    private bool _navigated; // the arrow keys or the mouse chose a row since the last typing
+
+    private IEnumerable<ListView> SearchLists =>
+        [QuickList, GamesList, ResultsList, SystemList, PathsList, PeopleList, StoreList, BattleNetList, WikiList, WebList];
+
+    /// <summary>Every row the keyboard can reach, top to bottom as they appear. Rows that only show a message are left out.</summary>
+    private List<(ListView List, object Item)> NavRows()
     {
-        if (ResultsList.ContainerFromIndex(ResultsList.SelectedIndex) is UIElement row)
-            row.StartBringIntoView(new BringIntoViewOptions { AnimationDesired = false });
+        var rows = new List<(ListView List, object Item)>();
+        void Add(ListView list, System.Collections.IEnumerable items, Func<object, bool>? usable = null)
+        {
+            foreach (var item in items)
+                if (usable is null || usable(item)) rows.Add((list, item));
+        }
+
+        Add(QuickList, _quick, r => r is QuickRow { CopyText: not null } or QuickRow { WebQuery: not null });
+        Add(GamesList, _games);
+        Add(ResultsList, _results);
+        Add(SystemList, _system);
+        Add(PathsList, _paths);
+        Add(PeopleList, _people, p => p is PersonEntry { CanOpen: true });
+        Add(StoreList, _store);
+        Add(BattleNetList, _battleNet);
+        Add(WikiList, _wiki);
+        Add(WebList, _web, r => r is QuickRow { WebQuery: not null });
+        return rows;
+    }
+
+    private static int IndexOf(List<(ListView List, object Item)> rows, object? item)
+    {
+        if (item is null) return -1;
+        return rows.FindIndex(r => ReferenceEquals(r.Item, item));
+    }
+
+    private void SetSelected(ListView? list, object? item)
+    {
+        if (_selectedItem is PathEntry old && !ReferenceEquals(old, item)) old.SecondaryActive = false;
+        foreach (var other in SearchLists)
+            if (!ReferenceEquals(other, list) && other.SelectedItem is not null) other.SelectedItem = null;
+        if (list is not null && !ReferenceEquals(list.SelectedItem, item)) list.SelectedItem = item;
+        _selectedList = list;
+        _selectedItem = item;
+    }
+
+    /// <summary>
+    /// After the rows change: the top row is highlighted until the user moves; after that the chosen row stays
+    /// chosen, and falls back to the top row only if it has gone.
+    /// </summary>
+    private void EnsureSelection()
+    {
+        var rows = NavRows();
+        if (rows.Count == 0) { SetSelected(null, null); return; }
+        int at = IndexOf(rows, _selectedItem);
+        if (!_navigated && at != 0)
+        {
+            SetSelected(rows[0].List, rows[0].Item);
+            ResultsScroller.ChangeView(null, 0, null, disableAnimation: true);
+        }
+        else if (_navigated && at < 0 && _selectedItem is not null)
+        {
+            SetSelected(rows[0].List, rows[0].Item);
+            ScrollSelectedIntoView();
+        }
+    }
+
+    /// <summary>Down/Up by one, PageDown/PageUp by a screenful, Home/End to the ends (int.MinValue / int.MaxValue).</summary>
+    private void MoveSelection(int step)
+    {
+        var rows = NavRows();
+        if (rows.Count == 0) return;
+        _navigated = true;
+        int at = IndexOf(rows, _selectedItem);
+        int next;
+        if (step == int.MinValue) next = 0;
+        else if (step == int.MaxValue) next = rows.Count - 1;
+        else if (Math.Abs(step) == 1)
+        {
+            // One step wraps round at the bottom; at the top it goes back to the search box (no row highlighted).
+            if (at < 0) next = step > 0 ? 0 : rows.Count - 1;
+            else if (step > 0) next = at == rows.Count - 1 ? 0 : at + 1;
+            else next = at == 0 ? -1 : at - 1;
+        }
+        else next = Math.Clamp((at < 0 ? (step > 0 ? -1 : rows.Count) : at) + step, 0, rows.Count - 1);
+
+        if (next < 0)
+        {
+            SetSelected(null, null);
+            ResultsScroller.ChangeView(null, 0, null, disableAnimation: true);
+            return;
+        }
+        SetSelected(rows[next].List, rows[next].Item);
+        ScrollSelectedIntoView(next == 0);
+    }
+
+    private int PageSize() => Math.Max(1, (int)(ResultsScroller.ViewportHeight / 56));
+
+    /// <summary>Tab moves to the row's second action if it has one; Shift+Tab goes back to its main action.</summary>
+    private void StepAction(bool back)
+    {
+        if (_selectedItem is PathEntry entry) entry.SecondaryActive = !back;
+    }
+
+    private void ActivateSelected()
+    {
+        var rows = NavRows();
+        if (rows.Count == 0) return;
+        int at = IndexOf(rows, _selectedItem);
+        var item = rows[at < 0 ? 0 : at].Item; // nothing highlighted (Up from the top row): Enter takes the best match
+        Activate(item, secondary: item is PathEntry { SecondaryActive: true });
+    }
+
+    /// <summary>What Enter does on a row: the same as clicking it, or its second action after Tab.</summary>
+    private void Activate(object item, bool secondary)
+    {
+        switch (item)
+        {
+            case AppEntry app: Launch(app); break;
+            case GameEntry game: OpenGame(game); break;
+            case SystemEntry entry: _ = OpenSystemAsync(entry); break;
+            case PathEntry path when secondary: ShowInFolder(path); break;
+            case PathEntry path: OpenPath(path); break;
+            case PersonEntry person: OpenPerson(person); break;
+            case WikiEntry article: OpenWiki(article); break;
+            case QuickRow { CopyText: not null } answer: CopyAnswer(answer); break;
+            case QuickRow web: OpenWeb(web); break;
+        }
+    }
+
+    /// <summary>
+    /// Scrolls the results column to the highlighted row. The lists do not scroll by themselves (the whole column
+    /// does). The first row of a section brings its heading along, and the very first row shows the column top.
+    /// </summary>
+    private void ScrollSelectedIntoView(bool veryFirst = false)
+    {
+        if (_selectedList is not { } list || _selectedItem is null) return;
+        if (veryFirst)
+        {
+            ResultsScroller.ChangeView(null, 0, null, disableAnimation: true);
+            return;
+        }
+        var row = list.ContainerFromItem(_selectedItem) as UIElement;
+        if (row is null)
+        {
+            list.UpdateLayout();
+            row = list.ContainerFromItem(_selectedItem) as UIElement;
+            if (row is null) return;
+        }
+        double headingRoom = list.Items.Count > 0 && ReferenceEquals(list.Items[0], _selectedItem) ? 28 : 0;
+        row.StartBringIntoView(new BringIntoViewOptions
+        {
+            AnimationDesired = false,
+            TargetRect = new Windows.Foundation.Rect(0, -headingRoom, row.ActualSize.X, row.ActualSize.Y + headingRoom),
+        });
+    }
+
+    /// <summary>Hovering a row highlights it, so the mouse and the keyboard share one highlight.</summary>
+    private void Results_PointerMoved(object sender, PointerRoutedEventArgs e)
+    {
+        for (var node = e.OriginalSource as DependencyObject; node is not null; node = VisualTreeHelper.GetParent(node))
+        {
+            if (node is not ListViewItem container) continue;
+            if (ItemsControl.ItemsControlFromItemContainer(container) is not ListView list) return;
+            var item = list.ItemFromContainer(container);
+            if (item is null || ReferenceEquals(item, _selectedItem)) return;
+            if (!NavRows().Any(r => ReferenceEquals(r.Item, item))) return; // a message row: nothing to select
+            _navigated = true;
+            SetSelected(list, item);
+            return;
+        }
     }
 
     private void ViewSelector_SelectionChanged(SelectorBar sender, SelectorBarSelectionChangedEventArgs args)
