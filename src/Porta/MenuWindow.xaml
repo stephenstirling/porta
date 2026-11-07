@@ -306,7 +306,7 @@
                     <GridView x:Name="PinnedGrid"
                               SelectionMode="None" IsItemClickEnabled="True" ItemClick="App_ItemClick"
                               CanDragItems="True" CanReorderItems="True" AllowDrop="True"
-                              DragItemsCompleted="PinnedGrid_DragItemsCompleted">
+                              DragItemsStarting="PinnedGrid_DragItemsStarting" DragItemsCompleted="PinnedGrid_DragItemsCompleted">
                         <GridView.ItemsPanel>
                             <ItemsPanelTemplate>
                                 <ItemsWrapGrid Orientation="Horizontal" MaximumRowsOrColumns="4" ItemWidth="92" ItemHeight="88" />

@@ -81,7 +81,7 @@ public partial class App : Application
         {
             ToolTipText = "Porta",
             IconSource = TrayIconForTheme(),
-            LeftClickCommand = new RelayCommand(() => _menu?.Toggle()),
+            LeftClickCommand = new RelayCommand(() => _menu?.Toggle(fromMouse: true)),
             NoLeftClickDelay = true,
             ContextMenuMode = ContextMenuMode.PopupMenu,
             ContextFlyout = menu,

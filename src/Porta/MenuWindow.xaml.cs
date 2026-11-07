@@ -50,6 +50,13 @@ public sealed partial class MenuWindow : Window
     private readonly ObservableCollection<PersonEntry> _people = []; // people from Ocula, below apps, games and tools
     private DateTime _pictureStamp;
     private bool _isOpen;
+    private bool _dragging; // a pinned app is being dragged to a new place
+    private long _shownAt; // Environment.TickCount64 when the menu last opened
+    private long _closedByFocusAt; // ... and when focus loss last closed it (0 = never)
+    private readonly MouseHook _outsideClicks = new();
+    private readonly Microsoft.UI.Dispatching.DispatcherQueueTimer _focusTimer;
+    private const int FocusGraceMs = 150; // focus loss this soon after opening is the menu still being activated
+    private const int FocusCheckMs = 100; // wait this long after focus loss, in case it comes straight back
 
     public MenuWindow()
     {
@@ -84,8 +91,13 @@ public sealed partial class MenuWindow : Window
         AppWindow.Closing += (_, e) => { e.Cancel = true; HideMenu(); }; // Alt+F4 hides instead of quitting
         Activated += (_, e) =>
         {
-            if (e.WindowActivationState == WindowActivationState.Deactivated && _isOpen) HideMenu();
+            if (e.WindowActivationState == WindowActivationState.Deactivated) OnFocusLost();
         };
+        _focusTimer = DispatcherQueue.CreateTimer();
+        _focusTimer.Interval = TimeSpan.FromMilliseconds(FocusCheckMs);
+        _focusTimer.IsRepeating = false;
+        _focusTimer.Tick += (_, _) => CheckFocus();
+        _outsideClicks.ClickedElsewhere += () => DispatcherQueue.TryEnqueue(OnClickedElsewhere);
 
         PinnedGrid.ItemsSource = _pinned;
         RecentList.ItemsSource = _recent;
@@ -125,6 +137,7 @@ public sealed partial class MenuWindow : Window
             if (App.Catalog.IsLoaded) RebuildAllApps();
             GlassSlider.Value = App.Settings.Current.GlassStrength; // also updates the glass
             CloseElsewhereToggle.IsOn = App.Settings.Current.CloseWhenClickedElsewhere;
+            UpdateOutsideClickWatch();
             WikipediaToggle.IsOn = App.Settings.Current.SearchWikipedia;
             EpicLibraryToggle.IsOn = App.Settings.Current.SearchEpicLibrary;
             EpicCoversToggle.IsOn = App.Settings.Current.EpicCoverImages;
@@ -151,9 +164,11 @@ public sealed partial class MenuWindow : Window
 
     // ---------- Showing and hiding ----------
 
-    public void Toggle()
+    public void Toggle(bool fromMouse = false)
     {
-        if (_isOpen) HideMenu(); else ShowMenu();
+        if (_isOpen) HideMenu();
+        else if (fromMouse && Environment.TickCount64 - _closedByFocusAt < 400) return; // that click just closed it
+        else ShowMenu();
     }
 
     public void ShowMenu()
@@ -172,15 +187,77 @@ public sealed partial class MenuWindow : Window
         Native.ForceForeground(_hwnd);
         SearchBox.Focus(FocusState.Programmatic);
         _isOpen = true;
+        _shownAt = Environment.TickCount64;
+        _dragging = false;
+        UpdateOutsideClickWatch();
     }
 
     public void HideMenu()
     {
         _confirmDialog?.Hide(); // don't leave a Restart/Shut down question waiting in the hidden menu
         _excludeDialog?.Hide();
+        _focusTimer.Stop();
         _isOpen = false;
+        UpdateOutsideClickWatch();
         AppWindow.Hide();
     }
+
+    // ---------- Closing when focus moves elsewhere ----------
+
+    /// <summary>The mouse watcher runs only while the menu is open and "Close when I click elsewhere" is on.</summary>
+    private void UpdateOutsideClickWatch()
+    {
+        try
+        {
+            if (_isOpen && App.Settings.Current.CloseWhenClickedElsewhere) _outsideClicks.Install();
+            else _outsideClicks.Uninstall();
+        }
+        catch (System.ComponentModel.Win32Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine("Porta: couldn't watch clicks: " + ex.Message); // focus loss still closes it
+        }
+    }
+
+    /// <summary>The menu stopped being the active window. Checked again shortly, because focus often comes straight back.</summary>
+    private void OnFocusLost()
+    {
+        if (_isOpen && App.Settings.Current.CloseWhenClickedElsewhere) _focusTimer.Start();
+    }
+
+    private void CheckFocus()
+    {
+        if (!_isOpen || !App.Settings.Current.CloseWhenClickedElsewhere) return;
+        if (_dragging) { _focusTimer.Start(); return; } // look again when the drag is over
+        // Still opening: Windows is handing the menu focus. Look again once that is done.
+        if (Environment.TickCount64 - _shownAt < FocusGraceMs) { _focusTimer.Start(); return; }
+        // The active window is one of Porta's own (palette pop-up, right-click menu, Exclude folders, a file picker).
+        if (ForegroundIsPorta()) return;
+        CloseForFocusLoss();
+    }
+
+    /// <summary>A click landed on another program's window, possibly one that never takes focus.</summary>
+    private void OnClickedElsewhere()
+    {
+        if (!_isOpen || !App.Settings.Current.CloseWhenClickedElsewhere || _dragging) return;
+        if (Environment.TickCount64 - _shownAt < FocusGraceMs) return;
+        CloseForFocusLoss();
+    }
+
+    private void CloseForFocusLoss()
+    {
+        _closedByFocusAt = Environment.TickCount64; // so the tray icon click that caused this doesn't reopen it
+        HideMenu();
+    }
+
+    private static bool ForegroundIsPorta()
+    {
+        var foreground = Native.GetForegroundWindow();
+        return foreground != IntPtr.Zero
+            && Native.GetWindowThreadProcessId(foreground, out uint process) != 0
+            && process == (uint)Environment.ProcessId;
+    }
+
+    private void PinnedGrid_DragItemsStarting(object sender, DragItemsStartingEventArgs e) => _dragging = true;
 
     /// <summary>Opens centred above the taskbar on whichever screen the pointer is on.</summary>
     private void PlaceAboveTaskbar()
@@ -973,6 +1050,7 @@ public sealed partial class MenuWindow : Window
         if (App.Settings.Current.CloseWhenClickedElsewhere == CloseElsewhereToggle.IsOn) return;
         App.Settings.Current.CloseWhenClickedElsewhere = CloseElsewhereToggle.IsOn;
         App.Settings.Save();
+        UpdateOutsideClickWatch();
     }
 
     private void WebSearchToggle_Toggled(object sender, RoutedEventArgs e)
@@ -1260,8 +1338,11 @@ public sealed partial class MenuWindow : Window
         e.Handled = true;
     }
 
-    private void PinnedGrid_DragItemsCompleted(ListViewBase sender, DragItemsCompletedEventArgs args) =>
+    private void PinnedGrid_DragItemsCompleted(ListViewBase sender, DragItemsCompletedEventArgs args)
+    {
+        _dragging = false;
         App.Settings.SetPinOrder(_pinned.Select(a => a.Id));
+    }
 
     // ---------- Right-hand panel ----------
 
