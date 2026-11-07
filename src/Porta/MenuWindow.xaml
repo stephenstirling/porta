@@ -550,7 +550,7 @@
                                 <!-- Until the Settings window exists (milestone 2) -->
                                 <ToggleSwitch x:Name="CloseElsewhereToggle" Header="Close when I click elsewhere" Margin="0,8,0,0"
                                               Toggled="CloseElsewhereToggle_Toggled" />
-                                <ToggleSwitch x:Name="StartButtonToggle" Header="Open Porta from the Start button" Margin="0,8,0,0"
+                                <ToggleSwitch x:Name="StartButtonToggle" Header="Open Porta from the Start button"
                                               Toggled="StartButtonToggle_Toggled" />
                                 <ToggleSwitch x:Name="WikipediaToggle" Header="Search Wikipedia"
                                               Toggled="WikipediaToggle_Toggled" />
