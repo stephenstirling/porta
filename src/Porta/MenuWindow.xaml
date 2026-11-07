@@ -131,7 +131,11 @@
                     <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="2" VerticalAlignment="Center">
                         <TextBlock Text="Open" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,4,0"
                                    Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
-                        <HyperlinkButton Content="Show in folder" FontSize="12" Padding="6,2" Click="ShowInFolder_Click" />
+                        <Grid>
+                            <HyperlinkButton Content="Show in folder" FontSize="12" Padding="6,2" Click="ShowInFolder_Click" />
+                            <Border CornerRadius="4" BorderThickness="2" BorderBrush="{ThemeResource AccentFillColorDefaultBrush}"
+                                    IsHitTestVisible="False" Visibility="{x:Bind SecondaryVisibility, Mode=OneWay}" />
+                        </Grid>
                     </StackPanel>
                 </Grid>
             </DataTemplate>
@@ -374,9 +378,19 @@
 
                     <!-- Installed games, then apps, then store results, each directly below the last; scrolls as one -->
                     <ScrollViewer x:Name="ResultsScroller" VerticalScrollBarVisibility="Auto">
-                        <StackPanel Spacing="6">
+                        <StackPanel Spacing="6" PointerMoved="Results_PointerMoved">
+                            <StackPanel.Resources>
+                                <!-- Keyboard and mouse share one highlight (the selected row, in the accent colour). The plain
+                                     hover and press shades are off here so the highlight never shows on two rows at once;
+                                     hovering a row selects it instead (Results_PointerMoved). -->
+                                <SolidColorBrush x:Key="ListViewItemBackgroundSelected" Color="{ThemeResource SystemAccentColor}" Opacity="0.30" />
+                                <SolidColorBrush x:Key="ListViewItemBackgroundSelectedPointerOver" Color="{ThemeResource SystemAccentColor}" Opacity="0.30" />
+                                <SolidColorBrush x:Key="ListViewItemBackgroundSelectedPressed" Color="{ThemeResource SystemAccentColor}" Opacity="0.40" />
+                                <SolidColorBrush x:Key="ListViewItemBackgroundPointerOver" Color="Transparent" />
+                                <SolidColorBrush x:Key="ListViewItemBackgroundPressed" Color="Transparent" />
+                            </StackPanel.Resources>
                             <!-- A calculation or conversion: one row, always on top ("Quick answers" turns it off) -->
-                            <ListView x:Name="QuickList" Visibility="Collapsed" SelectionMode="None" IsItemClickEnabled="True" ItemClick="Quick_ItemClick"
+                            <ListView x:Name="QuickList" Visibility="Collapsed" SelectionMode="Single" IsItemClickEnabled="True" ItemClick="Quick_ItemClick"
                                       ItemTemplate="{StaticResource QuickRowTemplate}"
                                       ScrollViewer.VerticalScrollMode="Disabled" ScrollViewer.VerticalScrollBarVisibility="Disabled" />
 
@@ -384,7 +398,7 @@
                             <StackPanel x:Name="GamesSection" Visibility="Collapsed" Spacing="4">
                                 <TextBlock Text="Games" FontSize="12" FontWeight="SemiBold" Margin="4,0,0,0"
                                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                                <ListView x:Name="GamesList" SelectionMode="None" IsItemClickEnabled="True" ItemClick="Game_ItemClick"
+                                <ListView x:Name="GamesList" SelectionMode="Single" IsItemClickEnabled="True" ItemClick="Game_ItemClick"
                                           ItemTemplate="{StaticResource GameRowTemplate}"
                                           ScrollViewer.VerticalScrollMode="Disabled" ScrollViewer.VerticalScrollBarVisibility="Disabled" />
                             </StackPanel>
@@ -397,7 +411,7 @@
                             <StackPanel x:Name="SystemSection" Visibility="Collapsed" Spacing="4">
                                 <TextBlock Text="System and settings" FontSize="12" FontWeight="SemiBold" Margin="4,0,0,0"
                                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                                <ListView x:Name="SystemList" SelectionMode="None" IsItemClickEnabled="True" ItemClick="System_ItemClick"
+                                <ListView x:Name="SystemList" SelectionMode="Single" IsItemClickEnabled="True" ItemClick="System_ItemClick"
                                           ItemTemplate="{StaticResource SystemRowTemplate}"
                                           ScrollViewer.VerticalScrollMode="Disabled" ScrollViewer.VerticalScrollBarVisibility="Disabled" />
                             </StackPanel>
@@ -406,7 +420,7 @@
                             <StackPanel x:Name="PathsSection" Visibility="Collapsed" Spacing="4">
                                 <TextBlock Text="Recent files and folders" FontSize="12" FontWeight="SemiBold" Margin="4,0,0,0"
                                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                                <ListView x:Name="PathsList" SelectionMode="None" IsItemClickEnabled="True" ItemClick="Path_ItemClick"
+                                <ListView x:Name="PathsList" SelectionMode="Single" IsItemClickEnabled="True" ItemClick="Path_ItemClick"
                                           ItemTemplate="{StaticResource PathRowTemplate}"
                                           ScrollViewer.VerticalScrollMode="Disabled" ScrollViewer.VerticalScrollBarVisibility="Disabled" />
                             </StackPanel>
@@ -415,7 +429,7 @@
                             <StackPanel x:Name="PeopleSection" Visibility="Collapsed" Spacing="4">
                                 <TextBlock Text="People in Ocula" FontSize="12" FontWeight="SemiBold" Margin="4,0,0,0"
                                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                                <ListView x:Name="PeopleList" SelectionMode="None" IsItemClickEnabled="True" ItemClick="Person_ItemClick"
+                                <ListView x:Name="PeopleList" SelectionMode="Single" IsItemClickEnabled="True" ItemClick="Person_ItemClick"
                                           ItemTemplate="{StaticResource PersonRowTemplate}"
                                           ScrollViewer.VerticalScrollMode="Disabled" ScrollViewer.VerticalScrollBarVisibility="Disabled" />
                             </StackPanel>
@@ -424,7 +438,7 @@
                             <StackPanel x:Name="StoreSection" Visibility="Collapsed" Spacing="4">
                                 <TextBlock Text="From the Steam store" FontSize="12" FontWeight="SemiBold" Margin="4,0,0,0"
                                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                                <ListView x:Name="StoreList" SelectionMode="None" IsItemClickEnabled="True" ItemClick="Game_ItemClick"
+                                <ListView x:Name="StoreList" SelectionMode="Single" IsItemClickEnabled="True" ItemClick="Game_ItemClick"
                                           ItemTemplate="{StaticResource GameRowTemplate}"
                                           ScrollViewer.VerticalScrollMode="Disabled" ScrollViewer.VerticalScrollBarVisibility="Disabled" />
                             </StackPanel>
@@ -433,7 +447,7 @@
                             <StackPanel x:Name="BattleNetSection" Visibility="Collapsed" Spacing="4">
                                 <TextBlock Text="Battle.net games" FontSize="12" FontWeight="SemiBold" Margin="4,0,0,0"
                                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                                <ListView x:Name="BattleNetList" SelectionMode="None" IsItemClickEnabled="True" ItemClick="Game_ItemClick"
+                                <ListView x:Name="BattleNetList" SelectionMode="Single" IsItemClickEnabled="True" ItemClick="Game_ItemClick"
                                           ItemTemplate="{StaticResource GameRowTemplate}"
                                           ScrollViewer.VerticalScrollMode="Disabled" ScrollViewer.VerticalScrollBarVisibility="Disabled" />
                             </StackPanel>
@@ -442,13 +456,13 @@
                             <StackPanel x:Name="WikiSection" Visibility="Collapsed" Spacing="4">
                                 <TextBlock Text="From Wikipedia" FontSize="12" FontWeight="SemiBold" Margin="4,0,0,0"
                                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                                <ListView x:Name="WikiList" SelectionMode="None" IsItemClickEnabled="True" ItemClick="Wiki_ItemClick"
+                                <ListView x:Name="WikiList" SelectionMode="Single" IsItemClickEnabled="True" ItemClick="Wiki_ItemClick"
                                           ItemTemplate="{StaticResource WikiRowTemplate}"
                                           ScrollViewer.VerticalScrollMode="Disabled" ScrollViewer.VerticalScrollBarVisibility="Disabled" />
                             </StackPanel>
 
                             <!-- Always the last row: opens the browser on your search engine. Nothing is sent until it is used. -->
-                            <ListView x:Name="WebList" Visibility="Collapsed" SelectionMode="None" IsItemClickEnabled="True" ItemClick="Web_ItemClick"
+                            <ListView x:Name="WebList" Visibility="Collapsed" SelectionMode="Single" IsItemClickEnabled="True" ItemClick="Web_ItemClick"
                                       ItemTemplate="{StaticResource QuickRowTemplate}"
                                       ScrollViewer.VerticalScrollMode="Disabled" ScrollViewer.VerticalScrollBarVisibility="Disabled" />
                         </StackPanel>

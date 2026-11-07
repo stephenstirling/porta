@@ -17,4 +17,20 @@ public sealed class PathEntry : IconItem
 
     /// <summary>Set once the row's icon has been asked for, so it is only loaded once.</summary>
     public bool IconRequested { get; set; }
+
+    /// <summary>Tab has moved the keyboard selection from "Open" to "Show in folder" on this row.</summary>
+    public bool SecondaryActive
+    {
+        get => _secondaryActive;
+        set
+        {
+            if (_secondaryActive == value) return;
+            _secondaryActive = value;
+            OnChanged(nameof(SecondaryVisibility));
+        }
+    }
+    private bool _secondaryActive;
+
+    public Microsoft.UI.Xaml.Visibility SecondaryVisibility =>
+        _secondaryActive ? Microsoft.UI.Xaml.Visibility.Visible : Microsoft.UI.Xaml.Visibility.Collapsed;
 }
