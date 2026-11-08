@@ -313,6 +313,7 @@ public sealed partial class MenuWindow : Window
     {
         SearchBox.Text = "";
         _showingAllApps = false;
+        AllAppsZoom.IsZoomedInViewActive = true;
         ShowPanel(PinnedPanel);
     }
 
@@ -321,7 +322,7 @@ public sealed partial class MenuWindow : Window
     private void ShowPanel(UIElement panel)
     {
         PinnedPanel.Visibility = panel == PinnedPanel ? Visibility.Visible : Visibility.Collapsed;
-        AllAppsList.Visibility = panel == AllAppsList ? Visibility.Visible : Visibility.Collapsed;
+        AllAppsZoom.Visibility = panel == AllAppsZoom ? Visibility.Visible : Visibility.Collapsed;
         SearchPanel.Visibility = panel == SearchPanel ? Visibility.Visible : Visibility.Collapsed;
         ViewHeader.Visibility = panel == SearchPanel ? Visibility.Collapsed : Visibility.Visible;
         ViewTitle.Text = _showingAllApps ? "All apps" : "Pinned";
@@ -348,7 +349,9 @@ public sealed partial class MenuWindow : Window
             .OrderBy(g => g.Key == "#" ? "" : g.Key, StringComparer.CurrentCultureIgnoreCase)
             .Select(g => new AppGroup(g.Key, g))
             .ToList();
-        AllAppsList.ItemsSource = new CollectionViewSource { IsSourceGrouped = true, Source = groups }.View;
+        var view = new CollectionViewSource { IsSourceGrouped = true, Source = groups }.View;
+        AllAppsList.ItemsSource = view;
+        AllAppsLetters.ItemsSource = view.CollectionGroups; // the zoomed-out view: one tile per letter
     }
 
     private static string GroupKey(string name)
@@ -410,7 +413,7 @@ public sealed partial class MenuWindow : Window
         WebList.Visibility = Visibility.Collapsed;
         if (query.Length == 0)
         {
-            ShowPanel(_showingAllApps ? AllAppsList : PinnedPanel);
+            ShowPanel(_showingAllApps ? AllAppsZoom : PinnedPanel);
             return;
         }
 
@@ -1573,7 +1576,8 @@ public sealed partial class MenuWindow : Window
     {
         if (SearchBox.Text.Trim().Length > 0) return;
         _showingAllApps = !_showingAllApps;
-        ShowPanel(_showingAllApps ? AllAppsList : PinnedPanel);
+        AllAppsZoom.IsZoomedInViewActive = true; // always open at the apps, not the letters
+        ShowPanel(_showingAllApps ? AllAppsZoom : PinnedPanel);
     }
 
     // ---------- Launching ----------
