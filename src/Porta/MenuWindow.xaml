@@ -250,8 +250,8 @@
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
 
-            <!-- Pill search bar: fully rounded, subtle fill that lets the glass through, magnifier on the left,
-                 thin periwinkle ring when focused (instead of WinUI's underline, which looks odd on a pill). -->
+            <!-- Pill search bar: fully rounded, darker filled, thin neutral border, soft placeholder, magnifier on the left;
+                 the periwinkle ring shows only while it has focus (instead of WinUI's underline, which looks odd on a pill). -->
             <Grid>
                 <TextBox x:Name="SearchBox"
                          PlaceholderText="Search apps, files and settings"
@@ -263,24 +263,30 @@
                         <ResourceDictionary>
                             <ResourceDictionary.ThemeDictionaries>
                                 <ResourceDictionary x:Key="Default">
-                                    <SolidColorBrush x:Key="TextControlBackground" Color="#FFFFFF" Opacity="0.07" />
-                                    <SolidColorBrush x:Key="TextControlBackgroundPointerOver" Color="#FFFFFF" Opacity="0.10" />
-                                    <SolidColorBrush x:Key="TextControlBackgroundFocused" Color="#FFFFFF" Opacity="0.12" />
-                                    <SolidColorBrush x:Key="TextControlElevationBorderBrush" Color="#FFFFFF" Opacity="0.10" />
-                                    <SolidColorBrush x:Key="TextControlBorderBrush" Color="#FFFFFF" Opacity="0.10" />
-                                    <SolidColorBrush x:Key="TextControlBorderBrushPointerOver" Color="#FFFFFF" Opacity="0.18" />
+                                    <SolidColorBrush x:Key="TextControlBackground" Color="#000000" Opacity="0.38" />
+                                    <SolidColorBrush x:Key="TextControlBackgroundPointerOver" Color="#000000" Opacity="0.42" />
+                                    <SolidColorBrush x:Key="TextControlBackgroundFocused" Color="#000000" Opacity="0.50" />
+                                    <SolidColorBrush x:Key="TextControlElevationBorderBrush" Color="#FFFFFF" Opacity="0.16" />
+                                    <SolidColorBrush x:Key="TextControlBorderBrush" Color="#FFFFFF" Opacity="0.16" />
+                                    <SolidColorBrush x:Key="TextControlBorderBrushPointerOver" Color="#FFFFFF" Opacity="0.24" />
                                     <SolidColorBrush x:Key="TextControlElevationBorderFocusedBrush" Color="#8AA8FF" />
                                     <SolidColorBrush x:Key="TextControlBorderBrushFocused" Color="#8AA8FF" />
+                                    <SolidColorBrush x:Key="TextControlPlaceholderForeground" Color="#FFFFFF" Opacity="0.55" />
+                                    <SolidColorBrush x:Key="TextControlPlaceholderForegroundPointerOver" Color="#FFFFFF" Opacity="0.60" />
+                                    <SolidColorBrush x:Key="TextControlPlaceholderForegroundFocused" Color="#FFFFFF" Opacity="0.45" />
                                 </ResourceDictionary>
                                 <ResourceDictionary x:Key="Light">
-                                    <SolidColorBrush x:Key="TextControlBackground" Color="#0F1428" Opacity="0.05" />
-                                    <SolidColorBrush x:Key="TextControlBackgroundPointerOver" Color="#0F1428" Opacity="0.08" />
-                                    <SolidColorBrush x:Key="TextControlBackgroundFocused" Color="#FFFFFF" Opacity="0.70" />
-                                    <SolidColorBrush x:Key="TextControlElevationBorderBrush" Color="#0F1428" Opacity="0.10" />
-                                    <SolidColorBrush x:Key="TextControlBorderBrush" Color="#0F1428" Opacity="0.10" />
-                                    <SolidColorBrush x:Key="TextControlBorderBrushPointerOver" Color="#0F1428" Opacity="0.18" />
+                                    <SolidColorBrush x:Key="TextControlBackground" Color="#0F1428" Opacity="0.10" />
+                                    <SolidColorBrush x:Key="TextControlBackgroundPointerOver" Color="#0F1428" Opacity="0.13" />
+                                    <SolidColorBrush x:Key="TextControlBackgroundFocused" Color="#FFFFFF" Opacity="0.75" />
+                                    <SolidColorBrush x:Key="TextControlElevationBorderBrush" Color="#0F1428" Opacity="0.16" />
+                                    <SolidColorBrush x:Key="TextControlBorderBrush" Color="#0F1428" Opacity="0.16" />
+                                    <SolidColorBrush x:Key="TextControlBorderBrushPointerOver" Color="#0F1428" Opacity="0.24" />
                                     <SolidColorBrush x:Key="TextControlElevationBorderFocusedBrush" Color="#5F7EE0" />
                                     <SolidColorBrush x:Key="TextControlBorderBrushFocused" Color="#5F7EE0" />
+                                    <SolidColorBrush x:Key="TextControlPlaceholderForeground" Color="#0F1428" Opacity="0.55" />
+                                    <SolidColorBrush x:Key="TextControlPlaceholderForegroundPointerOver" Color="#0F1428" Opacity="0.60" />
+                                    <SolidColorBrush x:Key="TextControlPlaceholderForegroundFocused" Color="#0F1428" Opacity="0.45" />
                                 </ResourceDictionary>
                             </ResourceDictionary.ThemeDictionaries>
                             <!-- Same 1 px all round when focused: a ring, not a thicker bottom line -->
@@ -293,10 +299,13 @@
                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" IsHitTestVisible="False" />
             </Grid>
 
-            <SelectorBar x:Name="ViewSelector" Grid.Row="1" SelectionChanged="ViewSelector_SelectionChanged">
-                <SelectorBarItem x:Name="PinnedTab" Text="Pinned" IsSelected="True" />
-                <SelectorBarItem x:Name="AllAppsTab" Text="All apps" />
-            </SelectorBar>
+            <!-- "Pinned" and an "All apps ›" chip on its right; in All apps the heading changes and the chip becomes "‹ Back" -->
+            <Grid x:Name="ViewHeader" Grid.Row="1" Height="32" Margin="4,0,0,0">
+                <TextBlock x:Name="ViewTitle" Text="Pinned" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center" />
+                <Button x:Name="ViewToggleButton" Content="All apps  ›" HorizontalAlignment="Right" VerticalAlignment="Center"
+                        FontSize="12" Padding="10,4" CornerRadius="6" Click="ViewToggle_Click"
+                        AutomationProperties.Name="All apps" />
+            </Grid>
 
             <Grid Grid.Row="2">
                 <!-- Pinned + Recent -->
@@ -307,27 +316,27 @@
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
-                    <GridView x:Name="PinnedGrid"
+                    <GridView x:Name="PinnedGrid" HorizontalAlignment="Center"
                               SelectionMode="None" IsItemClickEnabled="True" ItemClick="App_ItemClick"
                               CanDragItems="True" CanReorderItems="True" AllowDrop="True"
                               DragItemsStarting="PinnedGrid_DragItemsStarting" DragItemsCompleted="PinnedGrid_DragItemsCompleted">
                         <GridView.ItemsPanel>
                             <ItemsPanelTemplate>
-                                <ItemsWrapGrid Orientation="Horizontal" MaximumRowsOrColumns="4" ItemWidth="92" ItemHeight="88" />
+                                <ItemsWrapGrid Orientation="Horizontal" MaximumRowsOrColumns="4" ItemWidth="86" ItemHeight="82" />
                             </ItemsPanelTemplate>
                         </GridView.ItemsPanel>
                         <GridView.ItemTemplate>
                             <DataTemplate x:DataType="m:AppEntry">
-                                <StackPanel Width="88" Spacing="6" VerticalAlignment="Center" Background="Transparent"
+                                <StackPanel Width="82" Spacing="4" VerticalAlignment="Top" Background="Transparent"
                                             RightTapped="Item_RightTapped" ToolTipService.ToolTip="{x:Bind Name}">
-                                    <Grid Width="44" Height="44" HorizontalAlignment="Center">
-                                        <Border CornerRadius="12" Background="{ThemeResource SubtleFillColorSecondaryBrush}" Visibility="{x:Bind InitialVisibility, Mode=OneWay}">
+                                    <Grid Width="40" Height="40" HorizontalAlignment="Center">
+                                        <Border CornerRadius="10" Background="{ThemeResource SubtleFillColorSecondaryBrush}" Visibility="{x:Bind InitialVisibility, Mode=OneWay}">
                                             <TextBlock Text="{x:Bind Initial}" FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center" />
                                         </Border>
-                                        <Image Source="{x:Bind Icon, Mode=OneWay}" Width="36" Height="36" />
+                                        <Image Source="{x:Bind Icon, Mode=OneWay}" Width="32" Height="32" />
                                     </Grid>
-                                    <TextBlock Text="{x:Bind Name}" FontSize="12" HorizontalAlignment="Center"
-                                               TextAlignment="Center" TextTrimming="CharacterEllipsis" MaxLines="1" />
+                                    <TextBlock Text="{x:Bind Name}" FontSize="12" HorizontalAlignment="Center" LineHeight="15" LineStackingStrategy="BlockLineHeight"
+                                               TextAlignment="Center" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" MaxLines="2" />
                                 </StackPanel>
                             </DataTemplate>
                         </GridView.ItemTemplate>

@@ -311,16 +311,21 @@ public sealed partial class MenuWindow : Window
     private void ResetView()
     {
         SearchBox.Text = "";
-        ViewSelector.SelectedItem = PinnedTab;
+        _showingAllApps = false;
         ShowPanel(PinnedPanel);
     }
+
+    private bool _showingAllApps; // Pinned or All apps, whichever the header shows when nothing is typed
 
     private void ShowPanel(UIElement panel)
     {
         PinnedPanel.Visibility = panel == PinnedPanel ? Visibility.Visible : Visibility.Collapsed;
         AllAppsList.Visibility = panel == AllAppsList ? Visibility.Visible : Visibility.Collapsed;
         SearchPanel.Visibility = panel == SearchPanel ? Visibility.Visible : Visibility.Collapsed;
-        ViewSelector.Visibility = panel == SearchPanel ? Visibility.Collapsed : Visibility.Visible;
+        ViewHeader.Visibility = panel == SearchPanel ? Visibility.Collapsed : Visibility.Visible;
+        ViewTitle.Text = _showingAllApps ? "All apps" : "Pinned";
+        ViewToggleButton.Content = _showingAllApps ? "‹  Back" : "All apps  ›";
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(ViewToggleButton, _showingAllApps ? "Back to pinned apps" : "All apps");
     }
 
     // ---------- Data ----------
@@ -404,7 +409,7 @@ public sealed partial class MenuWindow : Window
         WebList.Visibility = Visibility.Collapsed;
         if (query.Length == 0)
         {
-            ShowPanel(ViewSelector.SelectedItem == AllAppsTab ? AllAppsList : PinnedPanel);
+            ShowPanel(_showingAllApps ? AllAppsList : PinnedPanel);
             return;
         }
 
@@ -1492,10 +1497,12 @@ public sealed partial class MenuWindow : Window
         }
     }
 
-    private void ViewSelector_SelectionChanged(SelectorBar sender, SelectorBarSelectionChangedEventArgs args)
+    /// <summary>"All apps ›" shows the A–Z list; "‹ Back" returns to the pinned apps.</summary>
+    private void ViewToggle_Click(object sender, RoutedEventArgs e)
     {
         if (SearchBox.Text.Trim().Length > 0) return;
-        ShowPanel(sender.SelectedItem == AllAppsTab ? AllAppsList : PinnedPanel);
+        _showingAllApps = !_showingAllApps;
+        ShowPanel(_showingAllApps ? AllAppsList : PinnedPanel);
     }
 
     // ---------- Launching ----------
