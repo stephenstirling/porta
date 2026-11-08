@@ -3,7 +3,8 @@ namespace Porta.Models;
 /// <summary>Everything Porta saves. Stored as JSON in %LocalAppData%\Porta\settings.json.</summary>
 public sealed class PortaSettings
 {
-    public int Version { get; set; } = 1;
+    /// <summary>Settings layout version. 2: the menu got its new look (Recent, clock card and lock button became switches, glass default changed).</summary>
+    public int Version { get; set; } = 2;
     public bool FirstRunDone { get; set; }
 
     // General
@@ -11,7 +12,20 @@ public sealed class PortaSettings
 
     /// <summary>A click on the taskbar's Start button opens Porta instead of Windows' Start menu. When off, Porta doesn't watch the mouse at all.</summary>
     public bool OpenFromStartButton { get; set; } = true;
-    public bool ShowRecent { get; set; } = true;
+    /// <summary>The Recent section under the pinned apps. Off by default; there was no switch for it before, so older files are switched off when they are read (see SettingsStore.Migrate).</summary>
+    public bool ShowRecent { get; set; } = false;
+
+    /// <summary>The user's name in the right-hand list opens their folder.</summary>
+    public bool ShowUserFolderLink { get; set; } = true;
+
+    /// <summary>Control Panel in the right-hand list.</summary>
+    public bool ShowControlPanel { get; set; } = true;
+
+    /// <summary>The clock and date card at the bottom of the right-hand panel.</summary>
+    public bool ShowClockCard { get; set; } = false;
+
+    /// <summary>A lock button beside the power button. Lock is always in the power menu.</summary>
+    public bool ShowLockButton { get; set; } = false;
 
     /// <summary>Hide the menu when focus moves to something else (another app, the desktop, the taskbar). When off, only Esc or the Win key closes it.</summary>
     public bool CloseWhenClickedElsewhere { get; set; } = true;
@@ -69,7 +83,8 @@ public sealed class PortaSettings
     public string? AccentColor { get; set; }
 
     /// <summary>How frosted the menu's glass is: 0 clearest, 100 most frosted.</summary>
-    public int GlassStrength { get; set; } = 30;
+    public int GlassStrength { get; set; } = DefaultGlassStrength;
+    public const int DefaultGlassStrength = 15;
 
     // Start button (used from milestone 2)
     public bool ReplaceStartButton { get; set; } = true;
