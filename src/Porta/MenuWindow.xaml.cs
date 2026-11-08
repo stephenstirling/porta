@@ -188,6 +188,11 @@ public sealed partial class MenuWindow : Window
         PlaceAboveTaskbar();
         AppWindow.Show(true);
         Native.ForceForeground(_hwnd);
+        try { _shadow.Show(_hwnd, _shape, _scale, Root.ActualTheme == ElementTheme.Light); }
+        catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or InvalidOperationException or ArgumentException or OutOfMemoryException)
+        {
+            System.Diagnostics.Debug.WriteLine("Porta: couldn't draw the shadow: " + ex.Message); // the menu works without it
+        }
         SearchBox.Focus(FocusState.Programmatic);
         _isOpen = true;
         _shownAt = Environment.TickCount64;
@@ -202,6 +207,7 @@ public sealed partial class MenuWindow : Window
         _focusTimer.Stop();
         _isOpen = false;
         UpdateOutsideClickWatch();
+        _shadow.Hide();
         AppWindow.Hide();
     }
 
@@ -281,6 +287,8 @@ public sealed partial class MenuWindow : Window
     }
 
     private double _scale = 1.0; // display scale the menu was last placed at
+    private readonly ShadowWindow _shadow = new();
+    private ShadowWindow.Shape _shape;
 
     /// <summary>
     /// Cuts the window to the panel plus the account picture's circle above its top edge, so the strip
@@ -303,6 +311,10 @@ public sealed partial class MenuWindow : Window
         int cx = dx + client.Right - (int)Math.Round(RightPaneWidth / 2.0 * scale);
         int cy = dy + overhang;
         var circle = Native.CreateEllipticRgn(cx - radius, cy - radius, cx + radius + 1, cy + radius + 1);
+
+        // Remember the shape in screen pixels: the shadow behind the menu follows it.
+        _shape = new ShadowWindow.Shape(origin.X, origin.Y + overhang, origin.X + client.Right + 1, origin.Y + client.Bottom + 1,
+            corner / 2.0, origin.X + client.Right - Math.Round(RightPaneWidth / 2.0 * scale), origin.Y + overhang, radius);
 
         Native.CombineRgn(panel, panel, circle, Native.RGN_OR);
         Native.DeleteObject(circle);
