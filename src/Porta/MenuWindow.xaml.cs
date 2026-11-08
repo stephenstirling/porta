@@ -21,9 +21,9 @@ namespace Porta;
 public sealed partial class MenuWindow : Window
 {
     private const int MenuWidth = 676;   // device-independent pixels
-    private const int MenuHeight = 620;
-    private const int AvatarOverhang = 36; // half the account picture's circle sticks out above the panel
-    private const int RightPaneWidth = 200;
+    private const int MenuHeight = 560;
+    private const int AvatarOverhang = 32; // half the account picture's circle sticks out above the panel
+    private const int RightPaneWidth = 216;
     private const int GapAboveTaskbar = 12;
 
     private readonly IntPtr _hwnd;
@@ -109,6 +109,7 @@ public sealed partial class MenuWindow : Window
         BattleNetList.ItemsSource = _battleNet;
         CloseElsewhereToggle.IsOn = App.Settings.Current.CloseWhenClickedElsewhere;
         StartButtonToggle.IsOn = App.Settings.Current.OpenFromStartButton;
+        SyncLayoutSwitches();
         BattleNetGamesToggle.IsOn = App.Settings.Current.SearchBattleNetGames;
         PeopleList.ItemsSource = _people;
         PathsList.ItemsSource = _paths;
@@ -127,8 +128,7 @@ public sealed partial class MenuWindow : Window
         OculaPeopleToggle.IsOn = App.Settings.Current.SearchOculaPeople;
 
         var name = Native.GetDisplayName();
-        UserNameText.Text = name;
-        Avatar.DisplayName = name;
+        SetUserName(name);
         _ = LoadAccountAsync();
 
         App.Catalog.Loaded += OnCatalogLoaded;
@@ -140,6 +140,7 @@ public sealed partial class MenuWindow : Window
             CloseElsewhereToggle.IsOn = App.Settings.Current.CloseWhenClickedElsewhere;
             UpdateOutsideClickWatch();
             StartButtonToggle.IsOn = App.Settings.Current.OpenFromStartButton;
+        SyncLayoutSwitches();
             WikipediaToggle.IsOn = App.Settings.Current.SearchWikipedia;
             EpicLibraryToggle.IsOn = App.Settings.Current.SearchEpicLibrary;
             EpicCoversToggle.IsOn = App.Settings.Current.EpicCoverImages;
@@ -298,7 +299,7 @@ public sealed partial class MenuWindow : Window
         int corner = (int)Math.Round(16 * scale); // 8 px radius, like Windows' own corners
         var panel = Native.CreateRoundRectRgn(dx, dy + overhang, dx + client.Right + 1, dy + client.Bottom + 1, corner, corner);
 
-        int radius = (int)Math.Round(38 * scale);
+        int radius = (int)Math.Round(32 * scale);
         int cx = dx + client.Right - (int)Math.Round(RightPaneWidth / 2.0 * scale);
         int cy = dy + overhang;
         var circle = Native.CreateEllipticRgn(cx - radius, cy - radius, cx + radius + 1, cy + radius + 1);
@@ -311,16 +312,21 @@ public sealed partial class MenuWindow : Window
     private void ResetView()
     {
         SearchBox.Text = "";
-        ViewSelector.SelectedItem = PinnedTab;
+        _showingAllApps = false;
         ShowPanel(PinnedPanel);
     }
+
+    private bool _showingAllApps; // Pinned or All apps, whichever the header shows when nothing is typed
 
     private void ShowPanel(UIElement panel)
     {
         PinnedPanel.Visibility = panel == PinnedPanel ? Visibility.Visible : Visibility.Collapsed;
         AllAppsList.Visibility = panel == AllAppsList ? Visibility.Visible : Visibility.Collapsed;
         SearchPanel.Visibility = panel == SearchPanel ? Visibility.Visible : Visibility.Collapsed;
-        ViewSelector.Visibility = panel == SearchPanel ? Visibility.Collapsed : Visibility.Visible;
+        ViewHeader.Visibility = panel == SearchPanel ? Visibility.Collapsed : Visibility.Visible;
+        ViewTitle.Text = _showingAllApps ? "All apps" : "Pinned";
+        ViewToggleButton.Content = _showingAllApps ? "‹  Back" : "All apps  ›";
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(ViewToggleButton, _showingAllApps ? "Back to pinned apps" : "All apps");
     }
 
     // ---------- Data ----------
@@ -404,7 +410,7 @@ public sealed partial class MenuWindow : Window
         WebList.Visibility = Visibility.Collapsed;
         if (query.Length == 0)
         {
-            ShowPanel(ViewSelector.SelectedItem == AllAppsTab ? AllAppsList : PinnedPanel);
+            ShowPanel(_showingAllApps ? AllAppsList : PinnedPanel);
             return;
         }
 
@@ -1058,6 +1064,77 @@ public sealed partial class MenuWindow : Window
         RefreshQuickRows();
     }
 
+    // ---------- Layout switches (what the right-hand panel and the pinned view show) ----------
+
+    private void SetUserName(string name)
+    {
+        UserNameText.Text = name;
+        UserFolderText.Text = name;
+        Avatar.DisplayName = name;
+    }
+
+    /// <summary>Sets the five layout switches from the saved settings and shows or hides the parts they control.</summary>
+    private void SyncLayoutSwitches()
+    {
+        var s = App.Settings.Current;
+        ShowRecentToggle.IsOn = s.ShowRecent;
+        ShowUserFolderToggle.IsOn = s.ShowUserFolderLink;
+        ShowControlPanelToggle.IsOn = s.ShowControlPanel;
+        ShowClockToggle.IsOn = s.ShowClockCard;
+        ShowLockToggle.IsOn = s.ShowLockButton;
+        ApplyLayoutSettings();
+    }
+
+    private void ApplyLayoutSettings()
+    {
+        var s = App.Settings.Current;
+        UserFolderRow.Visibility = s.ShowUserFolderLink ? Visibility.Visible : Visibility.Collapsed;
+        ControlPanelRow.Visibility = s.ShowControlPanel ? Visibility.Visible : Visibility.Collapsed;
+        ClockCard.Visibility = s.ShowClockCard ? Visibility.Visible : Visibility.Collapsed;
+        LockButton.Visibility = s.ShowLockButton ? Visibility.Visible : Visibility.Collapsed;
+        RefreshRecent();
+    }
+
+    private void ShowRecentToggle_Toggled(object sender, RoutedEventArgs e)
+    {
+        if (App.Settings.Current.ShowRecent == ShowRecentToggle.IsOn) return;
+        App.Settings.Current.ShowRecent = ShowRecentToggle.IsOn;
+        App.Settings.Save();
+        ApplyLayoutSettings();
+    }
+
+    private void ShowUserFolderToggle_Toggled(object sender, RoutedEventArgs e)
+    {
+        if (App.Settings.Current.ShowUserFolderLink == ShowUserFolderToggle.IsOn) return;
+        App.Settings.Current.ShowUserFolderLink = ShowUserFolderToggle.IsOn;
+        App.Settings.Save();
+        ApplyLayoutSettings();
+    }
+
+    private void ShowControlPanelToggle_Toggled(object sender, RoutedEventArgs e)
+    {
+        if (App.Settings.Current.ShowControlPanel == ShowControlPanelToggle.IsOn) return;
+        App.Settings.Current.ShowControlPanel = ShowControlPanelToggle.IsOn;
+        App.Settings.Save();
+        ApplyLayoutSettings();
+    }
+
+    private void ShowClockToggle_Toggled(object sender, RoutedEventArgs e)
+    {
+        if (App.Settings.Current.ShowClockCard == ShowClockToggle.IsOn) return;
+        App.Settings.Current.ShowClockCard = ShowClockToggle.IsOn;
+        App.Settings.Save();
+        ApplyLayoutSettings();
+    }
+
+    private void ShowLockToggle_Toggled(object sender, RoutedEventArgs e)
+    {
+        if (App.Settings.Current.ShowLockButton == ShowLockToggle.IsOn) return;
+        App.Settings.Current.ShowLockButton = ShowLockToggle.IsOn;
+        App.Settings.Save();
+        ApplyLayoutSettings();
+    }
+
     private void CloseElsewhereToggle_Toggled(object sender, RoutedEventArgs e)
     {
         if (App.Settings.Current.CloseWhenClickedElsewhere == CloseElsewhereToggle.IsOn) return;
@@ -1217,8 +1294,7 @@ public sealed partial class MenuWindow : Window
     private async Task LoadAccountAsync()
     {
         var name = await AccountPicture.GetDisplayNameAsync();
-        UserNameText.Text = name;
-        Avatar.DisplayName = name;
+        SetUserName(name);
 
         var path = AccountPicture.FindPicturePath() ?? await AccountPicture.FetchWithUserApiAsync();
         SetPicture(path);
@@ -1492,10 +1568,12 @@ public sealed partial class MenuWindow : Window
         }
     }
 
-    private void ViewSelector_SelectionChanged(SelectorBar sender, SelectorBarSelectionChangedEventArgs args)
+    /// <summary>"All apps ›" shows the A–Z list; "‹ Back" returns to the pinned apps.</summary>
+    private void ViewToggle_Click(object sender, RoutedEventArgs e)
     {
         if (SearchBox.Text.Trim().Length > 0) return;
-        ShowPanel(sender.SelectedItem == AllAppsTab ? AllAppsList : PinnedPanel);
+        _showingAllApps = !_showingAllApps;
+        ShowPanel(_showingAllApps ? AllAppsList : PinnedPanel);
     }
 
     // ---------- Launching ----------
@@ -1584,6 +1662,7 @@ public sealed partial class MenuWindow : Window
     }
 
     private void WindowsSettings_Click(object sender, RoutedEventArgs e) { HideMenu(); Launcher.Open("ms-settings:"); }
+    private void ControlPanel_Click(object sender, RoutedEventArgs e) { HideMenu(); Launcher.Open("control.exe"); }
     private void Run_Click(object sender, RoutedEventArgs e) { HideMenu(); Launcher.ShowRunDialog(); }
     private void Lock_Click(object sender, RoutedEventArgs e) { HideMenu(); Launcher.Lock(); }
     private void Sleep_Click(object sender, RoutedEventArgs e) { HideMenu(); Launcher.Sleep(); }

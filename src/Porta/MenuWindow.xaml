@@ -12,13 +12,15 @@
             <!-- Panel colours from design/Main.dc.html -->
             <ResourceDictionary.ThemeDictionaries>
                 <ResourceDictionary x:Key="Default">
-                    <!-- Right pane: a touch darker than the left -->
-                    <SolidColorBrush x:Key="PortaRailBrush" Color="#000000" Opacity="0.14" />
-                    <SolidColorBrush x:Key="PortaHairlineBrush" Color="#FFFFFF" Opacity="0.08" />
+                    <!-- Right pane: a slightly lighter frosted tint than the left, with a soft border of its own -->
+                    <SolidColorBrush x:Key="PortaRailBrush" Color="#FFFFFF" Opacity="0.09" />
+                    <SolidColorBrush x:Key="PortaRailBorderBrush" Color="#FFFFFF" Opacity="0.13" />
+                    <SolidColorBrush x:Key="PortaHairlineBrush" Color="#FFFFFF" Opacity="0.10" />
                 </ResourceDictionary>
                 <ResourceDictionary x:Key="Light">
-                    <SolidColorBrush x:Key="PortaRailBrush" Color="#0F1428" Opacity="0.04" />
-                    <SolidColorBrush x:Key="PortaHairlineBrush" Color="#0F1428" Opacity="0.08" />
+                    <SolidColorBrush x:Key="PortaRailBrush" Color="#FFFFFF" Opacity="0.35" />
+                    <SolidColorBrush x:Key="PortaRailBorderBrush" Color="#0F1428" Opacity="0.10" />
+                    <SolidColorBrush x:Key="PortaHairlineBrush" Color="#0F1428" Opacity="0.10" />
                 </ResourceDictionary>
             </ResourceDictionary.ThemeDictionaries>
 
@@ -28,15 +30,16 @@
                 <Setter Property="BorderThickness" Value="0" />
                 <Setter Property="HorizontalAlignment" Value="Stretch" />
                 <Setter Property="HorizontalContentAlignment" Value="Left" />
-                <Setter Property="Height" Value="40" />
-                <Setter Property="Padding" Value="12,0" />
+                <Setter Property="Height" Value="34" />
+                <Setter Property="FontSize" Value="13" />
+                <Setter Property="Padding" Value="10,0" />
                 <Setter Property="CornerRadius" Value="8" />
             </Style>
             <Style x:Key="RailIconButton" TargetType="Button" BasedOn="{StaticResource DefaultButtonStyle}">
                 <Setter Property="Background" Value="Transparent" />
                 <Setter Property="BorderThickness" Value="0" />
-                <Setter Property="Width" Value="44" />
-                <Setter Property="Height" Value="44" />
+                <Setter Property="Width" Value="40" />
+                <Setter Property="Height" Value="40" />
                 <Setter Property="Padding" Value="0" />
                 <Setter Property="CornerRadius" Value="10" />
             </Style>
@@ -233,12 +236,12 @@
 
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
-            <ColumnDefinition Width="200" />
+            <ColumnDefinition Width="216" />
         </Grid.ColumnDefinitions>
         <!-- Row 0 is the strip above the panel where the account picture breaks out; the window is
              cut to the panel plus the picture's circle, so the rest of that strip isn't drawn. -->
         <Grid.RowDefinitions>
-            <RowDefinition Height="36" />
+            <RowDefinition Height="32" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
@@ -250,8 +253,8 @@
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
 
-            <!-- Pill search bar: fully rounded, subtle fill that lets the glass through, magnifier on the left,
-                 thin periwinkle ring when focused (instead of WinUI's underline, which looks odd on a pill). -->
+            <!-- Pill search bar: fully rounded, darker filled, thin neutral border, soft placeholder, magnifier on the left;
+                 the periwinkle ring shows only while it has focus (instead of WinUI's underline, which looks odd on a pill). -->
             <Grid>
                 <TextBox x:Name="SearchBox"
                          PlaceholderText="Search apps, files and settings"
@@ -263,24 +266,30 @@
                         <ResourceDictionary>
                             <ResourceDictionary.ThemeDictionaries>
                                 <ResourceDictionary x:Key="Default">
-                                    <SolidColorBrush x:Key="TextControlBackground" Color="#FFFFFF" Opacity="0.07" />
-                                    <SolidColorBrush x:Key="TextControlBackgroundPointerOver" Color="#FFFFFF" Opacity="0.10" />
-                                    <SolidColorBrush x:Key="TextControlBackgroundFocused" Color="#FFFFFF" Opacity="0.12" />
-                                    <SolidColorBrush x:Key="TextControlElevationBorderBrush" Color="#FFFFFF" Opacity="0.10" />
-                                    <SolidColorBrush x:Key="TextControlBorderBrush" Color="#FFFFFF" Opacity="0.10" />
-                                    <SolidColorBrush x:Key="TextControlBorderBrushPointerOver" Color="#FFFFFF" Opacity="0.18" />
+                                    <SolidColorBrush x:Key="TextControlBackground" Color="#000000" Opacity="0.38" />
+                                    <SolidColorBrush x:Key="TextControlBackgroundPointerOver" Color="#000000" Opacity="0.42" />
+                                    <SolidColorBrush x:Key="TextControlBackgroundFocused" Color="#000000" Opacity="0.50" />
+                                    <SolidColorBrush x:Key="TextControlElevationBorderBrush" Color="#FFFFFF" Opacity="0.16" />
+                                    <SolidColorBrush x:Key="TextControlBorderBrush" Color="#FFFFFF" Opacity="0.16" />
+                                    <SolidColorBrush x:Key="TextControlBorderBrushPointerOver" Color="#FFFFFF" Opacity="0.24" />
                                     <SolidColorBrush x:Key="TextControlElevationBorderFocusedBrush" Color="#8AA8FF" />
                                     <SolidColorBrush x:Key="TextControlBorderBrushFocused" Color="#8AA8FF" />
+                                    <SolidColorBrush x:Key="TextControlPlaceholderForeground" Color="#FFFFFF" Opacity="0.55" />
+                                    <SolidColorBrush x:Key="TextControlPlaceholderForegroundPointerOver" Color="#FFFFFF" Opacity="0.60" />
+                                    <SolidColorBrush x:Key="TextControlPlaceholderForegroundFocused" Color="#FFFFFF" Opacity="0.45" />
                                 </ResourceDictionary>
                                 <ResourceDictionary x:Key="Light">
-                                    <SolidColorBrush x:Key="TextControlBackground" Color="#0F1428" Opacity="0.05" />
-                                    <SolidColorBrush x:Key="TextControlBackgroundPointerOver" Color="#0F1428" Opacity="0.08" />
-                                    <SolidColorBrush x:Key="TextControlBackgroundFocused" Color="#FFFFFF" Opacity="0.70" />
-                                    <SolidColorBrush x:Key="TextControlElevationBorderBrush" Color="#0F1428" Opacity="0.10" />
-                                    <SolidColorBrush x:Key="TextControlBorderBrush" Color="#0F1428" Opacity="0.10" />
-                                    <SolidColorBrush x:Key="TextControlBorderBrushPointerOver" Color="#0F1428" Opacity="0.18" />
+                                    <SolidColorBrush x:Key="TextControlBackground" Color="#0F1428" Opacity="0.10" />
+                                    <SolidColorBrush x:Key="TextControlBackgroundPointerOver" Color="#0F1428" Opacity="0.13" />
+                                    <SolidColorBrush x:Key="TextControlBackgroundFocused" Color="#FFFFFF" Opacity="0.75" />
+                                    <SolidColorBrush x:Key="TextControlElevationBorderBrush" Color="#0F1428" Opacity="0.16" />
+                                    <SolidColorBrush x:Key="TextControlBorderBrush" Color="#0F1428" Opacity="0.16" />
+                                    <SolidColorBrush x:Key="TextControlBorderBrushPointerOver" Color="#0F1428" Opacity="0.24" />
                                     <SolidColorBrush x:Key="TextControlElevationBorderFocusedBrush" Color="#5F7EE0" />
                                     <SolidColorBrush x:Key="TextControlBorderBrushFocused" Color="#5F7EE0" />
+                                    <SolidColorBrush x:Key="TextControlPlaceholderForeground" Color="#0F1428" Opacity="0.55" />
+                                    <SolidColorBrush x:Key="TextControlPlaceholderForegroundPointerOver" Color="#0F1428" Opacity="0.60" />
+                                    <SolidColorBrush x:Key="TextControlPlaceholderForegroundFocused" Color="#0F1428" Opacity="0.45" />
                                 </ResourceDictionary>
                             </ResourceDictionary.ThemeDictionaries>
                             <!-- Same 1 px all round when focused: a ring, not a thicker bottom line -->
@@ -293,10 +302,13 @@
                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" IsHitTestVisible="False" />
             </Grid>
 
-            <SelectorBar x:Name="ViewSelector" Grid.Row="1" SelectionChanged="ViewSelector_SelectionChanged">
-                <SelectorBarItem x:Name="PinnedTab" Text="Pinned" IsSelected="True" />
-                <SelectorBarItem x:Name="AllAppsTab" Text="All apps" />
-            </SelectorBar>
+            <!-- "Pinned" and an "All apps ›" chip on its right; in All apps the heading changes and the chip becomes "‹ Back" -->
+            <Grid x:Name="ViewHeader" Grid.Row="1" Height="32" Margin="4,0,0,0">
+                <TextBlock x:Name="ViewTitle" Text="Pinned" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center" />
+                <Button x:Name="ViewToggleButton" Content="All apps  ›" HorizontalAlignment="Right" VerticalAlignment="Center"
+                        FontSize="12" Padding="10,4" CornerRadius="6" Click="ViewToggle_Click"
+                        AutomationProperties.Name="All apps" />
+            </Grid>
 
             <Grid Grid.Row="2">
                 <!-- Pinned + Recent -->
@@ -307,27 +319,27 @@
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
-                    <GridView x:Name="PinnedGrid"
+                    <GridView x:Name="PinnedGrid" HorizontalAlignment="Center"
                               SelectionMode="None" IsItemClickEnabled="True" ItemClick="App_ItemClick"
                               CanDragItems="True" CanReorderItems="True" AllowDrop="True"
                               DragItemsStarting="PinnedGrid_DragItemsStarting" DragItemsCompleted="PinnedGrid_DragItemsCompleted">
                         <GridView.ItemsPanel>
                             <ItemsPanelTemplate>
-                                <ItemsWrapGrid Orientation="Horizontal" MaximumRowsOrColumns="4" ItemWidth="92" ItemHeight="88" />
+                                <ItemsWrapGrid Orientation="Horizontal" MaximumRowsOrColumns="4" ItemWidth="86" ItemHeight="82" />
                             </ItemsPanelTemplate>
                         </GridView.ItemsPanel>
                         <GridView.ItemTemplate>
                             <DataTemplate x:DataType="m:AppEntry">
-                                <StackPanel Width="88" Spacing="6" VerticalAlignment="Center" Background="Transparent"
+                                <StackPanel Width="82" Spacing="4" VerticalAlignment="Top" Background="Transparent"
                                             RightTapped="Item_RightTapped" ToolTipService.ToolTip="{x:Bind Name}">
-                                    <Grid Width="44" Height="44" HorizontalAlignment="Center">
-                                        <Border CornerRadius="12" Background="{ThemeResource SubtleFillColorSecondaryBrush}" Visibility="{x:Bind InitialVisibility, Mode=OneWay}">
+                                    <Grid Width="40" Height="40" HorizontalAlignment="Center">
+                                        <Border CornerRadius="10" Background="{ThemeResource SubtleFillColorSecondaryBrush}" Visibility="{x:Bind InitialVisibility, Mode=OneWay}">
                                             <TextBlock Text="{x:Bind Initial}" FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center" />
                                         </Border>
-                                        <Image Source="{x:Bind Icon, Mode=OneWay}" Width="36" Height="36" />
+                                        <Image Source="{x:Bind Icon, Mode=OneWay}" Width="32" Height="32" />
                                     </Grid>
-                                    <TextBlock Text="{x:Bind Name}" FontSize="12" HorizontalAlignment="Center"
-                                               TextAlignment="Center" TextTrimming="CharacterEllipsis" MaxLines="1" />
+                                    <TextBlock Text="{x:Bind Name}" FontSize="12" HorizontalAlignment="Center" LineHeight="15" LineStackingStrategy="BlockLineHeight"
+                                               TextAlignment="Center" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" MaxLines="2" />
                                 </StackPanel>
                             </DataTemplate>
                         </GridView.ItemTemplate>
@@ -378,7 +390,7 @@
 
                     <!-- Installed games, then apps, then store results, each directly below the last; scrolls as one -->
                     <ScrollViewer x:Name="ResultsScroller" VerticalScrollBarVisibility="Auto">
-                        <StackPanel Spacing="6" PointerMoved="Results_PointerMoved">
+                        <StackPanel Spacing="6" Margin="0,0,14,0" PointerMoved="Results_PointerMoved">
                             <StackPanel.Resources>
                                 <!-- Keyboard and mouse share one highlight (the selected row, in the accent colour). The plain
                                      hover and press shades are off here so the highlight never shows on two rows at once;
@@ -471,22 +483,23 @@
                                Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />
 
                     <!-- Search a game store for what was typed -->
-                    <StackPanel x:Name="StoreLinks" Grid.Row="1" Orientation="Horizontal" Spacing="4" Visibility="Collapsed">
-                        <TextBlock Text="Search stores:" FontSize="12" VerticalAlignment="Center" Margin="4,0,4,0"
+                    <StackPanel x:Name="StoreLinks" Grid.Row="1" Orientation="Horizontal" Spacing="0" Visibility="Collapsed">
+                        <TextBlock Text="Search stores:" FontSize="12" VerticalAlignment="Center" Margin="4,0,2,0"
                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                        <HyperlinkButton x:Name="SteamStoreLink" Content="Steam" FontSize="12" Click="StoreLink_Click" Tag="steam" />
-                        <HyperlinkButton x:Name="EpicStoreLink" Content="Epic Games" FontSize="12" Click="StoreLink_Click" Tag="epic" />
-                        <HyperlinkButton x:Name="BattleNetStoreLink" Content="Battle.net" FontSize="12" Click="StoreLink_Click" Tag="battlenet" />
-                        <HyperlinkButton x:Name="MsStoreLink" Content="Microsoft Store" FontSize="12" Click="StoreLink_Click" Tag="xbox" />
+                        <HyperlinkButton x:Name="SteamStoreLink" Content="Steam" FontSize="12" Padding="7,4" Click="StoreLink_Click" Tag="steam" />
+                        <HyperlinkButton x:Name="EpicStoreLink" Content="Epic Games" FontSize="12" Padding="7,4" Click="StoreLink_Click" Tag="epic" />
+                        <HyperlinkButton x:Name="BattleNetStoreLink" Content="Battle.net" FontSize="12" Padding="7,4" Click="StoreLink_Click" Tag="battlenet" />
+                        <HyperlinkButton x:Name="MsStoreLink" Content="Microsoft Store" FontSize="12" Padding="7,4" Click="StoreLink_Click" Tag="xbox" />
                     </StackPanel>
                 </Grid>
             </Grid>
         </Grid>
 
-        <!-- ===== Right: account, places, clock, power ===== -->
-        <Grid Grid.Row="1" Grid.Column="1" Padding="14,28,14,14" RowSpacing="2"
-              Background="{ThemeResource PortaRailBrush}"
-              BorderThickness="1,0,0,0" BorderBrush="{ThemeResource PortaHairlineBrush}">
+        <!-- ===== Right: account, places, power ===== -->
+        <Border Grid.Row="1" Grid.Column="1" Margin="0,8,8,8" CornerRadius="10"
+                Background="{ThemeResource PortaRailBrush}"
+                BorderThickness="1" BorderBrush="{ThemeResource PortaRailBorderBrush}">
+        <Grid Padding="10,34,10,10" RowSpacing="2">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
@@ -496,48 +509,63 @@
             </Grid.RowDefinitions>
 
             <!-- The picture itself sits on the panel's top edge (below); the name goes under it. -->
-            <TextBlock x:Name="UserNameText" Margin="0,16,0,16" FontSize="16" FontWeight="SemiBold"
+            <TextBlock x:Name="UserNameText" Margin="0,0,0,14" FontSize="20" FontWeight="SemiLight"
                        HorizontalAlignment="Center" TextTrimming="CharacterEllipsis" />
 
-            <StackPanel Grid.Row="1" Spacing="2">
+            <StackPanel Grid.Row="1" Spacing="0">
                 <Button Style="{StaticResource RailButton}" Tag="shell:Personal" Click="Folder_Click">
-                    <StackPanel Orientation="Horizontal" Spacing="12"><FontIcon Glyph="&#xE8A5;" FontSize="16" /><TextBlock Text="Documents" /></StackPanel>
+                    <StackPanel Orientation="Horizontal" Spacing="12"><FontIcon Glyph="&#xE8A5;" FontSize="14" /><TextBlock Text="Documents" /></StackPanel>
                 </Button>
                 <Button Style="{StaticResource RailButton}" Tag="shell:Downloads" Click="Folder_Click">
-                    <StackPanel Orientation="Horizontal" Spacing="12"><FontIcon Glyph="&#xE896;" FontSize="16" /><TextBlock Text="Downloads" /></StackPanel>
-                </Button>
-                <Button Style="{StaticResource RailButton}" Tag="shell:My Pictures" Click="Folder_Click">
-                    <StackPanel Orientation="Horizontal" Spacing="12"><FontIcon Glyph="&#xE8B9;" FontSize="16" /><TextBlock Text="Pictures" /></StackPanel>
+                    <StackPanel Orientation="Horizontal" Spacing="12"><FontIcon Glyph="&#xE896;" FontSize="14" /><TextBlock Text="Downloads" /></StackPanel>
                 </Button>
                 <Button Style="{StaticResource RailButton}" Tag="shell:My Music" Click="Folder_Click">
-                    <StackPanel Orientation="Horizontal" Spacing="12"><FontIcon Glyph="&#xE8D6;" FontSize="16" /><TextBlock Text="Music" /></StackPanel>
+                    <StackPanel Orientation="Horizontal" Spacing="12"><FontIcon Glyph="&#xE8D6;" FontSize="14" /><TextBlock Text="Music" /></StackPanel>
+                </Button>
+                <Button Style="{StaticResource RailButton}" Tag="shell:My Pictures" Click="Folder_Click">
+                    <StackPanel Orientation="Horizontal" Spacing="12"><FontIcon Glyph="&#xE8B9;" FontSize="14" /><TextBlock Text="Pictures" /></StackPanel>
+                </Button>
+                <!-- The user's own folder ("Show user folder link" turns it off) -->
+                <Button x:Name="UserFolderRow" Style="{StaticResource RailButton}" Tag="shell:UsersFilesFolder" Click="Folder_Click">
+                    <StackPanel Orientation="Horizontal" Spacing="12"><FontIcon Glyph="&#xE77B;" FontSize="14" /><TextBlock x:Name="UserFolderText" Text="Your folder" TextTrimming="CharacterEllipsis" MaxWidth="130" /></StackPanel>
                 </Button>
                 <Button Style="{StaticResource RailButton}" Tag="shell:MyComputerFolder" Click="Folder_Click">
-                    <StackPanel Orientation="Horizontal" Spacing="12"><FontIcon Glyph="&#xE977;" FontSize="16" /><TextBlock Text="PC" /></StackPanel>
+                    <StackPanel Orientation="Horizontal" Spacing="12"><FontIcon Glyph="&#xE977;" FontSize="14" /><TextBlock Text="PC" /></StackPanel>
                 </Button>
-                <Rectangle Height="1" Margin="12,8" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" />
+                <!-- "Show Control Panel" turns it off -->
+                <Button x:Name="ControlPanelRow" Style="{StaticResource RailButton}" Click="ControlPanel_Click">
+                    <StackPanel Orientation="Horizontal" Spacing="12"><FontIcon Glyph="&#xE9E9;" FontSize="14" /><TextBlock Text="Control Panel" /></StackPanel>
+                </Button>
                 <Button Style="{StaticResource RailButton}" Click="WindowsSettings_Click">
-                    <StackPanel Orientation="Horizontal" Spacing="12"><FontIcon Glyph="&#xE713;" FontSize="16" /><TextBlock Text="Settings" /></StackPanel>
+                    <StackPanel Orientation="Horizontal" Spacing="12"><FontIcon Glyph="&#xE713;" FontSize="14" /><TextBlock Text="Settings" /></StackPanel>
                 </Button>
                 <Button Style="{StaticResource RailButton}" Click="Run_Click">
-                    <StackPanel Orientation="Horizontal" Spacing="12"><FontIcon Glyph="&#xE756;" FontSize="16" /><TextBlock Text="Run…" /></StackPanel>
+                    <StackPanel Orientation="Horizontal" Spacing="12"><FontIcon Glyph="&#xE756;" FontSize="14" /><TextBlock Text="Run…" /></StackPanel>
                 </Button>
             </StackPanel>
 
-            <Border Grid.Row="3" CornerRadius="12" Padding="14,12" Background="{ThemeResource SubtleFillColorSecondaryBrush}">
+            <!-- Clock and date ("Show clock card" turns it on) -->
+            <Border x:Name="ClockCard" Grid.Row="3" Visibility="Collapsed" CornerRadius="12" Padding="14,12" Margin="0,0,0,8" Background="{ThemeResource SubtleFillColorSecondaryBrush}">
                 <StackPanel Spacing="2">
                     <TextBlock x:Name="ClockText" FontSize="26" FontWeight="SemiBold" />
                     <TextBlock x:Name="DateText" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                 </StackPanel>
             </Border>
 
-            <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="4" Margin="0,10,0,0">
-                <!-- Glass strength (moves to Settings › Appearance when that window exists) -->
-                <Button Style="{StaticResource RailIconButton}"
-                        AutomationProperties.Name="Glass strength" ToolTipService.ToolTip="Glass strength">
-                    <FontIcon Glyph="&#xE790;" FontSize="16" />
+            <!-- Bottom: Porta's settings (small and quiet), then the power button in the middle ("Show lock button" adds a lock button beside it) -->
+            <Grid Grid.Row="4" Margin="0,6,0,0" Height="40">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <!-- Glass strength and Porta's switches (moves to Settings when that window exists) -->
+                <Button Style="{StaticResource RailIconButton}" Width="32" Height="32" Opacity="0.6" HorizontalAlignment="Left" VerticalAlignment="Center"
+                        AutomationProperties.Name="Porta settings" ToolTipService.ToolTip="Porta settings">
+                    <FontIcon Glyph="&#xE790;" FontSize="14" />
                     <Button.Flyout>
-                        <Flyout x:Name="PaletteFlyout" Placement="TopEdgeAlignedRight" Closed="GlassFlyout_Closed">
+                        <Flyout x:Name="PaletteFlyout" Placement="Top" Closed="GlassFlyout_Closed">
                             <ScrollViewer MaxHeight="480" VerticalScrollBarVisibility="Auto">
                             <StackPanel Width="220" Spacing="4">
                                 <TextBlock Text="Glass strength" FontSize="13" FontWeight="SemiBold" />
@@ -552,6 +580,16 @@
                                               Toggled="CloseElsewhereToggle_Toggled" />
                                 <ToggleSwitch x:Name="StartButtonToggle" Header="Open Porta from the Start button"
                                               Toggled="StartButtonToggle_Toggled" />
+                                <ToggleSwitch x:Name="ShowRecentToggle" Header="Show recent items"
+                                              Toggled="ShowRecentToggle_Toggled" />
+                                <ToggleSwitch x:Name="ShowUserFolderToggle" Header="Show my folder link"
+                                              Toggled="ShowUserFolderToggle_Toggled" />
+                                <ToggleSwitch x:Name="ShowControlPanelToggle" Header="Show Control Panel"
+                                              Toggled="ShowControlPanelToggle_Toggled" />
+                                <ToggleSwitch x:Name="ShowClockToggle" Header="Show clock card"
+                                              Toggled="ShowClockToggle_Toggled" />
+                                <ToggleSwitch x:Name="ShowLockToggle" Header="Show lock button"
+                                              Toggled="ShowLockToggle_Toggled" />
                                 <ToggleSwitch x:Name="WikipediaToggle" Header="Search Wikipedia"
                                               Toggled="WikipediaToggle_Toggled" />
                                 <ToggleSwitch x:Name="WikipediaPicturesToggle" Header="Wikipedia pictures"
@@ -586,51 +624,58 @@
                         </Flyout>
                     </Button.Flyout>
                 </Button>
-                <Button Style="{StaticResource RailIconButton}" Click="Lock_Click"
-                        AutomationProperties.Name="Lock" ToolTipService.ToolTip="Lock">
-                    <FontIcon Glyph="&#xE72E;" FontSize="16" />
-                </Button>
-                <Button Style="{StaticResource RailIconButton}"
-                        AutomationProperties.Name="Power options" ToolTipService.ToolTip="Power">
-                    <FontIcon Glyph="&#xE7E8;" FontSize="16" />
-                    <Button.Flyout>
-                        <MenuFlyout Placement="TopEdgeAlignedRight">
-                            <MenuFlyoutItem Text="Sleep" Click="Sleep_Click">
-                                <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE708;" /></MenuFlyoutItem.Icon>
-                            </MenuFlyoutItem>
-                            <MenuFlyoutItem Text="Sign out" Click="SignOut_Click">
-                                <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE748;" /></MenuFlyoutItem.Icon>
-                            </MenuFlyoutItem>
-                            <MenuFlyoutItem Text="Restart" Click="Restart_Click">
-                                <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE777;" /></MenuFlyoutItem.Icon>
-                            </MenuFlyoutItem>
-                            <MenuFlyoutItem Text="Shut down" Click="ShutDown_Click">
-                                <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE7E8;" /></MenuFlyoutItem.Icon>
-                            </MenuFlyoutItem>
-                        </MenuFlyout>
-                    </Button.Flyout>
-                </Button>
-            </StackPanel>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                    <Button x:Name="LockButton" Style="{StaticResource RailIconButton}" Click="Lock_Click" Visibility="Collapsed"
+                            AutomationProperties.Name="Lock" ToolTipService.ToolTip="Lock">
+                        <FontIcon Glyph="&#xE72E;" FontSize="16" />
+                    </Button>
+                    <Button Style="{StaticResource RailIconButton}"
+                            AutomationProperties.Name="Power options" ToolTipService.ToolTip="Power">
+                        <FontIcon Glyph="&#xE7E8;" FontSize="16" />
+                        <Button.Flyout>
+                            <MenuFlyout Placement="Top">
+                                <MenuFlyoutItem Text="Lock" Click="Lock_Click">
+                                    <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE72E;" /></MenuFlyoutItem.Icon>
+                                </MenuFlyoutItem>
+                                <MenuFlyoutItem Text="Sleep" Click="Sleep_Click">
+                                    <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE708;" /></MenuFlyoutItem.Icon>
+                                </MenuFlyoutItem>
+                                <MenuFlyoutItem Text="Sign out" Click="SignOut_Click">
+                                    <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE748;" /></MenuFlyoutItem.Icon>
+                                </MenuFlyoutItem>
+                                <MenuFlyoutItem Text="Restart" Click="Restart_Click">
+                                    <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE777;" /></MenuFlyoutItem.Icon>
+                                </MenuFlyoutItem>
+                                <MenuFlyoutItem Text="Shut down" Click="ShutDown_Click">
+                                    <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE7E8;" /></MenuFlyoutItem.Icon>
+                                </MenuFlyoutItem>
+                            </MenuFlyout>
+                        </Button.Flyout>
+                    </Button>
+                </StackPanel>
+            </Grid>
         </Grid>
+        </Border>
 
         <!-- The one hairline around the visible panel (Windows' own border is off: it would outline the whole
              window rectangle, not the cut shape). Drawn after both panes so nothing covers it. The top edge
              is two pieces that stop 4 px short of the picture's ring, so the edge looks cut out around it:
-             the circle's centre is the middle of the 200 px right column, its ring 38 px in radius, so each
-             piece ends 38 + 4 = 42 px from the centre, i.e. 58 px into the column from either side. -->
-        <Border Grid.Row="1" Grid.ColumnSpan="2" Margin="0,0,142,0" Height="8" VerticalAlignment="Top"
+             the circle's centre is the middle of the 216 px right column, its ring 32 px in radius, so each
+             piece ends 32 + 4 = 36 px from the centre, i.e. 72 px into the column from either side. -->
+        <Border Grid.Row="1" Grid.ColumnSpan="2" Margin="0,0,144,0" Height="8" VerticalAlignment="Top"
                 BorderThickness="1,1,0,0" CornerRadius="8,0,0,0" BorderBrush="{ThemeResource PortaHairlineBrush}" IsHitTestVisible="False" />
-        <Border Grid.Row="1" Grid.Column="1" Width="58" Height="8" HorizontalAlignment="Right" VerticalAlignment="Top"
+        <Border Grid.Row="1" Grid.Column="1" Width="72" Height="8" HorizontalAlignment="Right" VerticalAlignment="Top"
                 BorderThickness="0,1,1,0" CornerRadius="0,8,0,0" BorderBrush="{ThemeResource PortaHairlineBrush}" IsHitTestVisible="False" />
         <Border Grid.Row="1" Grid.ColumnSpan="2" Margin="0,8,0,0"
                 BorderThickness="1,0,1,1" CornerRadius="0,0,8,8" BorderBrush="{ThemeResource PortaHairlineBrush}" IsHitTestVisible="False" />
 
-        <!-- Account picture, centred on the right pane's top edge (72 px with a thin ring = 76 px circle).
+        <!-- Account picture, centred on the right pane's top edge (60 px with a thin ring = 64 px circle).
              Last in the file so it's drawn above both panes and the hairline: nothing crosses the photo. -->
-        <Grid Grid.RowSpan="2" Grid.Column="1" Width="76" Height="76" Margin="0,-2,0,0"
+        <Grid Grid.RowSpan="2" Grid.Column="1" Width="64" Height="64" Margin="0,0,0,0"
               HorizontalAlignment="Center" VerticalAlignment="Top">
             <Ellipse Fill="{ThemeResource PortaRailBrush}" Stroke="{ThemeResource PortaHairlineBrush}" StrokeThickness="2" />
-            <PersonPicture x:Name="Avatar" Width="72" Height="72" />
+            <PersonPicture x:Name="Avatar" Width="60" Height="60" />
         </Grid>
     </Grid>
 </Window>

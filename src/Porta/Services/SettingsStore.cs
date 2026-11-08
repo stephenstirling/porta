@@ -28,7 +28,21 @@ public sealed class SettingsStore
             Current = new();
         }
 
+        Migrate(Current);
         if (Current.Profiles.Count == 0) Current.Profiles.Add(new Profile { Name = "Personal" });
+    }
+
+    /// <summary>
+    /// Brings settings written by an older Porta up to date. Version 1 -> 2 (the new menu look): Recent was always
+    /// shown with no way to change it, so it is switched off to match the new default, and the old default glass
+    /// strength (30) moves to the new default; a strength the user picked themselves is kept.
+    /// </summary>
+    private static void Migrate(PortaSettings settings)
+    {
+        if (settings.Version >= 2) return;
+        settings.ShowRecent = false;
+        if (settings.GlassStrength == 30) settings.GlassStrength = PortaSettings.DefaultGlassStrength;
+        settings.Version = 2;
     }
 
     public void Save()
@@ -77,6 +91,7 @@ public sealed class SettingsStore
             throw new InvalidDataException("That file isn't a Porta settings backup.");
         if (backup.Settings.Version > new PortaSettings().Version)
             throw new InvalidDataException("That backup is from a newer Porta. Update Porta, then restore it.");
+        Migrate(backup.Settings);
 
         Directory.CreateDirectory(_folder);
         if (File.Exists(FilePath)) File.Copy(FilePath, Path.Combine(_folder, "settings.before-restore.json"), overwrite: true);
