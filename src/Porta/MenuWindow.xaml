@@ -390,7 +390,7 @@
 
                     <!-- Installed games, then apps, then store results, each directly below the last; scrolls as one -->
                     <ScrollViewer x:Name="ResultsScroller" VerticalScrollBarVisibility="Auto">
-                        <StackPanel Spacing="6" PointerMoved="Results_PointerMoved">
+                        <StackPanel Spacing="6" Margin="0,0,14,0" PointerMoved="Results_PointerMoved">
                             <StackPanel.Resources>
                                 <!-- Keyboard and mouse share one highlight (the selected row, in the accent colour). The plain
                                      hover and press shades are off here so the highlight never shows on two rows at once;
@@ -483,13 +483,13 @@
                                Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />
 
                     <!-- Search a game store for what was typed -->
-                    <StackPanel x:Name="StoreLinks" Grid.Row="1" Orientation="Horizontal" Spacing="4" Visibility="Collapsed">
-                        <TextBlock Text="Search stores:" FontSize="12" VerticalAlignment="Center" Margin="4,0,4,0"
+                    <StackPanel x:Name="StoreLinks" Grid.Row="1" Orientation="Horizontal" Spacing="0" Visibility="Collapsed">
+                        <TextBlock Text="Search stores:" FontSize="12" VerticalAlignment="Center" Margin="4,0,2,0"
                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                        <HyperlinkButton x:Name="SteamStoreLink" Content="Steam" FontSize="12" Click="StoreLink_Click" Tag="steam" />
-                        <HyperlinkButton x:Name="EpicStoreLink" Content="Epic Games" FontSize="12" Click="StoreLink_Click" Tag="epic" />
-                        <HyperlinkButton x:Name="BattleNetStoreLink" Content="Battle.net" FontSize="12" Click="StoreLink_Click" Tag="battlenet" />
-                        <HyperlinkButton x:Name="MsStoreLink" Content="Microsoft Store" FontSize="12" Click="StoreLink_Click" Tag="xbox" />
+                        <HyperlinkButton x:Name="SteamStoreLink" Content="Steam" FontSize="12" Padding="7,4" Click="StoreLink_Click" Tag="steam" />
+                        <HyperlinkButton x:Name="EpicStoreLink" Content="Epic Games" FontSize="12" Padding="7,4" Click="StoreLink_Click" Tag="epic" />
+                        <HyperlinkButton x:Name="BattleNetStoreLink" Content="Battle.net" FontSize="12" Padding="7,4" Click="StoreLink_Click" Tag="battlenet" />
+                        <HyperlinkButton x:Name="MsStoreLink" Content="Microsoft Store" FontSize="12" Padding="7,4" Click="StoreLink_Click" Tag="xbox" />
                     </StackPanel>
                 </Grid>
             </Grid>
