@@ -2,6 +2,7 @@ using Microsoft.UI.Composition;
 using Microsoft.UI.Composition.SystemBackdrops;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Media;
+using Porta.Models;
 using Windows.UI;
 
 namespace Porta;
@@ -46,7 +47,7 @@ internal sealed class PanelBackdrop : SystemBackdrop
 
     private void OnThemeChanged(FrameworkElement sender, object args) => ApplyTheme();
 
-    private int _strength = 30;
+    private int _strength = PortaSettings.DefaultGlassStrength;
 
     /// <summary>Glass strength, 0 (clearest) to 100 (most frosted). Applies immediately.</summary>
     public int Strength
@@ -67,21 +68,22 @@ internal sealed class PanelBackdrop : SystemBackdrop
         _config.Theme = IsLight ? SystemBackdropTheme.Light : SystemBackdropTheme.Dark;
         if (_controller is null) return;
 
-        // Tint and luminosity rise together with strength. Even at 0 there's enough tint for text
-        // to stay readable over a bright wallpaper; at 100 the wallpaper is only a soft colour cast.
+        // Tint and luminosity rise together with strength. The curve is low on purpose: even the middle of the
+        // slider lets the wallpaper's colours clearly show through, and only near 100 does it turn into a
+        // soft frosted tint. (Windows doesn't let the blur itself be changed, only how much tint sits on top.)
         float s = _strength / 100f;
         if (IsLight)
         {
             _controller.TintColor = Color.FromArgb(255, 0xF7, 0xF7, 0xFA);
-            _controller.TintOpacity = 0.15f + 0.55f * s;
-            _controller.LuminosityOpacity = 0.40f + 0.50f * s;
+            _controller.TintOpacity = 0.06f + 0.55f * s;
+            _controller.LuminosityOpacity = 0.20f + 0.60f * s;
             _controller.FallbackColor = Color.FromArgb(255, 0xF3, 0xF3, 0xF6);
         }
         else
         {
             _controller.TintColor = Color.FromArgb(255, 0x12, 0x14, 0x1C);
-            _controller.TintOpacity = 0.15f + 0.60f * s;
-            _controller.LuminosityOpacity = 0.35f + 0.55f * s;
+            _controller.TintOpacity = 0.03f + 0.55f * s;
+            _controller.LuminosityOpacity = 0.10f + 0.60f * s;
             _controller.FallbackColor = Color.FromArgb(255, 0x17, 0x19, 0x22);
         }
     }
