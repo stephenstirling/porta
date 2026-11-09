@@ -188,6 +188,11 @@ public sealed partial class MenuWindow : Window
         PlaceAboveTaskbar();
         AppWindow.Show(true);
         Native.ForceForeground(_hwnd);
+        try { _shadow.Show(_hwnd, _shape, _scale, Root.ActualTheme == ElementTheme.Light); }
+        catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or InvalidOperationException or ArgumentException or OutOfMemoryException)
+        {
+            System.Diagnostics.Debug.WriteLine("Porta: couldn't draw the shadow: " + ex.Message); // the menu works without it
+        }
         SearchBox.Focus(FocusState.Programmatic);
         _isOpen = true;
         _shownAt = Environment.TickCount64;
@@ -202,6 +207,7 @@ public sealed partial class MenuWindow : Window
         _focusTimer.Stop();
         _isOpen = false;
         UpdateOutsideClickWatch();
+        _shadow.Hide();
         AppWindow.Hide();
     }
 
@@ -281,6 +287,8 @@ public sealed partial class MenuWindow : Window
     }
 
     private double _scale = 1.0; // display scale the menu was last placed at
+    private readonly ShadowWindow _shadow = new();
+    private ShadowWindow.Shape _shape;
 
     /// <summary>
     /// Cuts the window to the panel plus the account picture's circle above its top edge, so the strip
@@ -304,6 +312,10 @@ public sealed partial class MenuWindow : Window
         int cy = dy + overhang;
         var circle = Native.CreateEllipticRgn(cx - radius, cy - radius, cx + radius + 1, cy + radius + 1);
 
+        // Remember the shape in screen pixels: the shadow behind the menu follows it.
+        _shape = new ShadowWindow.Shape(origin.X, origin.Y + overhang, origin.X + client.Right + 1, origin.Y + client.Bottom + 1,
+            corner / 2.0, origin.X + client.Right - Math.Round(RightPaneWidth / 2.0 * scale), origin.Y + overhang, radius);
+
         Native.CombineRgn(panel, panel, circle, Native.RGN_OR);
         Native.DeleteObject(circle);
         Native.SetWindowRgn(_hwnd, panel, true); // Windows owns the region from here
@@ -313,6 +325,7 @@ public sealed partial class MenuWindow : Window
     {
         SearchBox.Text = "";
         _showingAllApps = false;
+        AllAppsZoom.IsZoomedInViewActive = true;
         ShowPanel(PinnedPanel);
     }
 
@@ -321,7 +334,7 @@ public sealed partial class MenuWindow : Window
     private void ShowPanel(UIElement panel)
     {
         PinnedPanel.Visibility = panel == PinnedPanel ? Visibility.Visible : Visibility.Collapsed;
-        AllAppsList.Visibility = panel == AllAppsList ? Visibility.Visible : Visibility.Collapsed;
+        AllAppsZoom.Visibility = panel == AllAppsZoom ? Visibility.Visible : Visibility.Collapsed;
         SearchPanel.Visibility = panel == SearchPanel ? Visibility.Visible : Visibility.Collapsed;
         ViewHeader.Visibility = panel == SearchPanel ? Visibility.Collapsed : Visibility.Visible;
         ViewTitle.Text = _showingAllApps ? "All apps" : "Pinned";
@@ -348,7 +361,9 @@ public sealed partial class MenuWindow : Window
             .OrderBy(g => g.Key == "#" ? "" : g.Key, StringComparer.CurrentCultureIgnoreCase)
             .Select(g => new AppGroup(g.Key, g))
             .ToList();
-        AllAppsList.ItemsSource = new CollectionViewSource { IsSourceGrouped = true, Source = groups }.View;
+        var view = new CollectionViewSource { IsSourceGrouped = true, Source = groups }.View;
+        AllAppsList.ItemsSource = view;
+        AllAppsLetters.ItemsSource = view.CollectionGroups; // the zoomed-out view: one tile per letter
     }
 
     private static string GroupKey(string name)
@@ -410,7 +425,7 @@ public sealed partial class MenuWindow : Window
         WebList.Visibility = Visibility.Collapsed;
         if (query.Length == 0)
         {
-            ShowPanel(_showingAllApps ? AllAppsList : PinnedPanel);
+            ShowPanel(_showingAllApps ? AllAppsZoom : PinnedPanel);
             return;
         }
 
@@ -1573,7 +1588,8 @@ public sealed partial class MenuWindow : Window
     {
         if (SearchBox.Text.Trim().Length > 0) return;
         _showingAllApps = !_showingAllApps;
-        ShowPanel(_showingAllApps ? AllAppsList : PinnedPanel);
+        AllAppsZoom.IsZoomedInViewActive = true; // always open at the apps, not the letters
+        ShowPanel(_showingAllApps ? AllAppsZoom : PinnedPanel);
     }
 
     // ---------- Launching ----------

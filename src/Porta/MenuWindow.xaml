@@ -367,19 +367,38 @@
                 </Grid>
 
                 <!-- All apps, grouped A–Z -->
-                <ListView x:Name="AllAppsList" Visibility="Collapsed"
-                          SelectionMode="None" IsItemClickEnabled="True" ItemClick="App_ItemClick"
-                          ItemTemplate="{StaticResource AppRowTemplate}">
-                    <ListView.GroupStyle>
-                        <GroupStyle>
-                            <GroupStyle.HeaderTemplate>
-                                <DataTemplate x:DataType="m:AppGroup">
-                                    <TextBlock Text="{x:Bind Key}" FontWeight="SemiBold" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+                <!-- Letter jump: click a letter heading (A, B, ...) to see all the letters, then click one to jump to it -->
+                <SemanticZoom x:Name="AllAppsZoom" Visibility="Collapsed" IsZoomOutButtonEnabled="False">
+                    <SemanticZoom.ZoomedInView>
+                        <ListView x:Name="AllAppsList"
+                                  SelectionMode="None" IsItemClickEnabled="True" ItemClick="App_ItemClick"
+                                  ItemTemplate="{StaticResource AppRowTemplate}">
+                            <ListView.GroupStyle>
+                                <GroupStyle>
+                                    <GroupStyle.HeaderTemplate>
+                                        <DataTemplate x:DataType="m:AppGroup">
+                                            <TextBlock Text="{x:Bind Key}" FontWeight="SemiBold" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"
+                                                       ToolTipService.ToolTip="Jump to a letter" />
+                                        </DataTemplate>
+                                    </GroupStyle.HeaderTemplate>
+                                </GroupStyle>
+                            </ListView.GroupStyle>
+                        </ListView>
+                    </SemanticZoom.ZoomedInView>
+                    <SemanticZoom.ZoomedOutView>
+                        <GridView x:Name="AllAppsLetters" SelectionMode="None" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <GridView.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Width="52" Height="52" CornerRadius="8" Background="{ThemeResource SubtleFillColorSecondaryBrush}">
+                                        <TextBlock Text="{Binding Group.Key}" FontSize="18" FontWeight="SemiBold"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                   Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+                                    </Border>
                                 </DataTemplate>
-                            </GroupStyle.HeaderTemplate>
-                        </GroupStyle>
-                    </ListView.GroupStyle>
-                </ListView>
+                            </GridView.ItemTemplate>
+                        </GridView>
+                    </SemanticZoom.ZoomedOutView>
+                </SemanticZoom>
 
                 <!-- Search results -->
                 <Grid x:Name="SearchPanel" Visibility="Collapsed" RowSpacing="6">
@@ -496,10 +515,10 @@
         </Grid>
 
         <!-- ===== Right: account, places, power ===== -->
-        <Border Grid.Row="1" Grid.Column="1" Margin="0,8,8,8" CornerRadius="10"
+        <Border Grid.Row="1" Grid.Column="1" CornerRadius="0,8,8,0"
                 Background="{ThemeResource PortaRailBrush}"
-                BorderThickness="1" BorderBrush="{ThemeResource PortaRailBorderBrush}">
-        <Grid Padding="10,34,10,10" RowSpacing="2">
+                BorderThickness="1,0,0,0" BorderBrush="{ThemeResource PortaRailBorderBrush}">
+        <Grid Padding="10,42,10,12" RowSpacing="2">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
