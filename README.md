@@ -219,8 +219,8 @@ or DuckDuckGo or Bing, chosen in the same pop-up; a saved choice is always kept)
 open) does your default browser open the search page of the engine, and **that engine (Google unless you picked
 another) then receives the words you typed**, under that company's own privacy policy. Until you click, nothing is sent.
 
-**People in Ocula** (`SearchOculaPeople`, **off** by default, "Search people in Ocula" switch in the glass-strength
-pop-up, saved and included in settings backups): when switched on, Porta reads the names Ocula keeps in
+**People in Ocula** (`SearchOculaPeople`, **on** by default, "Search people in Ocula" switch in the glass-strength
+pop-up, saved and included in settings backups; a choice already saved is kept): while switched on, Porta reads the names Ocula keeps in
 `%LocalAppData%\Stirling\Ocula\people-index.json` (format version 1) so you can find a person from search. A packaged
 Ocula (Store or sideloaded) has its writes there redirected by Windows into its own package folder, so Porta also looks in
 `%LocalAppData%\Packages\StephenStirling.Ocula_*\LocalCache\Local\Stirling\Ocula\` and reads whichever of the places has

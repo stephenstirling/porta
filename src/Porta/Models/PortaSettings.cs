@@ -45,8 +45,11 @@ public sealed class PortaSettings
 
     /// <summary>Download Epic cover pictures for the Epic results being shown. When off, nothing is downloaded.</summary>
     public bool EpicCoverImages { get; set; } = true;
-    /// <summary>Show people named in Ocula (read from Ocula's local people index, never online). Off until switched on.</summary>
-    public bool SearchOculaPeople { get; set; } = false;
+    /// <summary>
+    /// Show people named in Ocula (read from Ocula's local people index, never online). On by default: with no Ocula, or Ocula's own
+    /// "Share people with Porta" switched off, there is no file and nothing is shown. A choice already saved in settings.json is kept.
+    /// </summary>
+    public bool SearchOculaPeople { get; set; } = true;
 
     /// <summary>Show article pictures on Wikipedia rows (downloaded from upload.wikimedia.org). Only matters while Search Wikipedia is on.</summary>
     public bool WikipediaPictures { get; set; } = true;
