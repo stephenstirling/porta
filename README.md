@@ -105,6 +105,14 @@ The app icon is the Keyhole (`Assets/Porta.ico`, with the source in `Assets/Port
 - All apps, grouped A–Z, with real icons for both desktop and Store apps.
 - Search that forgives: initials ("vsc"), letters in order ("phts"), and one typo all match. Arrow keys and Enter work.
 - Recent files, folder shortcuts, Windows Settings, Run, Lock, and a power menu (Sleep, Sign out, Restart, Shut down).
+- **Update and restart / Update and shut down** (`ShowUpdateOptions`, on by default, "Show update options in the power
+  menu" switch in the palette pop-up, saved and included in settings backups): while Windows has updates waiting, the
+  power button gets a small orange dot and the power menu offers "Update and restart" and "Update and shut down", with
+  plain Restart and Shut down still below them to skip the updates. Typing "update", "restart" or "shutdown" in search
+  shows them too (below any app that matches). Both ask "Update and restart now?" first, install the updates as part of
+  restarting or shutting down, and never force apps closed. Porta checks when the menu or the power menu opens, at most
+  once a minute, using what Windows itself reads (Windows Update's own state; no admin rights, nothing goes online).
+  With the switch off the menu looks as it did before.
 - Only one copy ever runs; starting Porta again just opens the menu.
 - Games in search from **Steam, Epic Games, Battle.net and the Xbox app**, read from each launcher's own files
   on this PC. Typing "red dead" or "rdr2" finds Red Dead Redemption 2 with a Play button that starts it through
