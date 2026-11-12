@@ -48,6 +48,9 @@ public static class SystemCatalog
         PowerItem("Sleep", PowerAction.Sleep, "", confirm: false, "suspend"),
         PowerItem("Restart", PowerAction.Restart, "", confirm: true, "reboot"),
         PowerItem("Shut down", PowerAction.ShutDown, "", confirm: true, "shutdown", "power off", "turn off"),
+        // Only searched while Windows has updates waiting and "Show update options in the power menu" is on.
+        PowerItem("Update and restart", PowerAction.UpdateAndRestart, "", confirm: true, "update", "restart", "reboot", "install updates"),
+        PowerItem("Update and shut down", PowerAction.UpdateAndShutDown, "", confirm: true, "update", "shutdown", "shut down", "power off", "turn off", "install updates"),
     ];
 
     /// <summary>Icon for a Settings page that has none of its own, by the first part of its path.</summary>
@@ -115,12 +118,13 @@ public static class SystemCatalog
         return section is not null && SectionGlyphs.TryGetValue(section, out var g) ? g : ""; // Settings gear
     }
 
-    /// <summary>Best matches by name or alias, using the same rules as app search.</summary>
-    public static List<SystemEntry> Search(string query, int max = 5)
+    /// <summary>Best matches by name or alias, using the same rules as app search. The update actions only when <paramref name="updatesPending"/>.</summary>
+    public static List<SystemEntry> Search(string query, bool updatesPending = false, int max = 5)
     {
         query = query.Trim();
         if (query.Length < 2) return [];
         return All
+            .Where(e => updatesPending || !e.IsUpdateAction)
             .Select(e => (Entry: e, Score: e.Aliases.Select(a => SearchService.Score(a, query)).Prepend(SearchService.Score(e.Name, query)).Max()))
             .Where(x => x.Score > 0)
             .OrderByDescending(x => x.Score)
