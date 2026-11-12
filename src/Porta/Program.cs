@@ -20,6 +20,10 @@ public static class Program
         // --version, --status and --quit answer and exit before any UI or WinRT start-up.
         if (Cli.TryRun(args) is int exitCode) return exitCode;
 
+        // Hidden test switch: the update options show as if Windows had updates waiting, but only say what they would do.
+        // (A copy already running ignores it, so close that one first.)
+        Services.UpdateStatus.Simulated = args.Any(a => a.Equals("--simulate-pending-update", StringComparison.OrdinalIgnoreCase));
+
         WinRT.ComWrappersSupport.InitializeComWrappers();
 
         var instance = AppInstance.FindOrRegisterForKey("Porta.Main");
