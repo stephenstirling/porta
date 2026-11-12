@@ -27,6 +27,12 @@ public sealed class PortaSettings
     /// <summary>A lock button beside the power button. Lock is always in the power menu.</summary>
     public bool ShowLockButton { get; set; } = false;
 
+    /// <summary>
+    /// While Windows has updates waiting, the power menu (and search) offer "Update and restart" and "Update and shut down"
+    /// above plain Restart and Shut down, and the power button gets an orange dot. When off, the menu looks as before.
+    /// </summary>
+    public bool ShowUpdateOptions { get; set; } = true;
+
     /// <summary>Hide the menu when focus moves to something else (another app, the desktop, the taskbar). When off, only Esc or the Win key closes it.</summary>
     public bool CloseWhenClickedElsewhere { get; set; } = true;
 
