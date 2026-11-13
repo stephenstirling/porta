@@ -46,6 +46,10 @@ file, the thumbprint of the certificate that signs it, the exe, the minimum Wind
 (`%LocalAppData%\Programs\Porta`), where its data lives (`%LocalAppData%\Porta`), how to stop it, and how to uninstall
 (stop it, remove the install folder, keep the data). The copy in the repository has no version, so it never goes stale. Every
 release attaches its own copy with `version`, `tag` and `asset` added, and its checksum is in `SHA256SUMS.txt`.
+Integra keeps each version in its own folder (`%LocalAppData%\Integra\Apps\porta\<version>`) and closes Porta with
+`--quit` before an update, without starting it again. So the sign-in entry never points at the wrong copy for long: when
+Porta starts at sign-in from an Integra folder and Integra's `installed.json` names another Porta.exe as the current one
+(after an update or a rollback), it starts that one and exits, and the current one re-points the entry.
 The release workflow stops, and publishes nothing, unless that file matches the build: same repo, one zip matching
 `assetPattern`, `signerThumbprint` equal to the certificate that signed the release, `Porta.exe` inside the zip, and
 the exe's file-properties version equal to the tag.
@@ -75,9 +79,24 @@ removed when Porta exits (tray **Exit Porta**, `--quit`, or the process ending),
   all and Windows opens its own Start menu on a click. It needs no admin rights.
 - **Tray icon.** Click it to open or close Porta.
 
+**Starting with Windows** (`StartAtSignIn`, "Start Porta when I sign in" switch in the palette pop-up, saved and included
+in settings backups). A new copy asks once in the menu ("Start Porta when you sign in? Yes / No"); settings from an older
+Porta are switched on, with a one-time notice. When on, Porta adds a value named `Porta` to
+`HKCU\Software\Microsoft\Windows\CurrentVersion\Run` (your account only, no admin rights) that starts it with
+`--startup`: no window, just the Win key and the tray icon, and a second copy started that way simply exits. Windows starts
+these entries a few seconds after the desktop appears. Every time Porta starts it points the entry at the Porta.exe that is
+running, so an update that moves Porta to a new folder is picked up; a development build (`bin\Debug` or `bin\Release`)
+never takes over an entry that points at an installed Porta that still exists. Turning the switch off removes the entry.
+If you turn Porta off in **Settings > Apps > Startup**, Porta respects that: the pop-up says "Windows has Porta's startup
+turned off" with a button to that Settings page, and Porta never turns it back on itself.
+
 Both the Win key and the Start button work through a Windows "hook" that only exists while Porta runs. **If Porta exits or
 crashes (even if you end it in Task Manager), Windows removes the hook by itself and the normal Start menu is back.**
 Ctrl+Esc isn't taken over: it still opens the Windows Start menu.
+
+**If Porta stops** (a crash, or ending it in Task Manager), the normal Windows Start menu is back straight away. To start
+Porta again: open Integra and click **Open** on Porta, or run `Porta.exe` from its folder (`%LocalAppData%\Integra\Apps\porta\<version>`).
+It also starts again by itself at your next sign-in. (Windows' own Start search doesn't find Porta: it has no Start menu shortcut.)
 
 Not covered: a taskbar drawn by another program (for example DisplayFusion's own taskbar), and taps with a finger or pen,
 which Windows may handle before Porta sees them.
