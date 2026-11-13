@@ -609,6 +609,8 @@
                                               Toggled="ShowClockToggle_Toggled" />
                                 <ToggleSwitch x:Name="ShowLockToggle" Header="Show lock button"
                                               Toggled="ShowLockToggle_Toggled" />
+                                <ToggleSwitch x:Name="ShowUpdateOptionsToggle" Header="Show update options in the power menu"
+                                              Toggled="ShowUpdateOptionsToggle_Toggled" />
                                 <ToggleSwitch x:Name="WikipediaToggle" Header="Search Wikipedia"
                                               Toggled="WikipediaToggle_Toggled" />
                                 <ToggleSwitch x:Name="WikipediaPicturesToggle" Header="Wikipedia pictures"
@@ -649,11 +651,16 @@
                             AutomationProperties.Name="Lock" ToolTipService.ToolTip="Lock">
                         <FontIcon Glyph="&#xE72E;" FontSize="16" />
                     </Button>
-                    <Button Style="{StaticResource RailIconButton}"
+                    <Button x:Name="PowerButton" Style="{StaticResource RailIconButton}"
                             AutomationProperties.Name="Power options" ToolTipService.ToolTip="Power">
-                        <FontIcon Glyph="&#xE7E8;" FontSize="16" />
+                        <!-- The orange dot: Windows has updates waiting (like the badge on Windows' own power button) -->
+                        <Grid Width="20" Height="20">
+                            <FontIcon Glyph="&#xE7E8;" FontSize="16" />
+                            <Ellipse x:Name="UpdateDot" Width="7" Height="7" Fill="#F7630C" Visibility="Collapsed"
+                                     HorizontalAlignment="Right" VerticalAlignment="Top" />
+                        </Grid>
                         <Button.Flyout>
-                            <MenuFlyout Placement="Top">
+                            <MenuFlyout Placement="Top" Opening="PowerFlyout_Opening">
                                 <MenuFlyoutItem Text="Lock" Click="Lock_Click">
                                     <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE72E;" /></MenuFlyoutItem.Icon>
                                 </MenuFlyoutItem>
@@ -662,6 +669,13 @@
                                 </MenuFlyoutItem>
                                 <MenuFlyoutItem Text="Sign out" Click="SignOut_Click">
                                     <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE748;" /></MenuFlyoutItem.Icon>
+                                </MenuFlyoutItem>
+                                <!-- Only while Windows has updates waiting; plain Restart and Shut down stay below to skip them -->
+                                <MenuFlyoutItem x:Name="UpdateRestartItem" Text="Update and restart" Click="UpdateAndRestart_Click" Visibility="Collapsed">
+                                    <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE895;" /></MenuFlyoutItem.Icon>
+                                </MenuFlyoutItem>
+                                <MenuFlyoutItem x:Name="UpdateShutDownItem" Text="Update and shut down" Click="UpdateAndShutDown_Click" Visibility="Collapsed">
+                                    <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE895;" /></MenuFlyoutItem.Icon>
                                 </MenuFlyoutItem>
                                 <MenuFlyoutItem Text="Restart" Click="Restart_Click">
                                     <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE777;" /></MenuFlyoutItem.Icon>

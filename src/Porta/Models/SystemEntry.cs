@@ -2,7 +2,7 @@ namespace Porta.Models;
 
 public enum SystemKind { Tool, Settings, Power }
 
-public enum PowerAction { Lock, SignOut, Sleep, Restart, ShutDown }
+public enum PowerAction { Lock, SignOut, Sleep, Restart, ShutDown, UpdateAndRestart, UpdateAndShutDown }
 
 /// <summary>
 /// A built-in Windows tool, Settings page or power action. Not installed apps, so they don't appear
@@ -32,6 +32,9 @@ public sealed class SystemEntry
 
     /// <summary>Ask "Are you sure?" first (Restart, Shut down).</summary>
     public bool Confirm { get; init; }
+
+    /// <summary>"Update and restart" or "Update and shut down": only offered while Windows has updates waiting.</summary>
+    public bool IsUpdateAction => Power is PowerAction.UpdateAndRestart or PowerAction.UpdateAndShutDown;
 
     /// <summary>Segoe Fluent Icons glyph.</summary>
     public string Glyph { get; init; } = "";

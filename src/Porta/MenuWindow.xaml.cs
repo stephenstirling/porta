@@ -181,6 +181,7 @@ public sealed partial class MenuWindow : Window
         RefreshPictureIfChanged();
         if (App.Catalog.IsLoaded) App.Games.RefreshIfStale(App.Catalog.Apps);
         if (App.Settings.Current.SearchEpicLibrary) EpicCatalogCache.RefreshIfChanged(); // background, only if the file changed
+        _ = RefreshUpdateOptionsAsync(); // background, at most once a minute
         ClockText.Text = DateTime.Now.ToString("t");
         DateText.Text = DateTime.Now.ToString("dddd, MMMM d");
 
@@ -482,7 +483,7 @@ public sealed partial class MenuWindow : Window
 
         // Windows tools, Settings pages and power actions, minus any already listed as an app.
         _system.Clear();
-        foreach (var entry in SystemCatalog.Search(query))
+        foreach (var entry in SystemCatalog.Search(query, UpdatesOffered))
         {
             if (_results.Any(a => a.Name.Equals(entry.Name, StringComparison.OrdinalIgnoreCase))) continue;
             _system.Add(entry);
@@ -1097,6 +1098,7 @@ public sealed partial class MenuWindow : Window
         ShowControlPanelToggle.IsOn = s.ShowControlPanel;
         ShowClockToggle.IsOn = s.ShowClockCard;
         ShowLockToggle.IsOn = s.ShowLockButton;
+        ShowUpdateOptionsToggle.IsOn = s.ShowUpdateOptions;
         ApplyLayoutSettings();
     }
 
@@ -1107,6 +1109,7 @@ public sealed partial class MenuWindow : Window
         ControlPanelRow.Visibility = s.ShowControlPanel ? Visibility.Visible : Visibility.Collapsed;
         ClockCard.Visibility = s.ShowClockCard ? Visibility.Visible : Visibility.Collapsed;
         LockButton.Visibility = s.ShowLockButton ? Visibility.Visible : Visibility.Collapsed;
+        ApplyUpdateOptions();
         RefreshRecent();
     }
 
@@ -1148,6 +1151,71 @@ public sealed partial class MenuWindow : Window
         App.Settings.Current.ShowLockButton = ShowLockToggle.IsOn;
         App.Settings.Save();
         ApplyLayoutSettings();
+    }
+
+    private void ShowUpdateOptionsToggle_Toggled(object sender, RoutedEventArgs e)
+    {
+        if (App.Settings.Current.ShowUpdateOptions == ShowUpdateOptionsToggle.IsOn) return;
+        App.Settings.Current.ShowUpdateOptions = ShowUpdateOptionsToggle.IsOn;
+        App.Settings.Save();
+        ApplyLayoutSettings();
+        if (ShowUpdateOptionsToggle.IsOn) _ = RefreshUpdateOptionsAsync();
+    }
+
+    // ---------- Update and restart / Update and shut down ----------
+
+    /// <summary>Windows has updates waiting and the switch is on: offer the update actions.</summary>
+    private static bool UpdatesOffered => App.Settings.Current.ShowUpdateOptions && UpdateStatus.IsPending;
+
+    /// <summary>Asks Windows (or uses the answer from the last minute), then shows or hides the dot and the menu items.</summary>
+    private async Task RefreshUpdateOptionsAsync()
+    {
+        if (!App.Settings.Current.ShowUpdateOptions) return;
+        await UpdateStatus.CheckAsync();
+        ApplyUpdateOptions();
+    }
+
+    private void ApplyUpdateOptions()
+    {
+        var shown = UpdatesOffered ? Visibility.Visible : Visibility.Collapsed;
+        UpdateDot.Visibility = shown;
+        UpdateRestartItem.Visibility = shown;
+        UpdateShutDownItem.Visibility = shown;
+        ToolTipService.SetToolTip(PowerButton, UpdatesOffered ? "Power (updates are waiting)" : "Power");
+    }
+
+    private void PowerFlyout_Opening(object? sender, object e)
+    {
+        ApplyUpdateOptions();
+        _ = RefreshUpdateOptionsAsync();
+    }
+
+    private void UpdateAndRestart_Click(object sender, RoutedEventArgs e) => _ = OpenSystemAsync(PowerEntry(PowerAction.UpdateAndRestart));
+    private void UpdateAndShutDown_Click(object sender, RoutedEventArgs e) => _ = OpenSystemAsync(PowerEntry(PowerAction.UpdateAndShutDown));
+
+    private static SystemEntry PowerEntry(PowerAction action) => SystemCatalog.All.First(x => x.Power == action);
+
+    /// <summary>Starts the update-and-restart or update-and-shut-down. With --simulate-pending-update it only says what would happen.</summary>
+    private async Task RunUpdateActionAsync(SystemEntry entry)
+    {
+        var restart = entry.Power == PowerAction.UpdateAndRestart;
+        if (UpdateStatus.Simulated)
+        {
+            await ShowMessageAsync("Simulated update", $"Porta would now install the waiting updates and {(restart ? "restart" : "shut down")}. " +
+                "Nothing was done, because Porta was started with --simulate-pending-update.");
+            return;
+        }
+        var error = restart ? Launcher.UpdateAndRestart() : Launcher.UpdateAndShutDown();
+        if (error == 0) { HideMenu(); return; }
+        await ShowMessageAsync("Windows didn't start it", $"Windows said no ({new System.ComponentModel.Win32Exception((int)error).Message}). " +
+            "Try again, or use Settings > Windows Update.");
+    }
+
+    private async Task ShowMessageAsync(string title, string text)
+    {
+        _confirmDialog = new ContentDialog { XamlRoot = Root.XamlRoot, Title = title, Content = text, CloseButtonText = "OK", DefaultButton = ContentDialogButton.Close };
+        await _confirmDialog.ShowAsync();
+        _confirmDialog = null;
     }
 
     private void CloseElsewhereToggle_Toggled(object sender, RoutedEventArgs e)
@@ -1266,14 +1334,21 @@ public sealed partial class MenuWindow : Window
             {
                 XamlRoot = Root.XamlRoot,
                 Title = $"{entry.Name} now?",
-                Content = "Save your work first. Open apps will close.",
-                PrimaryButtonText = entry.Name,
+                Content = entry.IsUpdateAction
+                    ? $"Windows installs the waiting updates, then {(entry.Power == PowerAction.UpdateAndRestart ? "restarts" : "turns off")}. Save your work first: apps with unsaved work will ask before closing."
+                    : "Save your work first. Open apps will close.",
+                PrimaryButtonText = entry.IsUpdateAction ? "Yes" : entry.Name,
                 CloseButtonText = "Cancel",
                 DefaultButton = ContentDialogButton.Close,
             };
             var answer = await _confirmDialog.ShowAsync();
             _confirmDialog = null;
             if (answer != ContentDialogResult.Primary) return;
+        }
+        if (entry.IsUpdateAction)
+        {
+            await RunUpdateActionAsync(entry);
+            return;
         }
         HideMenu();
         Launcher.OpenSystem(entry);

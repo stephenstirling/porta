@@ -179,6 +179,35 @@ internal static class Native
     [DllImport("user32.dll")] public static extern bool LockWorkStation();
     [DllImport("powrprof.dll")] public static extern bool SetSuspendState(bool hibernate, bool forceCritical, bool disableWakeEvent);
 
+    // InitiateShutdownW: restart or shut down, installing waiting updates first. No SHUTDOWN_FORCE_* flag, so apps get asked.
+    public const uint SHUTDOWN_RESTART = 0x04, SHUTDOWN_POWEROFF = 0x08, SHUTDOWN_INSTALL_UPDATES = 0x40;
+    public const uint SHTDN_REASON_FLAG_PLANNED = 0x80000000, SHTDN_REASON_MAJOR_OPERATINGSYSTEM = 0x00020000, SHTDN_REASON_MINOR_UPGRADE = 0x03;
+
+    [DllImport("advapi32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    public static extern uint InitiateShutdownW(string? machineName, string? message, uint gracePeriod, uint shutdownFlags, uint reason);
+
+    public const uint TOKEN_ADJUST_PRIVILEGES = 0x20, TOKEN_QUERY = 0x08, SE_PRIVILEGE_ENABLED = 0x02;
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct TOKEN_PRIVILEGES
+    {
+        public uint PrivilegeCount;
+        public long Luid;
+        public uint Attributes;
+    }
+
+    [DllImport("advapi32.dll", SetLastError = true)]
+    public static extern bool OpenProcessToken(IntPtr process, uint access, out IntPtr token);
+
+    [DllImport("advapi32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    public static extern bool LookupPrivilegeValueW(string? systemName, string name, out long luid);
+
+    [DllImport("advapi32.dll", SetLastError = true)]
+    public static extern bool AdjustTokenPrivileges(IntPtr token, bool disableAll, ref TOKEN_PRIVILEGES newState, uint length, IntPtr previous, IntPtr returnLength);
+
+    [DllImport("kernel32.dll")] public static extern IntPtr GetCurrentProcess();
+    [DllImport("kernel32.dll")] public static extern bool CloseHandle(IntPtr handle);
+
     // ---- User ----
     [DllImport("secur32.dll", CharSet = CharSet.Unicode)]
     private static extern bool GetUserNameEx(int nameFormat, StringBuilder name, ref uint size);
