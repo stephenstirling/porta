@@ -317,7 +317,16 @@
                         <RowDefinition Height="*" />
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
+
+                    <!-- Asked once: "Start Porta when you sign in?" (or, for settings from an older Porta, a one-time notice that it's on) -->
+                    <InfoBar x:Name="StartupInfoBar" Grid.Row="3" IsOpen="False" IsClosable="False" Severity="Informational" Margin="4,0,4,4">
+                        <StackPanel x:Name="StartupAnswerButtons" Orientation="Horizontal" Spacing="8" Margin="0,0,0,12">
+                            <Button Content="Yes" Style="{StaticResource AccentButtonStyle}" MinWidth="72" Click="StartupYes_Click" />
+                            <Button Content="No" MinWidth="72" Click="StartupNo_Click" />
+                        </StackPanel>
+                    </InfoBar>
 
                     <GridView x:Name="PinnedGrid" HorizontalAlignment="Center"
                               SelectionMode="None" IsItemClickEnabled="True" ItemClick="App_ItemClick"
@@ -584,7 +593,7 @@
                         AutomationProperties.Name="Porta settings" ToolTipService.ToolTip="Porta settings">
                     <FontIcon Glyph="&#xE790;" FontSize="14" />
                     <Button.Flyout>
-                        <Flyout x:Name="PaletteFlyout" Placement="Top" Closed="GlassFlyout_Closed">
+                        <Flyout x:Name="PaletteFlyout" Placement="Top" Opening="PaletteFlyout_Opening" Closed="GlassFlyout_Closed">
                             <ScrollViewer MaxHeight="480" VerticalScrollBarVisibility="Auto">
                             <StackPanel Width="220" Spacing="4">
                                 <TextBlock Text="Glass strength" FontSize="13" FontWeight="SemiBold" />
@@ -599,6 +608,14 @@
                                               Toggled="CloseElsewhereToggle_Toggled" />
                                 <ToggleSwitch x:Name="StartButtonToggle" Header="Open Porta from the Start button"
                                               Toggled="StartButtonToggle_Toggled" />
+                                <ToggleSwitch x:Name="StartAtSignInToggle" Header="Start Porta when I sign in"
+                                              Toggled="StartAtSignInToggle_Toggled" />
+                                <!-- Switched off in Windows' own list: say so, never switch it back on behind the user's back -->
+                                <StackPanel x:Name="StartupOffInWindowsNote" Visibility="Collapsed" Margin="0,-4,0,4">
+                                    <TextBlock Text="Windows has Porta's startup turned off. Turn it back on in Settings > Apps > Startup."
+                                               FontSize="12" TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                    <HyperlinkButton Content="Open Startup settings" Padding="0,4" Click="OpenStartupSettings_Click" />
+                                </StackPanel>
                                 <ToggleSwitch x:Name="ShowRecentToggle" Header="Show recent items"
                                               Toggled="ShowRecentToggle_Toggled" />
                                 <ToggleSwitch x:Name="ShowUserFolderToggle" Header="Show my folder link"
