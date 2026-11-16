@@ -10,6 +10,12 @@ public sealed class PortaSettings
     // General
     public bool OpenWithWinKey { get; set; } = true;
 
+    /// <summary>
+    /// Start Porta when this user signs in to Windows (an entry in HKCU\...\Run). Null until answered: a new copy asks
+    /// once in the menu; settings saved by an older Porta are switched on, with a one-time notice.
+    /// </summary>
+    public bool? StartAtSignIn { get; set; }
+
     /// <summary>A click on the taskbar's Start button opens Porta instead of Windows' Start menu. When off, Porta doesn't watch the mouse at all.</summary>
     public bool OpenFromStartButton { get; set; } = true;
     /// <summary>The Recent section under the pinned apps. Off by default; there was no switch for it before, so older files are switched off when they are read (see SettingsStore.Migrate).</summary>

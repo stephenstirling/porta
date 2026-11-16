@@ -34,9 +34,19 @@ public partial class App : Application
         DispatcherShutdownMode = DispatcherShutdownMode.OnExplicitShutdown;
     }
 
+    /// <summary>Settings from an older Porta just had "Start Porta when I sign in" switched on: say so once in the menu.</summary>
+    public static bool StartupNoticePending { get; set; }
+
     protected override async void OnLaunched(LaunchActivatedEventArgs args)
     {
         Settings.Load();
+        if (Settings.Current.StartAtSignIn is null && Settings.LoadedExistingFile)
+        {
+            StartupNoticePending = true;
+            Settings.Current.StartAtSignIn = true;
+            Settings.Save();
+        }
+        ApplyStartAtSignIn();
         UiDispatcher = DispatcherQueue.GetForCurrentThread();
         Icons = new IconLoader(UiDispatcher);
 
@@ -54,6 +64,12 @@ public partial class App : Application
 
         _startButton.StartClicked += () => _menu.DispatcherQueue.TryEnqueue(() => _menu.Toggle(fromMouse: true)); // same guard as the tray icon: the click may already have closed it
         Settings.Restored += () => _menu.DispatcherQueue.TryEnqueue(ApplyStartButtonSetting);
+        Settings.Restored += () =>
+        {
+            Settings.Current.StartAtSignIn ??= true; // a backup from before the switch existed: an existing setup
+            Settings.Save();
+            ApplyStartAtSignIn();
+        };
         ApplyStartButtonSetting();
         AppDomain.CurrentDomain.ProcessExit += (_, _) => _startButton.Dispose();
 
@@ -61,6 +77,15 @@ public partial class App : Application
 
         await Catalog.LoadAsync();
         Games.RefreshIfStale(Catalog.Apps);
+    }
+
+    /// <summary>
+    /// Every start re-points the sign-in entry at this exe (Integra puts each version in its own folder), or removes it
+    /// when switched off. Not yet answered (a new copy): nothing is written until the question in the menu is answered.
+    /// </summary>
+    public static void ApplyStartAtSignIn()
+    {
+        if (Settings.Current.StartAtSignIn is bool on) StartupRegistration.Apply(on);
     }
 
     /// <summary>Installs the Start button hook, or removes it completely, to match "Open Porta from the Start button".</summary>

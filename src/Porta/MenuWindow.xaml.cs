@@ -182,6 +182,7 @@ public sealed partial class MenuWindow : Window
         if (App.Catalog.IsLoaded) App.Games.RefreshIfStale(App.Catalog.Apps);
         if (App.Settings.Current.SearchEpicLibrary) EpicCatalogCache.RefreshIfChanged(); // background, only if the file changed
         _ = RefreshUpdateOptionsAsync(); // background, at most once a minute
+        ShowStartupQuestion();
         ClockText.Text = DateTime.Now.ToString("t");
         DateText.Text = DateTime.Now.ToString("dddd, MMMM d");
 
@@ -1099,6 +1100,7 @@ public sealed partial class MenuWindow : Window
         ShowClockToggle.IsOn = s.ShowClockCard;
         ShowLockToggle.IsOn = s.ShowLockButton;
         ShowUpdateOptionsToggle.IsOn = s.ShowUpdateOptions;
+        StartAtSignInToggle.IsOn = s.StartAtSignIn == true;
         ApplyLayoutSettings();
     }
 
@@ -1160,6 +1162,61 @@ public sealed partial class MenuWindow : Window
         App.Settings.Save();
         ApplyLayoutSettings();
         if (ShowUpdateOptionsToggle.IsOn) _ = RefreshUpdateOptionsAsync();
+    }
+
+    // ---------- Start Porta when I sign in ----------
+
+    /// <summary>A new copy asks once; settings from an older Porta, already switched on, get a one-time notice instead.</summary>
+    private void ShowStartupQuestion()
+    {
+        if (App.Settings.Current.StartAtSignIn is null)
+        {
+            StartupInfoBar.Title = "Start Porta when you sign in?";
+            StartupInfoBar.Message = "Then Porta is your Start menu from the moment Windows starts.";
+            StartupAnswerButtons.Visibility = Visibility.Visible;
+            StartupInfoBar.IsClosable = false;
+            StartupInfoBar.IsOpen = true;
+        }
+        else if (App.StartupNoticePending)
+        {
+            App.StartupNoticePending = false;
+            StartupInfoBar.Title = "Porta now starts when you sign in";
+            StartupInfoBar.Message = "To change it, use \u201cStart Porta when I sign in\u201d in the palette pop-up.";
+            StartupAnswerButtons.Visibility = Visibility.Collapsed;
+            StartupInfoBar.IsClosable = true;
+            StartupInfoBar.IsOpen = true;
+        }
+    }
+
+    private void StartupYes_Click(object sender, RoutedEventArgs e) => SetStartAtSignIn(true);
+    private void StartupNo_Click(object sender, RoutedEventArgs e) => SetStartAtSignIn(false);
+
+    private void StartAtSignInToggle_Toggled(object sender, RoutedEventArgs e)
+    {
+        if (App.Settings.Current.StartAtSignIn == StartAtSignInToggle.IsOn) return;
+        SetStartAtSignIn(StartAtSignInToggle.IsOn);
+    }
+
+    private void SetStartAtSignIn(bool on)
+    {
+        App.Settings.Current.StartAtSignIn = on;
+        App.Settings.Save();
+        App.ApplyStartAtSignIn();
+        StartAtSignInToggle.IsOn = on;
+        StartupInfoBar.IsOpen = false;
+        UpdateStartupNote();
+    }
+
+    private void UpdateStartupNote() =>
+        StartupOffInWindowsNote.Visibility = App.Settings.Current.StartAtSignIn == true && StartupRegistration.IsTurnedOffInWindows()
+            ? Visibility.Visible : Visibility.Collapsed;
+
+    private void PaletteFlyout_Opening(object? sender, object e) => UpdateStartupNote();
+
+    private void OpenStartupSettings_Click(object sender, RoutedEventArgs e)
+    {
+        HideMenu();
+        Launcher.Open(StartupRegistration.WindowsStartupSettings);
     }
 
     // ---------- Update and restart / Update and shut down ----------

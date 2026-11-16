@@ -14,12 +14,18 @@ public sealed class SettingsStore
 
     public PortaSettings Current { get; private set; } = new();
 
+    /// <summary>Settings came from a file saved earlier, so this isn't a brand-new copy of Porta.</summary>
+    public bool LoadedExistingFile { get; private set; }
+
     public void Load()
     {
         try
         {
             if (File.Exists(FilePath))
+            {
                 Current = JsonSerializer.Deserialize<PortaSettings>(File.ReadAllText(FilePath), Json) ?? new();
+                LoadedExistingFile = true;
+            }
         }
         catch
         {

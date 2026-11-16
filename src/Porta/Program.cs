@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
@@ -26,9 +27,22 @@ public static class Program
 
         WinRT.ComWrappersSupport.InitializeComWrappers();
 
+        // Started at sign-in: an old version Integra has since replaced hands over to the current one.
+        bool atSignIn = args.Any(a => a.Equals(Services.StartupRegistration.StartupSwitch, StringComparison.OrdinalIgnoreCase));
+        if (atSignIn && Services.StartupRegistration.IntegraCurrentCopy() is { } current)
+        {
+            Process.Start(new ProcessStartInfo(current, Services.StartupRegistration.StartupSwitch)
+            {
+                UseShellExecute = false,
+                WorkingDirectory = Path.GetDirectoryName(current)!,
+            });
+            return 0;
+        }
+
         var instance = AppInstance.FindOrRegisterForKey("Porta.Main");
         if (!instance.IsCurrent)
         {
+            if (atSignIn) return 0; // already running: a sign-in start must not open the menu
             var activation = AppInstance.GetCurrent().GetActivatedEventArgs();
             // Redirect on a worker thread; waiting on the STA thread can deadlock.
             Task.Run(() => instance.RedirectActivationToAsync(activation).AsTask()).Wait();
